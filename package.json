@@ -1,0 +1,19 @@
+{
+  "name": "jungle-hunt",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test:ip": "node ./scripts/ipTest.js",
+    "test:db": "node ./scripts/dbTest.js",
+    "start:best-sellers": "node ./scripts/top100.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "firebase": "^7.5.0",
+    "mongodb": "^3.3.5",
+    "puppeteer": "^2.0.0"
+  },
+  "devDependencies": {}
+}
