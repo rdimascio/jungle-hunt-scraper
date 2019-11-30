@@ -1,5 +1,7 @@
 'use strict'
 
+const colors = require('colors')
+const notifier = require('node-notifier')
 const puppeteer = require('puppeteer')
 const changeIpAddress = require('../../helpers/changeIP')
 const isObjectEmpty = require('../../helpers/object')
@@ -27,11 +29,11 @@ const database = require('../../helpers/database')
 // const db = app.firestore()
 // const productsRef = db.collection('products')
 
-const DATE = new Date()
-const DAY = DATE.getDate()
-const MONTH = DATE.getMonth() + 1
-const YEAR = DATE.getFullYear()
-const DATE_PATH = `${MONTH}-${DAY}-${YEAR}`
+// const DATE = new Date()
+// const DAY = DATE.getDate()
+// const MONTH = DATE.getMonth() + 1
+// const YEAR = DATE.getFullYear()
+// const DATE_PATH = `${MONTH}-${DAY}-${YEAR}`
 
 const publicIps = ['12.205.195.90', '172.119.134.14']
 
@@ -248,10 +250,7 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 							asins.push({
 								asin,
 								title,
-								category: {
-									primary: category,
-									secondary: subCategory,
-								},
+								category: {secondary: subCategory},
 								image,
 								rank: parseFloat(rank),
 								price: price,
@@ -305,86 +304,90 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 						return
 					}
 
-					if (DATABASE === 'firebase') {
-						const categoryRef = productsRef.doc(category)
+					// Need to set the primary category here,
+					//otherwise it's out of context
+					asin.category.primary = category
 
-						// categoryRef.get().then((doc) => {
-						// 	if (!doc.exists) {
-						// 		batch.set(
-						// 			categoryRef,
-						// 			{
-						// 				name: category,
-						// 			},
-						// 			{merge: true}
-						// 		)
-						// 	}
-						// })
-						// batch.set(
-						// 	categoryRef,
-						// 	{
-						// 		name: category,
-						// 	},
-						// 	{merge: true}
-						// )
+					// if (DATABASE === 'firebase') {
+					// 	const categoryRef = productsRef.doc(category)
 
-						const asinRef = categoryRef
-							.collection(asin.asin)
-							.doc('details')
+					// 	// categoryRef.get().then((doc) => {
+					// 	// 	if (!doc.exists) {
+					// 	// 		batch.set(
+					// 	// 			categoryRef,
+					// 	// 			{
+					// 	// 				name: category,
+					// 	// 			},
+					// 	// 			{merge: true}
+					// 	// 		)
+					// 	// 	}
+					// 	// })
+					// 	// batch.set(
+					// 	// 	categoryRef,
+					// 	// 	{
+					// 	// 		name: category,
+					// 	// 	},
+					// 	// 	{merge: true}
+					// 	// )
 
-						// asinRef.get().then((doc) => {
-						// 	if (!doc.exists) {
-						// 		batch.set(
-						// 			asinRef,
-						// 			{
-						// 				asin: asin.asin,
-						// 				image: asin.image,
-						// 				title: asin.title,
-						// 				category: asin.subCategory,
-						// 			},
-						// 			{merge: true}
-						// 		)
-						// 	}
-						// })
-						batch.set(
-							asinRef,
-							{
-								asin: asin.asin,
-								image: asin.image,
-								title: asin.title,
-								category: asin.subCategory,
-							},
-							{merge: true}
-						)
+					// 	const asinRef = categoryRef
+					// 		.collection(asin.asin)
+					// 		.doc('details')
 
-						const dateRef = categoryRef
-							.collection(asin.asin)
-							.doc(DATE_PATH)
+					// 	// asinRef.get().then((doc) => {
+					// 	// 	if (!doc.exists) {
+					// 	// 		batch.set(
+					// 	// 			asinRef,
+					// 	// 			{
+					// 	// 				asin: asin.asin,
+					// 	// 				image: asin.image,
+					// 	// 				title: asin.title,
+					// 	// 				category: asin.subCategory,
+					// 	// 			},
+					// 	// 			{merge: true}
+					// 	// 		)
+					// 	// 	}
+					// 	// })
+					// 	batch.set(
+					// 		asinRef,
+					// 		{
+					// 			asin: asin.asin,
+					// 			image: asin.image,
+					// 			title: asin.title,
+					// 			category: asin.subCategory,
+					// 		},
+					// 		{merge: true}
+					// 	)
 
-						// dateRef.get().then((doc) => {
-						// 	if (!doc.exists) {
-						// 		batch.set(
-						// 			dateRef,
-						// 			{
-						// 				price: asin.price,
-						// 				rank: parseFloat(asin.rank),
-						// 				rating: parseFloat(asin.rating),
-						// 				reviews: parseFloat(asin.reviews),
-						// 			},
-						// 			{merge: true}
-						// 		)
-						// 	}
-						// })
-						batch.set(
-							dateRef,
-							{
-								price: asin.price,
-								rank: parseFloat(asin.rank),
-								rating: parseFloat(asin.rating),
-								reviews: parseFloat(asin.reviews),
-							},
-							{merge: true}
-						)
-					}
+					// 	const dateRef = categoryRef
+					// 		.collection(asin.asin)
+					// 		.doc(DATE_PATH)
+
+					// 	// dateRef.get().then((doc) => {
+					// 	// 	if (!doc.exists) {
+					// 	// 		batch.set(
+					// 	// 			dateRef,
+					// 	// 			{
+					// 	// 				price: asin.price,
+					// 	// 				rank: parseFloat(asin.rank),
+					// 	// 				rating: parseFloat(asin.rating),
+					// 	// 				reviews: parseFloat(asin.reviews),
+					// 	// 			},
+					// 	// 			{merge: true}
+					// 	// 		)
+					// 	// 	}
+					// 	// })
+					// 	batch.set(
+					// 		dateRef,
+					// 		{
+					// 			price: asin.price,
+					// 			rank: parseFloat(asin.rank),
+					// 			rating: parseFloat(asin.rating),
+					// 			reviews: parseFloat(asin.reviews),
+					// 		},
+					// 		{merge: true}
+					// 	)
+					// }
 
 					if (DATABASE === 'mongo') {
 						mongo.connect(
@@ -424,8 +427,10 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 																asinList.length
 															) {
 																console.log(
-																	`DB updated for subcategory #${i +
-																		1} in ${category}`
+																	colors.green(
+																		`Products updated for subcategory #${i +
+																			1} in ${category}`
+																	)
 																)
 															}
 														}
@@ -445,8 +450,10 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 															asinList.length
 														) {
 															console.log(
-																`Products updated for subcategory #${i +
-																	1} in ${category}`
+																colors.green(
+																	`Products updated for subcategory #${i +
+																		1} in ${category}`
+																)
 															)
 														}
 													}
@@ -455,6 +462,12 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 										}
 									)
 								} catch (error) {
+									console.log(
+										colors.green(
+											`Error updating Products for subcategory #${i +
+												1} in ${category}`
+										)
+									)
 									console.log(error)
 
 									// Error updating/inserting the ASIN
@@ -478,13 +491,21 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 										(result) => {
 											if (index + 1 === asinList.length) {
 												console.log(
-													`Product Stats updated for subcategory #${i +
-														1} in ${category}`
+													colors.green(
+														`Product Stats updated for subcategory #${i +
+															1} in ${category}`
+													)
 												)
 											}
 										}
 									)
 								} catch (error) {
+									console.log(
+										colors.red(
+											`Error updating Product Stats for subcategory #${i +
+												1} in ${category}`
+										)
+									)
 									console.log(error)
 
 									// Error updating/inserting the ASIN stats
@@ -495,36 +516,38 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 					}
 				})
 
-				if (DATABASE === 'firebase') {
-					batch
-						.commit()
-						.then(() => {
-							console.log(
-								`DB updated for subcategory #${i +
-									1} in ${category}`
-							)
+				// if (DATABASE === 'firebase') {
+				// 	batch
+				// 		.commit()
+				// 		.then(() => {
+				// 			console.log(
+				// 				`DB updated for subcategory #${i +
+				// 					1} in ${category}`
+				// 			)
 
-							if (
-								index + 1 === categories.length &&
-								i + 1 === urls.length
-							) {
-								console.log('Done')
-								process.exit()
-							}
-						})
-						.catch((error) => {
-							console.log(
-								`Error updating subcategory #${i +
-									1} in ${category}`,
-								error
-							)
-						})
-				}
+				// 			if (
+				// 				index + 1 === categories.length &&
+				// 				i + 1 === urls.length
+				// 			) {
+				// 				console.log('Done')
+				// 				process.exit()
+				// 			}
+				// 		})
+				// 		.catch((error) => {
+				// 			console.log(
+				// 				`Error updating subcategory #${i +
+				// 					1} in ${category}`,
+				// 				error
+				// 			)
+				// 		})
+				// }
 			} catch (error) {
 				console.log(
-					`Error scraping subcategory #${i + 1} in ${category}`,
-					error
+					colors.red(
+						`Error scraping subcategory #${i + 1} in ${category}`
+					)
 				)
+				console.log(error)
 			} finally {
 				await page.close()
 				await browser.close()

@@ -34,7 +34,7 @@ const updateProduct = function(db, col, doc, product, callback) {
 	})
 
 	collection.updateOne(
-		{item: doc.item},
+		{asin: doc.asin},
 		{
 			$set: newDoc
 		},

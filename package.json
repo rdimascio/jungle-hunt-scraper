@@ -6,6 +6,7 @@
   "scripts": {
     "test:ip": "node ./scripts/scrape/ipTest.js",
     "test:db": "node ./scripts/database/test.js",
+    "migrate:product-stats": "node ./scripts/database/migrations/productStats.js",
     "start:best-sellers": "node ./scripts/scrape/bestSellerLists.js"
   },
   "author": "",
@@ -15,5 +16,8 @@
     "mongodb": "^3.3.5",
     "puppeteer": "^2.0.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "colors": "^1.4.0",
+    "node-notifier": "^6.0.0"
+  }
 }
