@@ -2,7 +2,7 @@
 
 const assert = require('assert')
 
-const insertProduct = function(db, col, doc, callback) {
+const insertDocument = function(db, col, doc, callback) {
 	const collection = db.collection(col)
 
 	collection.insertOne(doc, function(err, result) {
@@ -13,18 +13,22 @@ const insertProduct = function(db, col, doc, callback) {
 
 const updateProduct = function(db, col, doc, product, callback) {
 	const collection = db.collection(col)
-
 	const metrics = ['price', 'rank', 'reviews', 'rating']
-
 	const newDoc = {}
 
+	// Rewrite all metric fields, so the metrics are all up to date
 	metrics.forEach((metric) => {
 		if (product[metric])
-			newDoc[metric] = [...doc[metric], ...product[metric]]
+			newDoc[metric] = product[metric]
 	})
 
 	Object.entries(doc).forEach(([key, value]) => {
+
+		// Rewrite any null field for the document
 		if (value === null && product[key]) newDoc[key] = product[key]
+
+		// We changed the category schema,
+		// so we need to update explicitly for now
 		if (key === 'category' && typeof key !== 'object')
 			newDoc[key] = product[key]
 	})
@@ -32,8 +36,7 @@ const updateProduct = function(db, col, doc, product, callback) {
 	collection.updateOne(
 		{item: doc.item},
 		{
-			$set: newDoc,
-			// $currentDate: {lastModified: true},
+			$set: newDoc
 		},
 		function(err, result) {
 			assert.equal(err, null)
@@ -43,7 +46,7 @@ const updateProduct = function(db, col, doc, product, callback) {
 	)
 }
 
-const findProduct = function(db, col, doc = {}, callback) {
+const findDocuments = function(db, col, doc = {}, callback) {
 	const collection = db.collection(col)
 
 	collection.find(doc).toArray(function(err, docs) {
@@ -53,7 +56,7 @@ const findProduct = function(db, col, doc = {}, callback) {
 }
 
 module.exports = {
-	insertProduct,
+	insertDocument,
 	updateProduct,
-	findProduct,
+	findDocuments,
 }

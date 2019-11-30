@@ -3,7 +3,7 @@
 const mongo = require('mongodb').MongoClient
 const mongoUrl = 'mongodb://localhost:27017'
 
-const database = require('../helpers/database')
+const database = require('../../helpers/database')
 
 mongo.connect(
 	mongoUrl,

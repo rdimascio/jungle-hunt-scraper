@@ -1,14 +1,14 @@
 'use strict'
 
 const puppeteer = require('puppeteer')
-const changeIpAddress = require('../helpers/changeIP')
-const isObjectEmpty = require('../helpers/object')
-const generateRandomNumbers = require('../helpers/randomNumbers')
+const changeIpAddress = require('../../helpers/changeIP')
+const isObjectEmpty = require('../../helpers/object')
+const generateRandomNumbers = require('../../helpers/randomNumbers')
 
 const DATABASE = 'mongo'
 const mongo = require('mongodb').MongoClient
 const mongoUrl = 'mongodb://localhost:27017'
-const database = require('../helpers/database')
+const database = require('../../helpers/database')
 
 // const firebase = require('firebase/app')
 // require('firebase/firestore')
@@ -35,8 +35,8 @@ const DATE_PATH = `${MONTH}-${DAY}-${YEAR}`
 
 const publicIps = ['12.205.195.90', '172.119.134.14']
 
-const categoryList = require('../helpers/categories')
-const preparePageForTests = require('../helpers/preparePageForTests')
+const categoryList = require('../../helpers/categories')
+const preparePageForTests = require('../../helpers/preparePageForTests')
 
 ;(async () => {
 	const categories = Object.entries(categoryList)
@@ -250,33 +250,13 @@ const preparePageForTests = require('../helpers/preparePageForTests')
 								title,
 								category: {
 									primary: category,
-									secondary: subCategory
+									secondary: subCategory,
 								},
 								image,
-								rank: [
-									{
-										timestamp: new Date().toISOString(),
-										total: parseFloat(rank),
-									},
-								],
-								price: [
-									{
-										timestamp: new Date().toISOString(),
-										total: price,
-									},
-								],
-								rating: [
-									{
-										timestamp: new Date().toISOString(),
-										total: parseFloat(rating),
-									},
-								],
-								reviews: [
-									{
-										timestamp: new Date().toISOString(),
-										total: parseFloat(reviews),
-									},
-								],
+								rank: parseFloat(rank),
+								price: price,
+								rating: parseFloat(rating),
+								reviews: parseFloat(reviews),
 							})
 						})
 
@@ -425,7 +405,7 @@ const preparePageForTests = require('../helpers/preparePageForTests')
 								const collection = 'products'
 
 								try {
-									database.findProduct(
+									database.findDocuments(
 										db,
 										collection,
 										{asin: asin.asin},
@@ -455,7 +435,7 @@ const preparePageForTests = require('../helpers/preparePageForTests')
 
 											// The product record doesn't exist yet, we need to create it
 											else {
-												database.insertProduct(
+												database.insertDocument(
 													db,
 													collection,
 													asin,
@@ -465,20 +445,49 @@ const preparePageForTests = require('../helpers/preparePageForTests')
 															asinList.length
 														) {
 															console.log(
-																`DB updated for subcategory #${i +
+																`Products updated for subcategory #${i +
 																	1} in ${category}`
 															)
 														}
 													}
 												)
 											}
-
-											client.close()
 										}
 									)
 								} catch (error) {
 									console.log(error)
 
+									// Error updating/inserting the ASIN
+									// @TODO Send message to Telegram
+								}
+
+								try {
+									const asinStats = {
+										asin: asin.asin,
+										price: asin.price,
+										rank: asin.rank,
+										rating: asin.rating,
+										reviews: asin.reviews,
+										timestamp: new Date().toISOString(),
+									}
+
+									database.insertDocument(
+										db,
+										'productStats',
+										asinStats,
+										(result) => {
+											if (index + 1 === asinList.length) {
+												console.log(
+													`Product Stats updated for subcategory #${i +
+														1} in ${category}`
+												)
+											}
+										}
+									)
+								} catch (error) {
+									console.log(error)
+
+									// Error updating/inserting the ASIN stats
 									// @TODO Send message to Telegram
 								}
 							}

@@ -4,9 +4,9 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test:ip": "node ./scripts/ipTest.js",
-    "test:db": "node ./scripts/dbTest.js",
-    "start:best-sellers": "node ./scripts/top100.js"
+    "test:ip": "node ./scripts/scrape/ipTest.js",
+    "test:db": "node ./scripts/database/test.js",
+    "start:best-sellers": "node ./scripts/scrape/bestSellerLists.js"
   },
   "author": "",
   "license": "ISC",
