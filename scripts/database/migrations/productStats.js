@@ -1,5 +1,6 @@
 'use strict'
 
+const colors = require('colors')
 const mongo = require('mongodb').MongoClient
 const mongoUrl = 'mongodb://localhost:27017'
 const database = require('../../../helpers/database')
@@ -20,29 +21,38 @@ mongo.connect(
 		try {
 			database.findDocuments(db, 'products', {}, (docs) => {
 				docs.forEach((doc, index) => {
-					const asinStats = {
-						asin: doc.asin,
-						price: doc.price.total,
-						rank: doc.rank.total,
-						rating: doc.rating.total,
-						reviews: doc.reviews.total,
-						timestamp: doc.price.timestamp,
-					}
-
-					database.insertDocument(
-						db,
-						'productStats',
-						asinStats,
-						(result) => {
-							if (index + 1 === docs.length) {
-								console.log(
-									colors.green(
-										`Done migrating Products into Product Stats`
-									)
-								)
-							}
+					if (
+						doc.price[0].total !== null &&
+						doc.rank[0].total !== null &&
+						doc.rating[0].total !== null &&
+						doc.reviews[0].total !== null
+					) {
+						const asinStats = {
+							asin: doc.asin,
+							price: doc.price[0].total,
+							rank: doc.rank[0].total,
+							rating: doc.rating[0].total,
+							reviews: doc.reviews[0].total,
+							timestamp: doc.price[0].timestamp,
 						}
-					)
+
+						database.insertDocument(
+							db,
+							'productStats',
+							asinStats,
+							(result) => {
+								if (index + 1 === docs.length) {
+									console.log(
+										colors.green(
+											`Done migrating Products into Product Stats`
+										)
+									)
+
+									client.close()
+								}
+							}
+						)
+					}
 				})
 			})
 		} catch (error) {

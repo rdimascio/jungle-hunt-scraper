@@ -299,7 +299,15 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 
 				// Save the asins to the database
 				asinList.forEach((asin, index) => {
-					if (isObjectEmpty(asin) || !asin.asin) {
+					if (
+						isObjectEmpty(asin) ||
+						!asin.asin ||
+						!asin.price ||
+						!asin.rating ||
+						!asin.reviews ||
+						!asin.rank
+					) {
+						console.log(`Failed to scrape ${asin.asin}`)
 						console.log(asin)
 						return
 					}
