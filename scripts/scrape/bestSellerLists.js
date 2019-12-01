@@ -1,37 +1,29 @@
 'use strict'
 
+// Packages
 const fs = require('fs')
 const colors = require('colors')
+const {createLogger, format, transports} = require('winston')
+const {combine, timestamp, label, printf} = format
 const notifier = require('node-notifier')
+const mongo = require('mongodb').MongoClient
 const puppeteer = require('puppeteer')
 const TelegramBot = require('node-telegram-bot-api')
+
+// Modules
+const database = require('../../helpers/database')
 const changeIpAddress = require('../../helpers/changeIP')
 const isObjectEmpty = require('../../helpers/object')
 const generateRandomNumbers = require('../../helpers/randomNumbers')
-const telegramBotToken = '894036353:AAEch4kCYoS7AUdm2qXPtUaxPHgDVjVvn48'
+const categoryList = require('../../helpers/categories')
+const preparePageForTests = require('../../helpers/preparePageForTests')
+
+// Variables
+const DEV = process.env.NODE_ENV === 'development'
+const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN
 const jungleHuntBot = new TelegramBot(telegramBotToken)
-
-const DATABASE = 'mongo'
-const mongo = require('mongodb').MongoClient
-const mongoUrl = 'mongodb://localhost:27017'
-const database = require('../../helpers/database')
-
-// const firebase = require('firebase/app')
-// require('firebase/firestore')
-
-// const firebaseConfig = {
-// 	apiKey: 'AIzaSyDQoN-wHRM4L18unBDZJqg3GItWZJjoV28',
-// 	authDomain: 'jungle-hunt.firebaseapp.com',
-// 	// databaseURL: 'https://jungle-hunt.firebaseio.com',
-// 	projectId: 'jungle-hunt',
-// 	// storageBucket: 'jungle-hunt.appspot.com',
-// 	// messagingSenderId: '608123474522',
-// 	// appId: '1:608123474522:web:d6a274aaf2e8b6a5433e63',
-// }
-
-// const app = firebase.initializeApp(firebaseConfig)
-// const db = app.firestore()
-// const productsRef = db.collection('products')
+const publicIps = ['12.205.195.90', '172.119.134.14', '167.71.144.15']
+const mongoUrl = DEV ? 'mongodb://localhost:27017' : process.env.DATABASE_URL
 
 const DATE = new Date()
 const HOURS = DATE.getHours()
@@ -41,12 +33,41 @@ const MONTH = DATE.getMonth() + 1
 const YEAR = DATE.getFullYear()
 const DATE_PATH = `${MONTH}-${DAY}-${YEAR}-${HOURS}-${MINUTES}`
 
-const publicIps = ['12.205.195.90', '172.119.134.14']
+// Logging
+const myFormat = printf(
+	({level, message, label, timestamp}) =>
+		`${timestamp} [${label}] ${level}: ${message}`
+)
 
-const categoryList = require('../../helpers/categories')
-const preparePageForTests = require('../../helpers/preparePageForTests')
+const logger = createLogger({
+	level: 'info',
+	format: combine(label({label: 'Best Seller List'}), timestamp(), myFormat),
+	defaultMeta: {service: 'user-service'},
+	transports: [
+		//
+		// - Write to all logs with level `info` and below to `combined.log`
+		// - Write all logs error (and below) to `error.log`.
+		//
+		new winston.transports.File({filename: 'error.log', level: 'error'}),
+		new winston.transports.File({filename: 'info.log'}),
+	],
+})
+
+//
+// If we're not in production then log to the `console` with the format:
+// `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
+//
+if (process.env.NODE_ENV !== 'production') {
+	logger.add(
+		new winston.transports.Console({
+			format: winston.format.simple(),
+		})
+	)
+}
 
 ;(async () => {
+	jungleHuntBot.sendMessage(605686296, '🚀 Best Seller List Scraper: Started')
+
 	const categories = Object.entries(categoryList)
 
 	for (let [index, [category, urls]] of categories.entries()) {
@@ -147,7 +168,7 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 						changeIpAddress()
 					} else {
 						// We're in, no need to change the IP
-						console.log('IP remains the same')
+						logger.log('IP remains the same')
 					}
 				}
 			})
@@ -162,11 +183,15 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 
 				if (publicIps.includes(IP)) {
 					// Send a message to Telegram
+					jungleHuntBot.sendMessage(
+						605686296,
+						'🚨 Best Seller List Scraper: Tor failed to anonymize our IP'
+					)
 
-					console.log("We're not using Tor. IP:", IP)
+					logger.log("We're not using Tor. IP:", IP)
 					return
 				} else {
-					console.log('Using Tor with IP:', IP)
+					logger.log('Using Tor with IP:', IP)
 				}
 
 				const scrapeAsins = async (pg = 1) => {
@@ -219,7 +244,7 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 							'🚨 Best Seller List Scaper: Tor IP retry limit reached. Cancelling connection'
 						)
 
-						console.log("We're blocked")
+						logger.log("We're blocked")
 						return
 					}
 
@@ -314,7 +339,7 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 
 						if (failedAsins.length) {
 							setTimeout(() => {
-								console.log(
+								logger.log(
 									'We have a failed asin, waiting 3 seconds to retry'
 								)
 							}, 3000)
@@ -377,7 +402,7 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 				asinList.push(...(await scrapeAsins(2)))
 
 				if (!asinList.length) {
-					console.log('No asins found')
+					logger.error('No asins found')
 				}
 
 				asinList.forEach((asin, index) => {
@@ -395,7 +420,7 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 								(item) => item.asin === asinData.asin
 							)
 						) {
-							console.log(`Failed to scrape ${asin.asin}`)
+							logger.error(`Failed to scrape ${asin.asin}`)
 						}
 
 						return
@@ -413,7 +438,7 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 						},
 						async (error, client) => {
 							if (error) {
-								console.error(error)
+								logger.error(error)
 
 								// Send message to Telegram
 								jungleHuntBot.sendMessage(
@@ -447,12 +472,10 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 					)
 				})
 			} catch (error) {
-				console.log(
-					colors.red(
-						`Error scraping subcategory #${i + 1} in ${category}`
-					)
+				logger.error(
+					`Error scraping subcategory #${i + 1} in ${category}`
 				)
-				console.log(error)
+				logger.error(error)
 
 				jungleHuntBot.sendMessage(
 					605686296,
@@ -470,7 +493,7 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 					},
 					(error, client) => {
 						if (error) {
-							console.error(error)
+							logger.error(error)
 
 							// Send message to Telegram
 							jungleHuntBot.sendMessage(
@@ -478,7 +501,7 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 								`🚨 Best Seller List Scaper: Error scraping subcategory #${i +
 									1} in ${category}`
 							)
-			
+
 							jungleHuntBot.sendMessage(605686296, error)
 
 							return
@@ -491,22 +514,18 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 									db,
 									asinList,
 									(result) => {
-										console.log(
-											colors.green(
-												`Product Stats inserted for subcategory #${i +
-													1} in ${category}`
-											)
+										logger.log(
+											`Product Stats inserted for subcategory #${i +
+												1} in ${category}`
 										)
 									}
 								)
 							} catch (error) {
-								console.log(
-									colors.red(
-										`Error inserting Product Stats for subcategory #${i +
-											1} in ${category}`
-									)
+								logger.error(
+									`Error inserting Product Stats for subcategory #${i +
+										1} in ${category}`
 								)
-								console.log(error)
+								logger.error(error)
 
 								// Send message to Telegram
 								jungleHuntBot.sendMessage(
@@ -525,22 +544,18 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 									db,
 									asinsToUpdate,
 									(result) => {
-										console.log(
-											colors.green(
-												`Products updated for subcategory #${i +
-													1} in ${category}`
-											)
+										logger.log(
+											`Products updated for subcategory #${i +
+												1} in ${category}`
 										)
 									}
 								)
 							} catch (error) {
-								console.log(
-									colors.red(
-										`Error updating Products for subcategory #${i +
-											1} in ${category}`
-									)
+								logger.error(
+									`Error updating Products for subcategory #${i +
+										1} in ${category}`
 								)
-								console.log(error)
+								logger.log(error)
 
 								// Send message to Telegram
 								jungleHuntBot.sendMessage(
@@ -559,22 +574,18 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 									db,
 									asinsToInsert,
 									(result) => {
-										console.log(
-											colors.green(
-												`Products inserted for subcategory #${i +
-													1} in ${category}`
-											)
+										logger.log(
+											`Products inserted for subcategory #${i +
+												1} in ${category}`
 										)
 									}
 								)
 							} catch (error) {
-								console.log(
-									colors.red(
-										`Error inserting Products for subcategory #${i +
-											1} in ${category}`
-									)
+								logger.error(
+									`Error inserting Products for subcategory #${i +
+										1} in ${category}`
 								)
-								console.log(error)
+								logger.error(error)
 
 								// Error updating/inserting the ASIN stats
 								// Send message to Telegram
@@ -601,6 +612,20 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 
 				await page.close()
 				await browser.close()
+
+				const DATE_FINISHED = new Date()
+				const TIME_ELAPSED = DATE_FINISHED - DATE
+				const MINUTES_ELAPSED = TIME_ELAPSED / 1000 / 60
+				const SECONDS_ELAPSED = MINUTES_ELAPSED % 60
+				const HOURS_ELAPSED =
+					MINUTES_ELAPSED >= 60 ? MINUTES_ELAPSED / 60 : 0
+
+				jungleHuntBot.sendMessage(
+					605686296,
+					`🎉 Best Seller List Scraper: Finished in ${
+						HOURS_ELAPSED > 0 ? `${HOURS_ELAPSED} hours, ` : ''
+					} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`
+				)
 			}
 		}
 	}
