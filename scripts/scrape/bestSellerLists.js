@@ -1,11 +1,15 @@
 'use strict'
 
+const fs = require('fs')
 const colors = require('colors')
 const notifier = require('node-notifier')
 const puppeteer = require('puppeteer')
+const TelegramBot = require('node-telegram-bot-api')
 const changeIpAddress = require('../../helpers/changeIP')
 const isObjectEmpty = require('../../helpers/object')
 const generateRandomNumbers = require('../../helpers/randomNumbers')
+const telegramBotToken = '894036353:AAEch4kCYoS7AUdm2qXPtUaxPHgDVjVvn48'
+const jungleHuntBot = new TelegramBot(telegramBotToken)
 
 const DATABASE = 'mongo'
 const mongo = require('mongodb').MongoClient
@@ -29,11 +33,13 @@ const database = require('../../helpers/database')
 // const db = app.firestore()
 // const productsRef = db.collection('products')
 
-// const DATE = new Date()
-// const DAY = DATE.getDate()
-// const MONTH = DATE.getMonth() + 1
-// const YEAR = DATE.getFullYear()
-// const DATE_PATH = `${MONTH}-${DAY}-${YEAR}`
+const DATE = new Date()
+const HOURS = DATE.getHours()
+const MINUTES = DATE.getMinutes()
+const DAY = DATE.getDate()
+const MONTH = DATE.getMonth() + 1
+const YEAR = DATE.getFullYear()
+const DATE_PATH = `${MONTH}-${DAY}-${YEAR}-${HOURS}-${MINUTES}`
 
 const publicIps = ['12.205.195.90', '172.119.134.14']
 
@@ -46,6 +52,20 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 	for (let [index, [category, urls]] of categories.entries()) {
 		for (let i = 0; i < urls.length; i++) {
 			// const batch = db.batch()
+
+			const asinList = []
+			const asinsToUpdate = []
+			const asinsToInsert = []
+
+			const failedAsinData = fs.existsSync(
+				`./data/failed/${DATE_PATH}.json`
+			)
+				? fs.readFileSync(`./data/failed/${DATE_PATH}.json`, 'utf8')
+				: []
+
+			let failedAsins = failedAsinData.length
+				? JSON.parse(failedAsinData)
+				: []
 
 			const browser = await puppeteer.launch({
 				ignoreHTTPSErrors: true,
@@ -174,14 +194,19 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 
 						const title = await page.title()
 
-						if (response.ok() && !title !== 'Robot Check') {
+						if (response.ok() && title !== 'Robot Check') {
 							success = true
 							await page.waitFor(3000)
 							break
 						}
 
 						if (title === 'Robot Check') {
+							jungleHuntBot.sendMessage(
+								605686296,
+								'Best Seller List Scraper: We hit a captcha page. Changing IP and waiting 10 minutes'
+							)
 							changeIpAddress()
+							await delay(6000000)
 						}
 
 						await delay(2000 * retryNumber)
@@ -189,6 +214,10 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 
 					if (!success) {
 						// Send a message to Telegram
+						jungleHuntBot.sendMessage(
+							605686296,
+							'🚨 Best Seller List Scaper: Tor IP retry limit reached. Cancelling connection'
+						)
 
 						console.log("We're blocked")
 						return
@@ -196,68 +225,124 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 
 					const asinList = await page.evaluate(() => {
 						const asins = []
+						const failedAsins = []
 						const grid = document.getElementById('zg-ordered-list')
 						const items = grid.querySelectorAll('li')
 
-						items.forEach((item, index) => {
-							const subCategory = document.querySelector(
+						const scrapeAsinData = (element) => {
+							const asinData = {}
+							asinData.category = {}
+
+							asinData.category.secondary = document.querySelector(
 								'.category'
 							)
 								? document.querySelector('.category').innerText
 								: null
-							const rank = item.querySelector('.zg-badge-text')
-								? item
-										.querySelector('.zg-badge-text')
-										.innerHTML.split('#')[1]
+							asinData.rank = element.querySelector(
+								'.zg-badge-text'
+							)
+								? parseFloat(
+										element
+											.querySelector('.zg-badge-text')
+											.innerHTML.split('#')[1]
+								  )
 								: null
-							const asin = item.querySelector(
+							asinData.asin = element.querySelector(
 								'.a-link-normal:not(.a-size-small)'
 							)
 								? new URL(
-										item.querySelector(
+										element.querySelector(
 											'.a-link-normal:not(.a-size-small)'
 										).href
 								  ).pathname.split('/')[3]
 								: null
-							const image = item.querySelector('img')
-								? item.querySelector('img').src
+							asinData.image = element.querySelector('img')
+								? element.querySelector('img').src
 								: null
-							const price = item.querySelector('.p13n-sc-price')
-								? item.querySelector('.p13n-sc-price').innerText
-								: null
-							const title = item.querySelector(
-								'.p13n-sc-truncated'
+							asinData.price = element.querySelector(
+								'.a-color-price'
 							)
-								? item.querySelector('.p13n-sc-truncated')
+								? element.querySelector('.a-color-price')
 										.innerText
 								: null
-							const rating = item.querySelector('.a-icon-alt')
-								? item
-										.querySelector('.a-icon-alt')
-										.innerText.split(' ')[0]
+							asinData.title = element.querySelector(
+								'.p13n-sc-truncated'
+							)
+								? element.querySelector('.p13n-sc-truncated')
+										.innerText
 								: null
-							const reviews = item.querySelector(
+							asinData.rating = element.querySelector(
+								'.a-icon-alt'
+							)
+								? parseFloat(
+										element
+											.querySelector('.a-icon-alt')
+											.innerText.split(' ')[0]
+								  )
+								: null
+							asinData.reviews = element.querySelector(
 								'.a-icon-row > a:nth-child(2)'
 							)
-								? item
-										.querySelector(
-											'.a-icon-row > a:nth-child(2)'
-										)
-										.innerText.split(',')
-										.join('')
+								? parseFloat(
+										element
+											.querySelector(
+												'.a-icon-row > a:nth-child(2)'
+											)
+											.innerText.split(',')
+											.join('')
+								  )
 								: null
 
-							asins.push({
-								asin,
-								title,
-								category: {secondary: subCategory},
-								image,
-								rank: parseFloat(rank),
-								price: price,
-								rating: parseFloat(rating),
-								reviews: parseFloat(reviews),
-							})
+							return asinData
+						}
+
+						items.forEach((item, index) => {
+							const asinData = scrapeAsinData(item)
+
+							if (
+								!asinData.asin ||
+								!asinData.price ||
+								!asinData.rating ||
+								!asinData.reviews ||
+								!asinData.rank
+							) {
+								failedAsins.push(item)
+							} else {
+								asins.push(asinData)
+							}
 						})
+
+						if (failedAsins.length) {
+							setTimeout(() => {
+								console.log(
+									'We have a failed asin, waiting 3 seconds to retry'
+								)
+							}, 3000)
+
+							failedAsins.forEach((item) => {
+								const asinData = scrapeAsinData(item)
+
+								if (
+									!asinData.asin ||
+									!asinData.price ||
+									!asinData.rating ||
+									!asinData.reviews ||
+									!asinData.rank
+								) {
+									// Write to the failed.json
+									if (
+										!failedAsins.some(
+											(item) =>
+												item.asin === asinData.asin
+										)
+									) {
+										failedAsins.push(asinData)
+									}
+								} else {
+									asins.push(asinData)
+								}
+							})
+						}
 
 						return asins
 					})
@@ -288,16 +373,13 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 					return asinList
 				}
 
-				const asinList = [
-					...(await scrapeAsins()),
-					...(await scrapeAsins(2)),
-				]
+				asinList.push(...(await scrapeAsins()))
+				asinList.push(...(await scrapeAsins(2)))
 
 				if (!asinList.length) {
 					console.log('No asins found')
 				}
 
-				// Save the asins to the database
 				asinList.forEach((asin, index) => {
 					if (
 						isObjectEmpty(asin) ||
@@ -307,8 +389,15 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 						!asin.reviews ||
 						!asin.rank
 					) {
-						console.log(`Failed to scrape ${asin.asin}`)
-						console.log(asin)
+						// Write to the failed.json
+						if (
+							!failedAsins.some(
+								(item) => item.asin === asinData.asin
+							)
+						) {
+							console.log(`Failed to scrape ${asin.asin}`)
+						}
+
 						return
 					}
 
@@ -316,239 +405,47 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 					//otherwise it's out of context
 					asin.category.primary = category
 
-					// if (DATABASE === 'firebase') {
-					// 	const categoryRef = productsRef.doc(category)
+					mongo.connect(
+						mongoUrl,
+						{
+							useNewUrlParser: true,
+							useUnifiedTopology: true,
+						},
+						async (error, client) => {
+							if (error) {
+								console.error(error)
 
-					// 	// categoryRef.get().then((doc) => {
-					// 	// 	if (!doc.exists) {
-					// 	// 		batch.set(
-					// 	// 			categoryRef,
-					// 	// 			{
-					// 	// 				name: category,
-					// 	// 			},
-					// 	// 			{merge: true}
-					// 	// 		)
-					// 	// 	}
-					// 	// })
-					// 	// batch.set(
-					// 	// 	categoryRef,
-					// 	// 	{
-					// 	// 		name: category,
-					// 	// 	},
-					// 	// 	{merge: true}
-					// 	// )
+								// Send message to Telegram
+								jungleHuntBot.sendMessage(
+									605686296,
+									`🚨 Best Seller List Scaper: MongoDB failed to query for ${asin}.`
+								)
 
-					// 	const asinRef = categoryRef
-					// 		.collection(asin.asin)
-					// 		.doc('details')
+								jungleHuntBot.sendMessage(605686296, error)
 
-					// 	// asinRef.get().then((doc) => {
-					// 	// 	if (!doc.exists) {
-					// 	// 		batch.set(
-					// 	// 			asinRef,
-					// 	// 			{
-					// 	// 				asin: asin.asin,
-					// 	// 				image: asin.image,
-					// 	// 				title: asin.title,
-					// 	// 				category: asin.subCategory,
-					// 	// 			},
-					// 	// 			{merge: true}
-					// 	// 		)
-					// 	// 	}
-					// 	// })
-					// 	batch.set(
-					// 		asinRef,
-					// 		{
-					// 			asin: asin.asin,
-					// 			image: asin.image,
-					// 			title: asin.title,
-					// 			category: asin.subCategory,
-					// 		},
-					// 		{merge: true}
-					// 	)
+								return
+							}
 
-					// 	const dateRef = categoryRef
-					// 		.collection(asin.asin)
-					// 		.doc(DATE_PATH)
+							const db = client.db('jungleHunt')
+							const collection = 'products'
 
-					// 	// dateRef.get().then((doc) => {
-					// 	// 	if (!doc.exists) {
-					// 	// 		batch.set(
-					// 	// 			dateRef,
-					// 	// 			{
-					// 	// 				price: asin.price,
-					// 	// 				rank: parseFloat(asin.rank),
-					// 	// 				rating: parseFloat(asin.rating),
-					// 	// 				reviews: parseFloat(asin.reviews),
-					// 	// 			},
-					// 	// 			{merge: true}
-					// 	// 		)
-					// 	// 	}
-					// 	// })
-					// 	batch.set(
-					// 		dateRef,
-					// 		{
-					// 			price: asin.price,
-					// 			rank: parseFloat(asin.rank),
-					// 			rating: parseFloat(asin.rating),
-					// 			reviews: parseFloat(asin.reviews),
-					// 		},
-					// 		{merge: true}
-					// 	)
-					// }
-
-					if (DATABASE === 'mongo') {
-						mongo.connect(
-							mongoUrl,
-							{
-								useNewUrlParser: true,
-								useUnifiedTopology: true,
-							},
-							async (error, client) => {
-								if (error) {
-									console.error(error)
-
-									// @TODO Send message to Telegram
-
-									return
-								}
-								const db = client.db('jungleHunt')
-								const collection = 'products'
-
-								try {
-									database.findDocuments(
-										db,
-										collection,
-										{asin: asin.asin},
-										(docs) => {
-											// The product is already in the database, we need to update it
-											if (docs.length) {
-												docs.forEach((doc) => {
-													database.updateProduct(
-														db,
-														collection,
-														doc,
-														asin,
-														(result) => {
-															if (
-																index + 1 ===
-																asinList.length
-															) {
-																console.log(
-																	colors.green(
-																		`Products updated for subcategory #${i +
-																			1} in ${category}`
-																	)
-																)
-															}
-														}
-													)
-												})
-											}
-
-											// The product record doesn't exist yet, we need to create it
-											else {
-												database.insertDocument(
-													db,
-													collection,
-													asin,
-													(result) => {
-														if (
-															index + 1 ===
-															asinList.length
-														) {
-															console.log(
-																colors.green(
-																	`Products updated for subcategory #${i +
-																		1} in ${category}`
-																)
-															)
-														}
-													}
-												)
-											}
-										}
-									)
-								} catch (error) {
-									console.log(
-										colors.green(
-											`Error updating Products for subcategory #${i +
-												1} in ${category}`
-										)
-									)
-									console.log(error)
-
-									// Error updating/inserting the ASIN
-									// @TODO Send message to Telegram
-								}
-
-								try {
-									const asinStats = {
-										asin: asin.asin,
-										price: asin.price,
-										rank: asin.rank,
-										rating: asin.rating,
-										reviews: asin.reviews,
-										timestamp: new Date().toISOString(),
+							database.findDocuments(
+								db,
+								collection,
+								{asin: asin.asin},
+								(docs) => {
+									if (docs.length) {
+										asinsToUpdate.push(asin)
+									} else {
+										asinsToInsert.push(asin)
 									}
 
-									database.insertDocument(
-										db,
-										'productStats',
-										asinStats,
-										(result) => {
-											if (index + 1 === asinList.length) {
-												console.log(
-													colors.green(
-														`Product Stats updated for subcategory #${i +
-															1} in ${category}`
-													)
-												)
-											}
-										}
-									)
-								} catch (error) {
-									console.log(
-										colors.red(
-											`Error updating Product Stats for subcategory #${i +
-												1} in ${category}`
-										)
-									)
-									console.log(error)
-
-									// Error updating/inserting the ASIN stats
-									// @TODO Send message to Telegram
+									client.close()
 								}
-							}
-						)
-					}
+							)
+						}
+					)
 				})
-
-				// if (DATABASE === 'firebase') {
-				// 	batch
-				// 		.commit()
-				// 		.then(() => {
-				// 			console.log(
-				// 				`DB updated for subcategory #${i +
-				// 					1} in ${category}`
-				// 			)
-
-				// 			if (
-				// 				index + 1 === categories.length &&
-				// 				i + 1 === urls.length
-				// 			) {
-				// 				console.log('Done')
-				// 				process.exit()
-				// 			}
-				// 		})
-				// 		.catch((error) => {
-				// 			console.log(
-				// 				`Error updating subcategory #${i +
-				// 					1} in ${category}`,
-				// 				error
-				// 			)
-				// 		})
-				// }
 			} catch (error) {
 				console.log(
 					colors.red(
@@ -556,251 +453,155 @@ const preparePageForTests = require('../../helpers/preparePageForTests')
 					)
 				)
 				console.log(error)
+
+				jungleHuntBot.sendMessage(
+					605686296,
+					`🚨 Best Seller List Scaper: Error scraping subcategory #${i +
+						1} in ${category}`
+				)
+
+				jungleHuntBot.sendMessage(605686296, error)
 			} finally {
+				mongo.connect(
+					mongoUrl,
+					{
+						useNewUrlParser: true,
+						useUnifiedTopology: true,
+					},
+					(error, client) => {
+						if (error) {
+							console.error(error)
+
+							// Send message to Telegram
+							jungleHuntBot.sendMessage(
+								605686296,
+								`🚨 Best Seller List Scaper: Error scraping subcategory #${i +
+									1} in ${category}`
+							)
+			
+							jungleHuntBot.sendMessage(605686296, error)
+
+							return
+						}
+						const db = client.db('jungleHunt')
+
+						if (asinList.length) {
+							try {
+								database.insertProductStats(
+									db,
+									asinList,
+									(result) => {
+										console.log(
+											colors.green(
+												`Product Stats inserted for subcategory #${i +
+													1} in ${category}`
+											)
+										)
+									}
+								)
+							} catch (error) {
+								console.log(
+									colors.red(
+										`Error inserting Product Stats for subcategory #${i +
+											1} in ${category}`
+									)
+								)
+								console.log(error)
+
+								// Send message to Telegram
+								jungleHuntBot.sendMessage(
+									605686296,
+									`🚨 Best Seller List Scaper: Error inserting Product Stats for subcategory #${i +
+										1} in ${category}`
+								)
+
+								jungleHuntBot.sendMessage(605686296, error)
+							}
+						}
+
+						if (asinsToUpdate.length) {
+							try {
+								database.updateProducts(
+									db,
+									asinsToUpdate,
+									(result) => {
+										console.log(
+											colors.green(
+												`Products updated for subcategory #${i +
+													1} in ${category}`
+											)
+										)
+									}
+								)
+							} catch (error) {
+								console.log(
+									colors.red(
+										`Error updating Products for subcategory #${i +
+											1} in ${category}`
+									)
+								)
+								console.log(error)
+
+								// Send message to Telegram
+								jungleHuntBot.sendMessage(
+									605686296,
+									`🚨 Best Seller List Scaper: Error updating Products for subcategory #${i +
+										1} in ${category}`
+								)
+
+								jungleHuntBot.sendMessage(605686296, error)
+							}
+						}
+
+						if (asinsToInsert.length) {
+							try {
+								database.insertProducts(
+									db,
+									asinsToInsert,
+									(result) => {
+										console.log(
+											colors.green(
+												`Products inserted for subcategory #${i +
+													1} in ${category}`
+											)
+										)
+									}
+								)
+							} catch (error) {
+								console.log(
+									colors.red(
+										`Error inserting Products for subcategory #${i +
+											1} in ${category}`
+									)
+								)
+								console.log(error)
+
+								// Error updating/inserting the ASIN stats
+								// Send message to Telegram
+								jungleHuntBot.sendMessage(
+									605686296,
+									`🚨 Best Seller List Scaper: Error inserting Products for subcategory #${i +
+										1} in ${category}`
+								)
+
+								jungleHuntBot.sendMessage(605686296, error)
+							}
+						}
+
+						client.close()
+					}
+				)
+
+				if (failedAsins.length) {
+					fs.writeFileSync(
+						`./data/failed/${DATE_PATH}.json`,
+						JSON.stringify(failedAsins)
+					)
+				}
+
 				await page.close()
 				await browser.close()
 			}
 		}
 	}
 })()
-
-// ;(async () => {
-// 	Object.entries(categories).forEach(([category, urls]) => {
-// 		urls.forEach(async (url) => {
-// 			const batch = db.batch()
-
-// 			const browser = await puppeteer.launch({
-// 				ignoreHTTPSErrors: true,
-// 				dumpio: false,
-// 				// headless: true,
-// 				devtools: false,
-// 				// ignoreDefaultArgs: true,
-// 				ignoreDefaultFlags: true,
-// 				defaultViewport: {
-// 					//--window-size in args
-// 					width: 1280,
-// 					height: 1024,
-// 				},
-// 				args: [
-// 					/* TODO : https://peter.sh/experiments/chromium-command-line-switches/
-// 					there is still a whole bunch of stuff to disable
-// 					*/
-// 					//'--crash-test', // Causes the browser process to crash on startup, useful to see if we catch that correctly
-// 					// not idea if those 2 aa options are usefull with disable gl thingy
-// 					// '--disable-canvas-aa', // Disable antialiasing on 2d canvas
-// 					// '--disable-2d-canvas-clip-aa', // Disable antialiasing on 2d canvas clips
-// 					'--disable-gl-drawing-for-tests', // BEST OPTION EVER! Disables GL drawing operations which produce pixel output. With this the GL output will not be correct but tests will run faster.
-// 					// '--disable-dev-shm-usage', // ???
-// 					// '--no-zygote', // wtf does that mean ?
-// 					'--use-gl=desktop', // better cpu usage with --use-gl=desktop rather than --use-gl=swiftshader, still needs more testing.
-// 					'--enable-webgl',
-// 					'--hide-scrollbars',
-// 					'--mute-audio',
-// 					'--no-first-run',
-// 					'--disable-infobars',
-// 					'--disable-breakpad',
-// 					'--ignore-gpu-blacklist',
-// 					'--window-size=1280,1024', // see defaultViewport
-// 					'--no-sandbox',
-// 					'--disable-setuid-sandbox',
-// 					'--ignore-certificate-errors',
-// 					'--proxy-server=socks5://127.0.0.1:9050',
-// 					'--proxy-bypass-list=*',
-// 				],
-// 			})
-
-// 			const page = await browser.newPage()
-
-// 			// @TODO Set a random user agent from array
-// 			await page.setUserAgent(
-// 				'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.70 Safari/537.36'
-// 			)
-
-// 			// enable request interception
-// 			await page.setRequestInterception(true)
-
-// 			page.on('request', (request) => {
-// 				// Do nothing in case of non-navigation requests.
-// 				if (!request.isNavigationRequest()) {
-// 					request.continue()
-// 					return
-// 				}
-
-// 				// Add a new header for navigation request.
-// 				const headers = request.headers()
-// 				headers['X-Requested-With'] = 'XMLHttpRequest'
-// 				request.continue({headers})
-// 			})
-
-// 			page.on('response', (response) => {
-// 				// Ignore requests that aren't the one we are explicitly doing
-// 				if (
-// 					response
-// 						.request()
-// 						.url()
-// 						.split('?')[0] === url
-// 				) {
-// 					if (response.status() > 399) {
-// 						exec(
-// 							'(echo authenticate \'""\'; echo signal newnym; echo quit) | nc localhost 9051',
-// 							async (error, stdout, stderr) => {
-// 								if (stdout.match(/250/g).length === 3) {
-// 									console.log('IP was changed')
-// 								} else {
-// 									console.log('IP tried to change but failed')
-// 								}
-// 							}
-// 						)
-// 					} else {
-// 						console.log('IP remains the same')
-// 					}
-// 				}
-// 			})
-
-// 			try {
-// 				const scrapeAsins = async (pg = 1) => {
-// 					await page.goto(`${url}?pg=${pg}`)
-
-// 					// @TODO mock user actions on the page (scrolls, clicks, mouse movements, delays, hovers, etc.)
-
-// 					const asinList = await page.evaluate(() => {
-// 						const asins = []
-// 						const grid = document.getElementById('zg-ordered-list')
-// 						const items = grid.querySelectorAll('li')
-// 						items.forEach((item) => {
-// 							const subCategory = document.querySelector(
-// 								'.category'
-// 							)
-// 								? document.querySelector('.category').innerText
-// 								: null
-// 							const rank = item.querySelector('.zg-badge-text')
-// 								? item
-// 										.querySelector('.zg-badge-text')
-// 										.innerHTML.split('#')[1]
-// 								: null
-// 							const asin = item.querySelector(
-// 								'.a-link-normal:not(.a-size-small)'
-// 							)
-// 								? new URL(
-// 										item.querySelector(
-// 											'.a-link-normal:not(.a-size-small)'
-// 										).href
-// 								  ).pathname.split('/')[3]
-// 								: null
-// 							const image = item.querySelector('img')
-// 								? item.querySelector('img').src
-// 								: null
-// 							const price = item.querySelector('.p13n-sc-price')
-// 								? item.querySelector('.p13n-sc-price').innerText
-// 								: null
-// 							const title = item.querySelector(
-// 								'.p13n-sc-truncated'
-// 							)
-// 								? item.querySelector('.p13n-sc-truncated')
-// 										.innerText
-// 								: null
-// 							const rating = item.querySelector('.a-icon-alt')
-// 								? item
-// 										.querySelector('.a-icon-alt')
-// 										.innerText.split(' ')[0]
-// 								: null
-// 							const reviews = item.querySelector(
-// 								'.a-icon-row > a:nth-child(2)'
-// 							)
-// 								? item.querySelector(
-// 										'.a-icon-row > a:nth-child(2)'
-// 								  ).innerText
-// 								: null
-
-// 							asins.push({
-// 								asin,
-// 								image,
-// 								price,
-// 								title,
-// 								rank,
-// 								rating,
-// 								reviews,
-// 								subCategory,
-// 							})
-// 						})
-
-// 						return asins
-// 					})
-
-// 					return asinList
-// 				}
-
-// 				const asinList = [
-// 					...(await scrapeAsins()),
-// 					...(await scrapeAsins(2)),
-// 				]
-
-// 				if (!asinList.length) {
-// 					console.log('No asins found')
-// 				}
-
-// 				// Save the asins to the database
-// 				asinList.forEach((asin) => {
-// 					if (isObjectEmpty(asin) || !asin.asin) {
-// 						console.log(asin)
-// 						return
-// 					}
-
-// 					const categoryRef = productsRef.doc(category)
-
-// 					batch.set(
-// 						categoryRef,
-// 						{
-// 							name: category,
-// 						},
-// 						{merge: true}
-// 					)
-
-// 					const asinRef = categoryRef
-// 						.collection(asin.asin)
-// 						.doc('details')
-
-// 					batch.set(
-// 						asinRef,
-// 						{
-// 							asin: asin.asin,
-// 							image: asin.image,
-// 							title: asin.title,
-// 							category: asin.subCategory,
-// 						},
-// 						{merge: true}
-// 					)
-
-// 					const dateRef = categoryRef
-// 						.collection(asin.asin)
-// 						.doc(DATE_PATH)
-
-// 					batch.set(
-// 						dateRef,
-// 						{
-// 							price: asin.price,
-// 							rank: asin.rank,
-// 							rating: asin.rating,
-// 							reviews: asin.reviews,
-// 						},
-// 						{merge: true}
-// 					)
-// 				})
-
-// 				batch
-// 					.commit()
-// 					.then(() => {
-// 						console.log('DB updated')
-// 					})
-// 					.catch((error) => {
-// 						console.log(error)
-// 					})
-// 			} catch (error) {
-// 				console.log(error)
-// 			} finally {
-// 				await browser.close()
-// 				return false
-// 			}
-// 		})
-// 	})
-// })()

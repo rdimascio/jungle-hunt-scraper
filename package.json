@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "test:ip": "node ./scripts/scrape/ipTest.js",
+    "test:bot": "node ./scripts/bot/test.js",
     "test:db": "node ./scripts/database/test.js",
     "migrate:product-stats": "node ./scripts/database/migrations/productStats.js",
     "start:best-sellers": "node ./scripts/scrape/bestSellerLists.js"
@@ -14,6 +15,7 @@
   "dependencies": {
     "firebase": "^7.5.0",
     "mongodb": "^3.3.5",
+    "node-telegram-bot-api": "^0.40.0",
     "puppeteer": "^2.0.0"
   },
   "devDependencies": {
