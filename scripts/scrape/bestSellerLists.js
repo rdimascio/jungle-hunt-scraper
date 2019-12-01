@@ -2,6 +2,7 @@
 
 // Packages
 const fs = require('fs')
+require('dotenv').config()
 const colors = require('colors')
 const {createLogger, format, transports} = require('winston')
 const {combine, timestamp, label, printf} = format
@@ -48,25 +49,29 @@ const logger = createLogger({
 		// - Write to all logs with level `info` and below to `combined.log`
 		// - Write all logs error (and below) to `error.log`.
 		//
-		new winston.transports.File({filename: 'error.log', level: 'error'}),
-		new winston.transports.File({filename: 'info.log'}),
+		new transports.File({
+			filename: `./data/logs/${MONTH}-${DAY}-${YEAR}-error.log`,
+			level: 'error',
+		}),
+		new transports.File({
+			filename: `./data/logs/${MONTH}-${DAY}-${YEAR}-info.log`,
+		}),
 	],
 })
 
-//
-// If we're not in production then log to the `console` with the format:
-// `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
-//
-if (process.env.NODE_ENV !== 'production') {
-	logger.add(
-		new winston.transports.Console({
-			format: winston.format.simple(),
-		})
-	)
-}
-
 ;(async () => {
 	jungleHuntBot.sendMessage(605686296, '🚀 Best Seller List Scraper: Started')
+
+	logger.info('🚀 Started scraping')
+
+	if (DEV) {
+		console.log(colors.green('🚀 Started scraping'))
+
+		notifier.notify({
+			title: 'Jungle Hunt',
+			message: '🚀 Started scraping Best Seller Lists',
+		})
+	}
 
 	const categories = Object.entries(categoryList)
 
@@ -168,7 +173,7 @@ if (process.env.NODE_ENV !== 'production') {
 						changeIpAddress()
 					} else {
 						// We're in, no need to change the IP
-						logger.log('IP remains the same')
+						logger.info('IP remains the same')
 					}
 				}
 			})
@@ -182,16 +187,45 @@ if (process.env.NODE_ENV !== 'production') {
 				)
 
 				if (publicIps.includes(IP)) {
-					// Send a message to Telegram
 					jungleHuntBot.sendMessage(
 						605686296,
 						'🚨 Best Seller List Scraper: Tor failed to anonymize our IP'
 					)
 
-					logger.log("We're not using Tor. IP:", IP)
+					logger.error(
+						`Tor failed to anonymize our IP. Using IP: ${IP}`
+					)
+
+					if (DEV) {
+						console.log(
+							colors.red(
+								`Tor failed to anonymize our IP. Using IP: ${IP}`
+							)
+						)
+
+						notifier.notify({
+							title: 'Jungle Hunt',
+							message: `🚨 Tor failed to anonymize our IP. Using IP: ${IP}`,
+						})
+					}
 					return
 				} else {
-					logger.log('Using Tor with IP:', IP)
+					logger.info(
+						`Tor successfully anonymized our IP. Using IP: ${IP}`
+					)
+
+					if (DEV) {
+						console.log(
+							colors.green(
+								`Tor successfully anonymized our IP. Using IP: ${IP}`
+							)
+						)
+
+						notifier.notify({
+							title: 'Jungle Hunt',
+							message: `🎉 Tor successfully anonymized our IP. Using IP: ${IP}`,
+						})
+					}
 				}
 
 				const scrapeAsins = async (pg = 1) => {
@@ -244,7 +278,22 @@ if (process.env.NODE_ENV !== 'production') {
 							'🚨 Best Seller List Scaper: Tor IP retry limit reached. Cancelling connection'
 						)
 
-						logger.log("We're blocked")
+						logger.error(
+							'Tor IP retry limit reached. Cancelling connection'
+						)
+
+						if (DEV) {
+							console.log(
+								colors.red(
+									'Tor IP retry limit reached. Cancelling connection'
+								)
+							)
+
+							notifier.notify({
+								title: 'Jungle Hunt',
+								message: `🚨 Tor IP retry limit reached. Cancelling connection`,
+							})
+						}
 						return
 					}
 
@@ -342,6 +391,14 @@ if (process.env.NODE_ENV !== 'production') {
 								logger.log(
 									'We have a failed asin, waiting 3 seconds to retry'
 								)
+
+								if (DEV) {
+									console.log(
+										colors.red(
+											'We have a failed asin, waiting 3 seconds to retry'
+										)
+									)
+								}
 							}, 3000)
 
 							failedAsins.forEach((item) => {
@@ -402,7 +459,25 @@ if (process.env.NODE_ENV !== 'production') {
 				asinList.push(...(await scrapeAsins(2)))
 
 				if (!asinList.length) {
-					logger.error('No asins found')
+					logger.error(
+						`No asins found for subcategory #${i +
+							1} in ${category}`
+					)
+
+					if (DEV) {
+						console.log(
+							colors.red(
+								`No asins found for subcategory #${i +
+									1} in ${category}`
+							)
+						)
+
+						notifier.notify({
+							title: 'Jungle Hunt',
+							message: `🚨 No asins found for subcategory #${i +
+								1} in ${category}`,
+						})
+					}
 				}
 
 				asinList.forEach((asin, index) => {
@@ -420,7 +495,39 @@ if (process.env.NODE_ENV !== 'production') {
 								(item) => item.asin === asinData.asin
 							)
 						) {
-							logger.error(`Failed to scrape ${asin.asin}`)
+							jungleHuntBot.sendMessage(
+								605686296,
+								`🚨 Best Seller List Scaper: Failed to scrape ${
+									asin.asin
+								} for subcategory #${i +
+									1} in ${category}. Pushing to failed.json`
+							)
+
+							logger.error(
+								`Failed to scrape ${
+									asin.asin
+								} for subcategory #${i +
+									1} in ${category}. Pushing to failed.json`
+							)
+
+							if (DEV) {
+								console.log(
+									colors.red(
+										`Failed to scrape ${
+											asin.asin
+										} for subcategory #${i +
+											1} in ${category}. Pushing to failed.json`
+									)
+								)
+
+								notifier.notify({
+									title: 'Jungle Hunt',
+									message: `🚨 Failed to scrape ${
+										asin.asin
+									} for subcategory #${i +
+										1} in ${category}. Pushing to failed.json`,
+								})
+							}
 						}
 
 						return
@@ -438,15 +545,34 @@ if (process.env.NODE_ENV !== 'production') {
 						},
 						async (error, client) => {
 							if (error) {
-								logger.error(error)
-
 								// Send message to Telegram
 								jungleHuntBot.sendMessage(
 									605686296,
-									`🚨 Best Seller List Scaper: MongoDB failed to query for ${asin}.`
+									`🚨 Best Seller List Scaper: MongoDB failed to query for ${asin}`
 								)
 
 								jungleHuntBot.sendMessage(605686296, error)
+
+								logger.error(
+									`MongoDB failed to query for ${asin}`
+								)
+
+								logger.error(error)
+
+								if (DEV) {
+									console.log(
+										colors.red(
+											`MongoDB failed to query for ${asin}`
+										)
+									)
+
+									console.error(error)
+
+									notifier.notify({
+										title: 'Jungle Hunt',
+										message: `🚨 MongoDB failed to query for ${asin}`,
+									})
+								}
 
 								return
 							}
@@ -472,11 +598,6 @@ if (process.env.NODE_ENV !== 'production') {
 					)
 				})
 			} catch (error) {
-				logger.error(
-					`Error scraping subcategory #${i + 1} in ${category}`
-				)
-				logger.error(error)
-
 				jungleHuntBot.sendMessage(
 					605686296,
 					`🚨 Best Seller List Scaper: Error scraping subcategory #${i +
@@ -484,6 +605,27 @@ if (process.env.NODE_ENV !== 'production') {
 				)
 
 				jungleHuntBot.sendMessage(605686296, error)
+
+				logger.error(
+					`Error scraping subcategory #${i + 1} in ${category}`
+				)
+				logger.error(error)
+
+				if (DEV) {
+					console.log(
+						colors.red(
+							`Error scraping subcategory #${i +
+								1} in ${category}`
+						)
+					)
+					console.error(error)
+
+					notifier.notify({
+						title: 'Jungle Hunt',
+						message: `🚨 Error scraping subcategory #${i +
+							1} in ${category}`,
+					})
+				}
 			} finally {
 				mongo.connect(
 					mongoUrl,
@@ -493,8 +635,6 @@ if (process.env.NODE_ENV !== 'production') {
 					},
 					(error, client) => {
 						if (error) {
-							logger.error(error)
-
 							// Send message to Telegram
 							jungleHuntBot.sendMessage(
 								605686296,
@@ -503,6 +643,28 @@ if (process.env.NODE_ENV !== 'production') {
 							)
 
 							jungleHuntBot.sendMessage(605686296, error)
+
+							logger.error(
+								`Error scraping subcategory #${i +
+									1} in ${category}`
+							)
+							logger.error(error)
+
+							if (DEV) {
+								console.log(
+									colors.red(
+										`Error scraping subcategory #${i +
+											1} in ${category}`
+									)
+								)
+								console.error(error)
+
+								notifier.notify({
+									title: 'Jungle Hunt',
+									message: `🚨 Error scraping subcategory #${i +
+										1} in ${category}`,
+								})
+							}
 
 							return
 						}
@@ -521,12 +683,6 @@ if (process.env.NODE_ENV !== 'production') {
 									}
 								)
 							} catch (error) {
-								logger.error(
-									`Error inserting Product Stats for subcategory #${i +
-										1} in ${category}`
-								)
-								logger.error(error)
-
 								// Send message to Telegram
 								jungleHuntBot.sendMessage(
 									605686296,
@@ -535,6 +691,28 @@ if (process.env.NODE_ENV !== 'production') {
 								)
 
 								jungleHuntBot.sendMessage(605686296, error)
+
+								logger.error(
+									`Error inserting Product Stats for subcategory #${i +
+										1} in ${category}`
+								)
+								logger.error(error)
+
+								if (DEV) {
+									console.log(
+										colors.red(
+											`Error inserting Product Stats for subcategory #${i +
+												1} in ${category}`
+										)
+									)
+									console.error(error)
+
+									notifier.notify({
+										title: 'Jungle Hunt',
+										message: `🚨 Error inserting Product Stats for subcategory #${i +
+											1} in ${category}`,
+									})
+								}
 							}
 						}
 
@@ -551,12 +729,6 @@ if (process.env.NODE_ENV !== 'production') {
 									}
 								)
 							} catch (error) {
-								logger.error(
-									`Error updating Products for subcategory #${i +
-										1} in ${category}`
-								)
-								logger.log(error)
-
 								// Send message to Telegram
 								jungleHuntBot.sendMessage(
 									605686296,
@@ -565,6 +737,28 @@ if (process.env.NODE_ENV !== 'production') {
 								)
 
 								jungleHuntBot.sendMessage(605686296, error)
+
+								logger.error(
+									`Error updating Products for subcategory #${i +
+										1} in ${category}`
+								)
+								logger.log(error)
+
+								if (DEV) {
+									console.log(
+										colors.red(
+											`Error updating Products for subcategory #${i +
+												1} in ${category}`
+										)
+									)
+									console.log(error)
+
+									notifier.notify({
+										title: 'Jungle Hunt',
+										message: `🚨 Error updating Products for subcategory #${i +
+											1} in ${category}`,
+									})
+								}
 							}
 						}
 
@@ -581,14 +775,6 @@ if (process.env.NODE_ENV !== 'production') {
 									}
 								)
 							} catch (error) {
-								logger.error(
-									`Error inserting Products for subcategory #${i +
-										1} in ${category}`
-								)
-								logger.error(error)
-
-								// Error updating/inserting the ASIN stats
-								// Send message to Telegram
 								jungleHuntBot.sendMessage(
 									605686296,
 									`🚨 Best Seller List Scaper: Error inserting Products for subcategory #${i +
@@ -596,6 +782,28 @@ if (process.env.NODE_ENV !== 'production') {
 								)
 
 								jungleHuntBot.sendMessage(605686296, error)
+
+								logger.error(
+									`Error inserting Products for subcategory #${i +
+										1} in ${category}`
+								)
+								logger.error(error)
+
+								if (DEV) {
+									console.log(
+										colors.red(
+											`Error inserting Products for subcategory #${i +
+												1} in ${category}`
+										)
+									)
+									console.error(error)
+
+									notifier.notify({
+										title: 'Jungle Hunt',
+										message: `🚨 Error inserting Products for subcategory #${i +
+											1} in ${category}`,
+									})
+								}
 							}
 						}
 
@@ -626,6 +834,31 @@ if (process.env.NODE_ENV !== 'production') {
 						HOURS_ELAPSED > 0 ? `${HOURS_ELAPSED} hours, ` : ''
 					} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`
 				)
+
+				logger.info(
+					`🎉 Best Seller List Scraper: Finished in ${
+						HOURS_ELAPSED > 0 ? `${HOURS_ELAPSED} hours, ` : ''
+					} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`
+				)
+
+				if (DEV) {
+					console.log(
+						colors.green(
+							`🎉 Best Seller List Scraper: Finished in ${
+								HOURS_ELAPSED > 0
+									? `${HOURS_ELAPSED} hours, `
+									: ''
+							} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`
+						)
+					)
+
+					notifier.notify({
+						title: 'Jungle Hunt',
+						message: `🎉 Best Seller List Scraper: Finished in ${
+							HOURS_ELAPSED > 0 ? `${HOURS_ELAPSED} hours, ` : ''
+						} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`,
+					})
+				}
 			}
 		}
 	}
