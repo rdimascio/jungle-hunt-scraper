@@ -1,12 +1,13 @@
 'use strict'
 
+require('dotenv').config()
 const mongo = require('mongodb').MongoClient
-const mongoUrl = 'mongodb://localhost:27017'
+const mongoUrl = `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_TABLE}`
 
 const database = require('../../helpers/database')
 
 mongo.connect(
-	mongoUrl,
+	mongoUrl, 
 	{
 		useNewUrlParser: true,
 		useUnifiedTopology: true,
@@ -16,26 +17,30 @@ mongo.connect(
 			console.error(err)
 			return
 		}
-		const db = client.db('test')
-		const collection = 'inventory'
+		const db = client.db('jungleHunt')
+		const collection = 'products'
 
-		database.findProduct(db, collection, {asin: asin.asin}, (docs) => {
+		database.findDocuments(db, collection, {}, (docs) => {
 
 			// The product is already in the database, we need to update it
 			if (docs.length) {
-				docs.forEach((doc) => {
-					database.updateProduct(db, collection, doc, asin, (result) => {
-						console.log(`${asin.asin} updated`)
-					})
-				})
+				console.log('Found docs')
+				// docs.forEach((doc) => {
+				// 	// database.updateProduct(db, collection, doc, asin, (result) => {
+				// 	// 	console.log(`${asin.asin} updated`)
+				// 	// })
+				// 	console.log(doc)
+				// })
+			} else {
+				console.log('Found nothing')
 			}
 			
 			// The product record doesn't exist yet, we need to create it
-			else {
-				database.insertProduct(db, collection, asin, (result) => {
-					console.log(`${asin.asin} created`)
-				})
-			}
+			// else {
+			// 	database.insertProduct(db, collection, asin, (result) => {
+			// 		console.log(`${asin.asin} created`)
+			// 	})
+			// }
 
 			client.close()
 		})

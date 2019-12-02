@@ -27,7 +27,7 @@ const jungleHuntBot = new TelegramBot(telegramBotToken)
 const publicIps = ['12.205.195.90', '172.119.134.14', '167.71.144.15']
 const mongoUrl = DEV
 	? 'mongo://localhost:27017'
-	: `mongo://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_TABLE}`
+	: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_TABLE}`
 
 const DATE = new Date()
 const HOURS = DATE.getHours()
@@ -562,7 +562,7 @@ const logger = createLogger({
 								jungleHuntBot.sendMessage(605686296, error)
 
 								logger.error(
-									`MongoDB failed to query for ${asin}`
+									`MongoDB failed to query for ${asin.asin}`
 								)
 
 								logger.error(error)
@@ -570,7 +570,7 @@ const logger = createLogger({
 								if (DEV) {
 									console.log(
 										colors.red(
-											`MongoDB failed to query for ${asin}`
+											`MongoDB failed to query for ${asin.asin}`
 										)
 									)
 
@@ -578,7 +578,7 @@ const logger = createLogger({
 
 									notifier.notify({
 										title: 'Jungle Hunt',
-										message: `🚨 MongoDB failed to query for ${asin}`,
+										message: `🚨 MongoDB failed to query for ${asin.asin}`,
 									})
 								}
 
