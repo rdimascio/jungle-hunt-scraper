@@ -705,7 +705,7 @@ const logger = createLogger({
 										}
 									}
 								)
-							} catch {
+							} catch (error) {
 								// Send message to Telegram
 								jungleHuntBot.sendMessage(
 									605686296,

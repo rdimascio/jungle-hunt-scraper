@@ -57,7 +57,7 @@ const insertProducts = (db, products, callback) => {
 	try {
 		const bulkInsert = collection.bulkWrite(formattedProducts)
 		callback(bulkInsert)
-	} catch {
+	} catch (error) {
 		logger.error(error)
 		
 		if (DEV) {
