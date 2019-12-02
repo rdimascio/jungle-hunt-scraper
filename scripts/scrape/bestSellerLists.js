@@ -559,8 +559,6 @@ const logger = createLogger({
 									`🚨 Best Seller List Scaper: MongoDB failed to query for ${asin}`
 								)
 
-								jungleHuntBot.sendMessage(605686296, error)
-
 								logger.error(
 									`MongoDB failed to query for ${asin.asin}`
 								)
@@ -612,8 +610,6 @@ const logger = createLogger({
 						1} in ${category}`
 				)
 
-				jungleHuntBot.sendMessage(605686296, error)
-
 				logger.error(
 					`Error scraping subcategory #${i + 1} in ${category}`
 				)
@@ -649,8 +645,6 @@ const logger = createLogger({
 								`🚨 Best Seller List Scaper: Error scraping subcategory #${i +
 									1} in ${category}`
 							)
-
-							jungleHuntBot.sendMessage(605686296, error)
 
 							logger.error(
 								`Error scraping subcategory #${i +
@@ -698,8 +692,6 @@ const logger = createLogger({
 										1} in ${category}`
 								)
 
-								jungleHuntBot.sendMessage(605686296, error)
-
 								logger.error(
 									`Error inserting Product Stats for subcategory #${i +
 										1} in ${category}`
@@ -744,8 +736,6 @@ const logger = createLogger({
 										1} in ${category}`
 								)
 
-								jungleHuntBot.sendMessage(605686296, error)
-
 								logger.error(
 									`Error updating Products for subcategory #${i +
 										1} in ${category}`
@@ -788,8 +778,6 @@ const logger = createLogger({
 									`🚨 Best Seller List Scaper: Error inserting Products for subcategory #${i +
 										1} in ${category}`
 								)
-
-								jungleHuntBot.sendMessage(605686296, error)
 
 								logger.error(
 									`Error inserting Products for subcategory #${i +
