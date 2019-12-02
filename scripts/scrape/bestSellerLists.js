@@ -16,6 +16,7 @@ const database = require('../../helpers/database')
 const changeIpAddress = require('../../helpers/changeIP')
 const isObjectEmpty = require('../../helpers/object')
 const generateRandomNumbers = require('../../helpers/randomNumbers')
+const delay = require('../../helpers/delay')
 const categoryList = require('../../helpers/categories')
 const preparePageForTests = require('../../helpers/preparePageForTests')
 
@@ -24,7 +25,9 @@ const DEV = process.env.NODE_ENV === 'development'
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN
 const jungleHuntBot = new TelegramBot(telegramBotToken)
 const publicIps = ['12.205.195.90', '172.119.134.14', '167.71.144.15']
-const mongoUrl = DEV ? 'mongodb://localhost:27017' : process.env.DATABASE_URL
+const mongoUrl = DEV
+	? 'mongo://localhost:27017'
+	: `mongo://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_TABLE}`
 
 const DATE = new Date()
 const HOURS = DATE.getHours()
@@ -60,7 +63,6 @@ const logger = createLogger({
 })
 
 ;(async () => {
-
 	// We don't want to run the scraper at the same time every single day,
 	// so we're going to wait a random time betwen 10 minutes and an hour
 	const randomWaitTimer = generateRandomNumbers(600000, 3600000, 1)
