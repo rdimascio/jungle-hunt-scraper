@@ -60,6 +60,12 @@ const logger = createLogger({
 })
 
 ;(async () => {
+
+	// We don't want to run the scraper at the same time every single day,
+	// so we're going to wait a random time betwen 10 minutes and an hour
+	const randomWaitTimer = generateRandomNumbers(600000, 3600000, 1)
+	await delay(randomWaitTimer)
+
 	jungleHuntBot.sendMessage(605686296, '🚀 Best Seller List Scraper: Started')
 
 	logger.info('🚀 Started scraping')

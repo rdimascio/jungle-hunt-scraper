@@ -8,7 +8,7 @@ const generateRandomNumbers = (min = 0, max, limit) => {
 		if (numbers.indexOf(randomNumber) === -1) numbers.push(randomNumber)
 	}
 
-	return numbers
+	return limit === 1 ? numbers[0] : numbers
 }
 
 module.exports = generateRandomNumbers

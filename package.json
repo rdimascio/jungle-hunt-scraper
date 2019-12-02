@@ -2,13 +2,14 @@
   "name": "jungle-hunt",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
+  "main": "index.js",
   "scripts": {
     "test:ip": "node ./scripts/scrape/tor/test.js",
     "test:bot": "node ./scripts/bot/test.js",
     "test:db": "node ./scripts/database/test.js",
     "migrate:product-stats": "node ./scripts/database/migrations/productStats.js",
-    "start:best-sellers": "node ./scripts/scrape/bestSellerLists.js"
+    "start:best-sellers": "node ./scripts/scrape/bestSellerLists.js",
+    "start:detail-pages": "node ./scripts/scrape/detailPages.js"
   },
   "author": "",
   "license": "ISC",
@@ -16,6 +17,7 @@
     "colors": "^1.4.0",
     "dotenv": "^8.2.0",
     "mongodb": "^3.3.5",
+    "node-cron": "^2.0.3",
     "node-notifier": "^6.0.0",
     "node-telegram-bot-api": "^0.40.0",
     "puppeteer": "^2.0.0",
