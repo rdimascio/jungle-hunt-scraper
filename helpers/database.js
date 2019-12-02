@@ -1,6 +1,37 @@
 'use strict'
 
 const assert = require('assert')
+const {createLogger, format, transports} = require('winston')
+const {combine, timestamp, label, printf} = format
+
+const DATE = new Date()
+const DAY = DATE.getDate()
+const MONTH = DATE.getMonth() + 1
+const YEAR = DATE.getFullYear()
+
+const myFormat = printf(
+	({level, message, label, timestamp}) =>
+		`${timestamp} [${label}] ${level}: ${message}`
+)
+
+const logger = createLogger({
+	level: 'info',
+	format: combine(label({label: 'Best Seller List'}), timestamp(), myFormat),
+	defaultMeta: {service: 'user-service'},
+	transports: [
+		//
+		// - Write to all logs with level `info` and below to `combined.log`
+		// - Write all logs error (and below) to `error.log`.
+		//
+		new transports.File({
+			filename: `./data/logs/${MONTH}-${DAY}-${YEAR}-error.log`,
+			level: 'error',
+		}),
+		new transports.File({
+			filename: `./data/logs/${MONTH}-${DAY}-${YEAR}-info.log`,
+		}),
+	],
+})
 
 // const insertDocument = (db, col, doc, callback) => {
 // 	const collection = db.collection(col)
@@ -26,7 +57,13 @@ const insertProducts = (db, products, callback) => {
 	try {
 		const bulkInsert = collection.bulkWrite(formattedProducts)
 		callback(bulkInsert)
-	} catch (error) {
+	} catch {
+		logger.error(error)
+		
+		if (DEV) {
+			console.log(error)
+		}
+
 		callback(error)
 	}
 }
@@ -56,6 +93,12 @@ const insertProductStats = (db, products, callback) => {
 		const bulkInsert = collection.bulkWrite(formattedProducts)
 		callback(bulkInsert)
 	} catch (error) {
+		logger.error(error)
+
+		if (DEV) {
+			console.log(error)
+		}
+
 		callback(error)
 	}
 }
@@ -117,6 +160,12 @@ const updateProducts = (db, products, callback) => {
 		const bulkUpdate = collection.bulkWrite(formattedProducts)
 		callback(bulkUpdate)
 	} catch (error) {
+		logger.error(error)
+
+		if (DEV) {
+			console.log(error)
+		}
+
 		callback(error)
 	}
 }

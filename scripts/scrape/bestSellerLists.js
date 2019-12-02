@@ -25,9 +25,11 @@ const DEV = process.env.NODE_ENV === 'development'
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN
 const jungleHuntBot = new TelegramBot(telegramBotToken)
 const publicIps = ['12.205.195.90', '172.119.134.14', '167.71.144.15']
-const mongoUrl = DEV
-	? 'mongo://localhost:27017'
-	: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_TABLE}`
+// const mongoUrl = DEV
+// 	? 'mongo://localhost:27017'
+// 	: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_TABLE}`
+
+const mongoUrl = `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_TABLE}`
 
 const DATE = new Date()
 const HOURS = DATE.getHours()
@@ -65,8 +67,8 @@ const logger = createLogger({
 ;(async () => {
 	// We don't want to run the scraper at the same time every single day,
 	// so we're going to wait a random time betwen 10 minutes and an hour
-	const randomWaitTimer = generateRandomNumbers(600000, 3600000, 1)
-	await delay(randomWaitTimer)
+	// const randomWaitTimer = generateRandomNumbers(600000, 3600000, 1)
+	// await delay(randomWaitTimer)
 
 	jungleHuntBot.sendMessage(605686296, '🚀 Best Seller List Scraper: Started')
 
@@ -642,12 +644,12 @@ const logger = createLogger({
 							// Send message to Telegram
 							jungleHuntBot.sendMessage(
 								605686296,
-								`🚨 Best Seller List Scaper: Error scraping subcategory #${i +
+								`🚨 Best Seller List Scaper: Error connecting to the database for subcategory #${i +
 									1} in ${category}`
 							)
 
 							logger.error(
-								`Error scraping subcategory #${i +
+								`Error connecting to the database for subcategory #${i +
 									1} in ${category}`
 							)
 							logger.error(error)
@@ -655,7 +657,7 @@ const logger = createLogger({
 							if (DEV) {
 								console.log(
 									colors.red(
-										`Error scraping subcategory #${i +
+										`Error connecting to the database for subcategory #${i +
 											1} in ${category}`
 									)
 								)
@@ -663,7 +665,7 @@ const logger = createLogger({
 
 								notifier.notify({
 									title: 'Jungle Hunt',
-									message: `🚨 Error scraping subcategory #${i +
+									message: `🚨 Error connecting to the database for subcategory #${i +
 										1} in ${category}`,
 								})
 							}
@@ -678,13 +680,34 @@ const logger = createLogger({
 									db,
 									asinList,
 									(result) => {
-										logger.log(
+										jungleHuntBot.sendMessage(
+											605686296,
+											`🎉 Product Stats inserted for subcategory #${i +
+												1} in ${category}`
+										)
+
+										logger.info(
 											`Product Stats inserted for subcategory #${i +
 												1} in ${category}`
 										)
+
+										if (DEV) {
+											console.log(
+												colors.green(
+													`Product Stats inserted for subcategory #${i +
+														1} in ${category}`
+												)
+											)
+
+											notifier.notify({
+												title: 'Jungle Hunt',
+												message: `🎉 Product Stats inserted for subcategory #${i +
+													1} in ${category}`,
+											})
+										}
 									}
 								)
-							} catch (error) {
+							} catch {
 								// Send message to Telegram
 								jungleHuntBot.sendMessage(
 									605686296,
@@ -696,7 +719,6 @@ const logger = createLogger({
 									`Error inserting Product Stats for subcategory #${i +
 										1} in ${category}`
 								)
-								logger.error(error)
 
 								if (DEV) {
 									console.log(
@@ -705,7 +727,6 @@ const logger = createLogger({
 												1} in ${category}`
 										)
 									)
-									console.error(error)
 
 									notifier.notify({
 										title: 'Jungle Hunt',
@@ -722,10 +743,31 @@ const logger = createLogger({
 									db,
 									asinsToUpdate,
 									(result) => {
-										logger.log(
+										jungleHuntBot.sendMessage(
+											605686296,
+											`🎉 Products updated for subcategory #${i +
+												1} in ${category}`
+										)
+
+										logger.info(
 											`Products updated for subcategory #${i +
 												1} in ${category}`
 										)
+
+										if (DEV) {
+											console.log(
+												colors.green(
+													`Products updated for subcategory #${i +
+														1} in ${category}`
+												)
+											)
+
+											notifier.notify({
+												title: 'Jungle Hunt',
+												message: `🎉 Products updated for subcategory #${i +
+													1} in ${category}`,
+											})
+										}
 									}
 								)
 							} catch (error) {
@@ -740,7 +782,6 @@ const logger = createLogger({
 									`Error updating Products for subcategory #${i +
 										1} in ${category}`
 								)
-								logger.log(error)
 
 								if (DEV) {
 									console.log(
@@ -749,7 +790,6 @@ const logger = createLogger({
 												1} in ${category}`
 										)
 									)
-									console.log(error)
 
 									notifier.notify({
 										title: 'Jungle Hunt',
@@ -766,10 +806,31 @@ const logger = createLogger({
 									db,
 									asinsToInsert,
 									(result) => {
-										logger.log(
+										jungleHuntBot.sendMessage(
+											605686296,
+											`🎉 Products inserted for subcategory #${i +
+												1} in ${category}`
+										)
+
+										logger.info(
 											`Products inserted for subcategory #${i +
 												1} in ${category}`
 										)
+
+										if (DEV) {
+											console.log(
+												colors.green(
+													`Products inserted for subcategory #${i +
+														1} in ${category}`
+												)
+											)
+
+											notifier.notify({
+												title: 'Jungle Hunt',
+												message: `🎉 Products inserted for subcategory #${i +
+													1} in ${category}`,
+											})
+										}
 									}
 								)
 							} catch (error) {
@@ -783,7 +844,6 @@ const logger = createLogger({
 									`Error inserting Products for subcategory #${i +
 										1} in ${category}`
 								)
-								logger.error(error)
 
 								if (DEV) {
 									console.log(
@@ -792,7 +852,6 @@ const logger = createLogger({
 												1} in ${category}`
 										)
 									)
-									console.error(error)
 
 									notifier.notify({
 										title: 'Jungle Hunt',
@@ -817,43 +876,47 @@ const logger = createLogger({
 				await page.close()
 				await browser.close()
 
-				const DATE_FINISHED = new Date()
-				const TIME_ELAPSED = DATE_FINISHED - DATE
-				const MINUTES_ELAPSED = TIME_ELAPSED / 1000 / 60
-				const SECONDS_ELAPSED = MINUTES_ELAPSED % 60
-				const HOURS_ELAPSED =
-					MINUTES_ELAPSED >= 60 ? MINUTES_ELAPSED / 60 : 0
+				if (index + 1 === categories.length && i + 1 === urls.length) {
+					const DATE_FINISHED = new Date()
+					const TIME_ELAPSED = DATE_FINISHED - DATE
+					const MINUTES_ELAPSED = TIME_ELAPSED / 1000 / 60
+					const SECONDS_ELAPSED = MINUTES_ELAPSED % 60
+					const HOURS_ELAPSED =
+						MINUTES_ELAPSED >= 60 ? MINUTES_ELAPSED / 60 : 0
 
-				jungleHuntBot.sendMessage(
-					605686296,
-					`🎉 Best Seller List Scraper: Finished in ${
-						HOURS_ELAPSED > 0 ? `${HOURS_ELAPSED} hours, ` : ''
-					} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`
-				)
+					jungleHuntBot.sendMessage(
+						605686296,
+						`🎉 Best Seller List Scraper: Finished in ${
+							HOURS_ELAPSED > 0 ? `${HOURS_ELAPSED} hours, ` : ''
+						} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`
+					)
 
-				logger.info(
-					`🎉 Best Seller List Scraper: Finished in ${
-						HOURS_ELAPSED > 0 ? `${HOURS_ELAPSED} hours, ` : ''
-					} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`
-				)
+					logger.info(
+						`🎉 Best Seller List Scraper: Finished in ${
+							HOURS_ELAPSED > 0 ? `${HOURS_ELAPSED} hours, ` : ''
+						} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`
+					)
 
-				if (DEV) {
-					console.log(
-						colors.green(
-							`🎉 Best Seller List Scraper: Finished in ${
+					if (DEV) {
+						console.log(
+							colors.green(
+								`🎉 Best Seller List Scraper: Finished in ${
+									HOURS_ELAPSED > 0
+										? `${HOURS_ELAPSED} hours, `
+										: ''
+								} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`
+							)
+						)
+
+						notifier.notify({
+							title: 'Jungle Hunt',
+							message: `🎉 Best Seller List Scraper: Finished in ${
 								HOURS_ELAPSED > 0
 									? `${HOURS_ELAPSED} hours, `
 									: ''
-							} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`
-						)
-					)
-
-					notifier.notify({
-						title: 'Jungle Hunt',
-						message: `🎉 Best Seller List Scraper: Finished in ${
-							HOURS_ELAPSED > 0 ? `${HOURS_ELAPSED} hours, ` : ''
-						} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`,
-					})
+							} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`,
+						})
+					}
 				}
 			}
 		}
