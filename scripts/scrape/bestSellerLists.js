@@ -189,7 +189,7 @@ const mongoUrl = DEV
 
 	const shutdown = async (browser) => {
 		await cleanupBrowser(browser)
-		await killBrowser()
+		await killBrowser(browser)
 
 		process.exit()
 	}
