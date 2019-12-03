@@ -77,6 +77,6 @@ const preparePageForTests = require('../../../helpers/preparePageForTests')
 
 	await page.goto('https://bot.sannysoft.com')
 	await page.waitFor(5000)
-	await page.screenshot({path: 'testresult.png', fullPage: true})
+	await page.screenshot({path: './scripts/scrape/bot-detect/testresult.png', fullPage: true})
 	await browser.close()
 })()

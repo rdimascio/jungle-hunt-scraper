@@ -8,10 +8,20 @@ const path = require('path')
 const rimraf = require('rimraf')
 require('dotenv').config()
 const kill = require('tree-kill')
-const mongo = require('mongodb').MongoClient
 const puppeteer = require('puppeteer-extra')
 const pluginStealth = require('puppeteer-extra-plugin-stealth')
 const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha')
+
+// Database
+const mongoClient = require('mongodb').MongoClient
+const mongoUrl = DEV
+	? 'mongodb://localhost:27017'
+	: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_DATABASE}`
+const mongoOptions = {
+	useNewUrlParser: true,
+	useUnifiedTopology: true,
+}
+const mongo = new MongoClient(mongoUrl, mongoOptions)
 
 // Modules
 const database = require('../../helpers/database')
@@ -27,9 +37,6 @@ const logger = new Logger('Best Seller List Scraper')
 // Variables
 const DEV = process.env.NODE_ENV === 'development'
 const publicIps = ['12.205.195.90', '172.119.134.14', '167.71.144.15']
-const mongoUrl = DEV
-	? 'mongodb://localhost:27017'
-	: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_DATABASE}`
 
 // const mkdirAsync = util.promisify(fs.mkdir)
 // const setup = async () => {
@@ -519,11 +526,6 @@ const mongoUrl = DEV
 					asin.category.primary = category
 
 					mongo.connect(
-						mongoUrl,
-						{
-							useNewUrlParser: true,
-							useUnifiedTopology: true,
-						},
 						(error, client) => {
 							if (error) {
 								logger.send({
@@ -546,9 +548,9 @@ const mongoUrl = DEV
 								})
 							}
 
-							const db = client.db(process.env.DB_DATABASE)
-
 							try {
+								const db = client.db(process.env.DB_DATABASE)
+
 								database.findDocuments(
 									db,
 									'products',
@@ -559,7 +561,7 @@ const mongoUrl = DEV
 										} else {
 											asinsToInsert.push(asin)
 										}
-	
+
 										client.close()
 									}
 								)
@@ -601,11 +603,6 @@ const mongoUrl = DEV
 				process.exit()
 			} finally {
 				mongo.connect(
-					mongoUrl,
-					{
-						useNewUrlParser: true,
-						useUnifiedTopology: true,
-					},
 					(error, client) => {
 						if (error) {
 							logger.send({
