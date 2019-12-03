@@ -7,6 +7,7 @@
     "test:ip": "node ./scripts/scrape/tor/test.js",
     "test:bot": "node ./scripts/bot/test.js",
     "test:db": "node ./scripts/database/test.js",
+    "test:bot-detect": "node ./scripts/scrape/bot-detect/test.js",
     "migrate:product-stats": "node ./scripts/database/migrations/productStats.js",
     "start:best-sellers": "node ./scripts/scrape/bestSellerLists.js",
     "start:detail-pages": "node ./scripts/scrape/detailPages.js"
@@ -17,10 +18,15 @@
     "colors": "^1.4.0",
     "dotenv": "^8.2.0",
     "mongodb": "^3.3.5",
-    "node-cron": "^2.0.3",
     "node-notifier": "^6.0.0",
     "node-telegram-bot-api": "^0.40.0",
     "puppeteer": "^2.0.0",
+    "puppeteer-extra": "^3.1.5",
+    "puppeteer-extra-plugin-adblocker": "^2.11.1",
+    "puppeteer-extra-plugin-anonymize-ua": "^2.2.4",
+    "puppeteer-extra-plugin-recaptcha": "^3.1.6",
+    "puppeteer-extra-plugin-stealth": "^2.3.2",
+    "tree-kill": "^1.2.1",
     "winston": "^3.2.1"
   },
   "devDependencies": {}

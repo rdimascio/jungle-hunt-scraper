@@ -2,14 +2,16 @@
 
 // Packages
 const fs = require('fs')
+const util = require('util')
+const os = require('os')
+const path = require('path')
+const rimraf = require('rimraf')
 require('dotenv').config()
-const colors = require('colors')
-const {createLogger, format, transports} = require('winston')
-const {combine, timestamp, label, printf} = format
-const notifier = require('node-notifier')
+// const kill = require('tree-kill')
 const mongo = require('mongodb').MongoClient
-const puppeteer = require('puppeteer')
-const TelegramBot = require('node-telegram-bot-api')
+const puppeteer = require('puppeteer-extra')
+const pluginStealth = require('puppeteer-extra-plugin-stealth')
+const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha')
 
 // Modules
 const database = require('../../helpers/database')
@@ -17,76 +19,162 @@ const changeIpAddress = require('../../helpers/changeIP')
 const isObjectEmpty = require('../../helpers/object')
 const generateRandomNumbers = require('../../helpers/randomNumbers')
 const delay = require('../../helpers/delay')
+const Logger = require('../../helpers/Logger')
 const categoryList = require('../../helpers/categories')
-const preparePageForTests = require('../../helpers/preparePageForTests')
+const logger = new Logger('Best Seller List Scraper')
+// const preparePageForTests = require('../../helpers/preparePageForTests')
 
 // Variables
 const DEV = process.env.NODE_ENV === 'development'
-const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN
-const jungleHuntBot = new TelegramBot(telegramBotToken)
 const publicIps = ['12.205.195.90', '172.119.134.14', '167.71.144.15']
 const mongoUrl = DEV
-	? 'mongo://localhost:27017'
-	: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_TABLE}`
+	? 'mongodb://localhost:27017'
+	: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_DATABASE}`
 
-const DATE = new Date()
-const HOURS = DATE.getHours()
-const MINUTES = DATE.getMinutes()
-const DAY = DATE.getDate()
-const MONTH = DATE.getMonth() + 1
-const YEAR = DATE.getFullYear()
-const DATE_PATH = `${MONTH}-${DAY}-${YEAR}-${HOURS}-${MINUTES}`
+// require('events').EventEmitter.defaultMaxListeners = 12;
+// const mkdirAsync = util.promisify(fs.mkdir)
+// const setup = async () => {
+// 	const dataDir = path.join(os.tmpdir(), Date.now())
+// 	await mkdirAsync(dataDir)
+// 	return dataDir
+// }
 
-// Logging
-const myFormat = printf(
-	({level, message, label, timestamp}) =>
-		`${timestamp} [${label}] ${level}: ${message}`
-)
-
-const logger = createLogger({
-	level: 'info',
-	format: combine(label({label: 'Best Seller List'}), timestamp(), myFormat),
-	defaultMeta: {service: 'user-service'},
-	transports: [
-		//
-		// - Write to all logs with level `info` and below to `combined.log`
-		// - Write all logs error (and below) to `error.log`.
-		//
-		new transports.File({
-			filename: `./data/logs/${MONTH}-${DAY}-${YEAR}-error.log`,
-			level: 'error',
-		}),
-		new transports.File({
-			filename: `./data/logs/${MONTH}-${DAY}-${YEAR}-info.log`,
-		}),
-	],
-})
+// const cleanup = (path) => rimraf(path)
 
 ;(async () => {
 	// We don't want to run the scraper at the same time every single day,
-	// so we're going to wait a random time betwen 10 minutes and an hour
-	const randomWaitTimer = generateRandomNumbers(600000, 3600000, 1)
-	await delay(randomWaitTimer)
+	// so we're going to wait a random time betwen 10 minutes and 2 hours
+	const randomWaitTimer = generateRandomNumbers(
+		1000 * 60 * 10,
+		1000 * 60 * 60 * 2,
+		1
+	)
+	// await delay(randomWaitTimer)
 
-	jungleHuntBot.sendMessage(605686296, '🚀 Best Seller List Scraper: Started')
+	const DATE = new Date()
+	const HOURS = DATE.getHours()
+	const MINUTES = DATE.getMinutes()
+	const DAY = DATE.getDate()
+	const MONTH = DATE.getMonth() + 1
+	const YEAR = DATE.getFullYear()
+	const DATE_PATH = `${MONTH}-${DAY}-${YEAR}-${HOURS}-${MINUTES}`
 
-	logger.info('🚀 Started scraping')
-
-	if (DEV) {
-		console.log(colors.green('🚀 Started scraping'))
-
-		notifier.notify({
-			title: 'Jungle Hunt',
-			message: '🚀 Started scraping Best Seller Lists',
-		})
-	}
+	logger.send({
+		emoji: '🚀',
+		title: 'Best Seller List Scraper',
+		message: `Started scraping at ${DATE.toLocaleString()}`,
+		status: 'success',
+	})
 
 	const categories = Object.entries(categoryList)
+	const maxRunningTime = 60 * 60 * 1000
+	let browser = null
+
+	// const userDataDir = await setup()
+
+	// Use our plugins
+	puppeteer.use(pluginStealth())
+	puppeteer.use(require('puppeteer-extra-plugin-anonymize-ua')())
+	puppeteer.use(
+		RecaptchaPlugin({
+			provider: {
+				id: '2captcha',
+				token: '5a48a12a57d25d67de11e965dba8a655',
+			},
+			visualFeedback: true,
+		})
+	)
+
+	const getBrowser = async () => {
+		if (!browser) {
+			try {
+				browser = await puppeteer.launch({
+					// userDataDir,
+					ignoreHTTPSErrors: true,
+					dumpio: false,
+					// headless: true,
+					devtools: false,
+					// ignoreDefaultArgs: true,
+					ignoreDefaultFlags: true,
+					defaultViewport: {
+						//--window-size in args
+						width: 1280,
+						height: 1024,
+					},
+					args: [
+						/* TODO : https://peter.sh/experiments/chromium-command-line-switches/
+						there is still a whole bunch of stuff to disable
+						*/
+						//'--crash-test', // Causes the browser process to crash on startup, useful to see if we catch that correctly
+						// not idea if those 2 aa options are usefull with disable gl thingy
+						// '--disable-canvas-aa', // Disable antialiasing on 2d canvas
+						// '--disable-2d-canvas-clip-aa', // Disable antialiasing on 2d canvas clips
+						'--disable-gl-drawing-for-tests', // BEST OPTION EVER! Disables GL drawing operations which produce pixel output. With this the GL output will not be correct but tests will run faster.
+						// '--disable-dev-shm-usage', // ???
+						// '--no-zygote', // wtf does that mean ?
+						'--use-gl=desktop', // better cpu usage with --use-gl=desktop rather than --use-gl=swiftshader, still needs more testing.
+						'--enable-webgl',
+						'--hide-scrollbars',
+						'--mute-audio',
+						'--no-first-run',
+						'--disable-infobars',
+						'--disable-breakpad',
+						'--ignore-gpu-blacklist',
+						'--window-size=1280,1024', // see defaultViewport
+						'--no-sandbox',
+						'--disable-setuid-sandbox',
+						'--ignore-certificate-errors',
+						'--disable-dev-shm-usage',
+						'--disable-accelerated-2d-canvas',
+						'--disable-gpu',
+						'--proxy-server=socks5://127.0.0.1:9050',
+						// '--proxy-bypass-list=*',
+					],
+				})
+
+				browser.__BROWSER_START_TIME_MS__ = Date.now()
+
+				logger.send({
+					emoji: '🚀',
+					message: `Browser launched at ${browser.__BROWSER_START_TIME_MS__.toLocaleString()}`,
+					status: 'success',
+				})
+			} catch (error) {
+				logger.send({
+					emoji: '🚨',
+					message: `Error launching puppeteer`,
+					status: 'error',
+					error: error,
+				})
+
+				process.exit()
+			}
+		}
+
+		return browser
+	}
+
+	const cleanupBrowser = async (browser) => {
+		// Kill it if it's time
+		if (Date.now() - browser.__BROWSER_START_TIME_MS__ >= maxRunningTime) {
+			treekill(browser.process().pid, 'SIGKILL')
+			// cleanup(userDataDir)
+			browser = null
+			await getBrowser()
+		}
+		// Cleanup the browser's pages
+		const pages = await browser.pages()
+
+		return Promise.all(pages.map((page) => page.close()))
+	}
+
+	const killBrowser = async (browser) => {
+		treekill(browser.process().pid, 'SIGKILL')
+		// cleanup(userDataDir)
+	}
 
 	for (let [index, [category, urls]] of categories.entries()) {
 		for (let i = 0; i < urls.length; i++) {
-			// const batch = db.batch()
-
 			const asinList = []
 			const asinsToUpdate = []
 			const asinsToInsert = []
@@ -101,73 +189,31 @@ const logger = createLogger({
 				? JSON.parse(failedAsinData)
 				: []
 
-			const browser = await puppeteer.launch({
-				ignoreHTTPSErrors: true,
-				dumpio: false,
-				// headless: true,
-				devtools: false,
-				// ignoreDefaultArgs: true,
-				ignoreDefaultFlags: true,
-				defaultViewport: {
-					//--window-size in args
-					width: 1280,
-					height: 1024,
-				},
-				args: [
-					/* TODO : https://peter.sh/experiments/chromium-command-line-switches/
-					there is still a whole bunch of stuff to disable
-					*/
-					//'--crash-test', // Causes the browser process to crash on startup, useful to see if we catch that correctly
-					// not idea if those 2 aa options are usefull with disable gl thingy
-					// '--disable-canvas-aa', // Disable antialiasing on 2d canvas
-					// '--disable-2d-canvas-clip-aa', // Disable antialiasing on 2d canvas clips
-					'--disable-gl-drawing-for-tests', // BEST OPTION EVER! Disables GL drawing operations which produce pixel output. With this the GL output will not be correct but tests will run faster.
-					// '--disable-dev-shm-usage', // ???
-					// '--no-zygote', // wtf does that mean ?
-					'--use-gl=desktop', // better cpu usage with --use-gl=desktop rather than --use-gl=swiftshader, still needs more testing.
-					'--enable-webgl',
-					'--hide-scrollbars',
-					'--mute-audio',
-					'--no-first-run',
-					'--disable-infobars',
-					'--disable-breakpad',
-					'--ignore-gpu-blacklist',
-					'--window-size=1280,1024', // see defaultViewport
-					'--no-sandbox',
-					'--disable-setuid-sandbox',
-					'--ignore-certificate-errors',
-					'--disable-dev-shm-usage',
-					'--disable-accelerated-2d-canvas',
-					'--disable-gpu',
-					'--proxy-server=socks5://127.0.0.1:9050',
-					// '--proxy-bypass-list=*',
-				],
-			})
-
+			const browser = await getBrowser()
 			const page = await browser.newPage()
 
 			// enable request interception
-			await page.setRequestInterception(true)
+			// await page.setRequestInterception(true)
 			await page.setDefaultNavigationTimeout(0)
-			await preparePageForTests(page)
+			// await preparePageForTests(page)
 
-			page.on('request', (request) => {
-				// Do nothing in case of non-navigation requests.
-				if (!request.isNavigationRequest()) {
-					request.continue()
-					return
-				}
+			// page.on('request', (request) => {
+			// 	// Do nothing in case of non-navigation requests.
+			// 	if (!request.isNavigationRequest()) {
+			// 		request.continue()
+			// 		return
+			// 	}
 
-				// Add a new header for navigation request.
-				const headers = request.headers()
-				headers['X-Requested-With'] = 'XMLHttpRequest'
-				headers['Accept'] =
-					'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3'
-				headers['Accept-Encoding'] = 'gzip, deflate, br'
-				headers['Accept-Language'] = 'en-US,en;q=0.9'
-				headers['Upgrade-Insecure-Requests'] = '1'
-				request.continue({headers})
-			})
+			// 	// Add a new header for navigation request.
+			// 	const headers = request.headers()
+			// 	headers['X-Requested-With'] = 'XMLHttpRequest'
+			// 	headers['Accept'] =
+			// 		'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3'
+			// 	headers['Accept-Encoding'] = 'gzip, deflate, br'
+			// 	headers['Accept-Language'] = 'en-US,en;q=0.9'
+			// 	headers['Upgrade-Insecure-Requests'] = '1'
+			// 	request.continue({headers})
+			// })
 
 			page.on('response', (response) => {
 				// Ignore requests that aren't the one we are explicitly doing
@@ -179,9 +225,6 @@ const logger = createLogger({
 				) {
 					if (!response.ok()) {
 						changeIpAddress()
-					} else {
-						// We're in, no need to change the IP
-						logger.info('IP remains the same')
 					}
 				}
 			})
@@ -195,45 +238,23 @@ const logger = createLogger({
 				)
 
 				if (publicIps.includes(IP)) {
-					jungleHuntBot.sendMessage(
-						605686296,
-						'🚨 Best Seller List Scraper: Tor failed to anonymize our IP'
-					)
+					logger.send({
+						emoji: '🚨',
+						message: `Tor failed to anonymize our IP. Using IP: ${IP}`,
+						status: 'error',
+					})
 
-					logger.error(
-						`Tor failed to anonymize our IP. Using IP: ${IP}`
-					)
+					await cleanupBrowser(browser)
+					await killBrowser()
 
-					if (DEV) {
-						console.log(
-							colors.red(
-								`Tor failed to anonymize our IP. Using IP: ${IP}`
-							)
-						)
-
-						notifier.notify({
-							title: 'Jungle Hunt',
-							message: `🚨 Tor failed to anonymize our IP. Using IP: ${IP}`,
-						})
-					}
-					return
+					process.exit()
 				} else {
-					logger.info(
-						`Tor successfully anonymized our IP. Using IP: ${IP}`
-					)
-
-					if (DEV) {
-						console.log(
-							colors.green(
-								`Tor successfully anonymized our IP. Using IP: ${IP}`
-							)
-						)
-
-						notifier.notify({
-							title: 'Jungle Hunt',
-							message: `🎉 Tor successfully anonymized our IP. Using IP: ${IP}`,
-						})
-					}
+					logger.send({
+						emoji: '👻',
+						message: `Tor successfully anonymized our IP. Using IP: ${IP}`,
+						status: 'success',
+						loggers: ['logger', 'console', 'notify'],
+					})
 				}
 
 				const scrapeAsins = async (pg = 1) => {
@@ -268,40 +289,33 @@ const logger = createLogger({
 						}
 
 						if (title === 'Robot Check') {
-							jungleHuntBot.sendMessage(
-								605686296,
-								'Best Seller List Scraper: We hit a captcha page. Changing IP and waiting 10 minutes'
-							)
-							changeIpAddress()
-							await delay(6000000)
+							logger.send({
+								emoji: '🚨',
+								message: `We hit a captcha page. Trying to crack it...`,
+								status: 'error',
+							})
+
+							await page.solveRecaptchas()
+
+							await Promise.all([
+								page.waitForNavigation(),
+								page.click(`button[type="submit"]`),
+							])
+
+							// changeIpAddress()
+							// await delay(6000000)
 						}
 
 						await delay(2000 * retryNumber)
 					}
 
 					if (!success) {
-						// Send a message to Telegram
-						jungleHuntBot.sendMessage(
-							605686296,
-							'🚨 Best Seller List Scaper: Tor IP retry limit reached. Cancelling connection'
-						)
+						logger.send({
+							emoji: '🚨',
+							message: `Tor IP retry limit reached. Cancelling connection`,
+							status: 'error',
+						})
 
-						logger.error(
-							'Tor IP retry limit reached. Cancelling connection'
-						)
-
-						if (DEV) {
-							console.log(
-								colors.red(
-									'Tor IP retry limit reached. Cancelling connection'
-								)
-							)
-
-							notifier.notify({
-								title: 'Jungle Hunt',
-								message: `🚨 Tor IP retry limit reached. Cancelling connection`,
-							})
-						}
 						return
 					}
 
@@ -395,18 +409,16 @@ const logger = createLogger({
 						})
 
 						if (failedAsins.length) {
-							setTimeout(() => {
-								logger.log(
-									'We have a failed asin, waiting 3 seconds to retry'
-								)
+							// logger.send({
+							// 	emoji: '🚨',
+							// 	message:
+							// 		'We have a failed asin, waiting 3 seconds to retry',
+							// 	status: 'error',
+							// 	loggers: ['logger', 'console'],
+							// })
 
-								if (DEV) {
-									console.log(
-										colors.red(
-											'We have a failed asin, waiting 3 seconds to retry'
-										)
-									)
-								}
+							setTimeout(() => {
+								// silently continue
 							}, 3000)
 
 							failedAsins.forEach((item) => {
@@ -467,25 +479,12 @@ const logger = createLogger({
 				asinList.push(...(await scrapeAsins(2)))
 
 				if (!asinList.length) {
-					logger.error(
-						`No asins found for subcategory #${i +
-							1} in ${category}`
-					)
-
-					if (DEV) {
-						console.log(
-							colors.red(
-								`No asins found for subcategory #${i +
-									1} in ${category}`
-							)
-						)
-
-						notifier.notify({
-							title: 'Jungle Hunt',
-							message: `🚨 No asins found for subcategory #${i +
-								1} in ${category}`,
-						})
-					}
+					logger.send({
+						emoji: '🚨',
+						message: `No asins found for subcategory #${i +
+							1} in ${category}`,
+						status: 'error',
+					})
 				}
 
 				asinList.forEach((asin, index) => {
@@ -503,39 +502,14 @@ const logger = createLogger({
 								(item) => item.asin === asinData.asin
 							)
 						) {
-							jungleHuntBot.sendMessage(
-								605686296,
-								`🚨 Best Seller List Scaper: Failed to scrape ${
+							logger.send({
+								emoji: '🚨',
+								message: `Failed to scrape ${
 									asin.asin
 								} for subcategory #${i +
-									1} in ${category}. Pushing to failed.json`
-							)
-
-							logger.error(
-								`Failed to scrape ${
-									asin.asin
-								} for subcategory #${i +
-									1} in ${category}. Pushing to failed.json`
-							)
-
-							if (DEV) {
-								console.log(
-									colors.red(
-										`Failed to scrape ${
-											asin.asin
-										} for subcategory #${i +
-											1} in ${category}. Pushing to failed.json`
-									)
-								)
-
-								notifier.notify({
-									title: 'Jungle Hunt',
-									message: `🚨 Failed to scrape ${
-										asin.asin
-									} for subcategory #${i +
-										1} in ${category}. Pushing to failed.json`,
-								})
-							}
+									1} in ${category}. Pushing to failed.json`,
+								status: 'error',
+							})
 						}
 
 						return
@@ -551,44 +525,31 @@ const logger = createLogger({
 							useNewUrlParser: true,
 							useUnifiedTopology: true,
 						},
-						async (error, client) => {
+						(error, client) => {
 							if (error) {
-								// Send message to Telegram
-								jungleHuntBot.sendMessage(
-									605686296,
-									`🚨 Best Seller List Scaper: MongoDB failed to query for ${asin}`
+								logger.send({
+									emoji: '🚨',
+									message: `Error connecting to the database for subcategory #${i +
+										1} in ${category}`,
+									status: 'error',
+								})
+
+								const killEverything = new Promise(
+									async (resovle, reject) => {
+										await cleanupBrowser(browser)
+										await killBrowser(browser)
+										resovle()
+									}
 								)
 
-								logger.error(
-									`MongoDB failed to query for ${asin.asin}`
-								)
-
-								logger.error(error)
-
-								if (DEV) {
-									console.log(
-										colors.red(
-											`MongoDB failed to query for ${asin.asin}`
-										)
-									)
-
-									console.error(error)
-
-									notifier.notify({
-										title: 'Jungle Hunt',
-										message: `🚨 MongoDB failed to query for ${asin.asin}`,
-									})
-								}
-
-								return
+								killEverything.then(() => {
+									process.exit()
+								})
 							}
 
-							const db = client.db('jungleHunt')
-							const collection = 'products'
-
 							database.findDocuments(
-								db,
-								collection,
+								client.db(process.env.DB_DATABASE),
+								'products',
 								{asin: asin.asin},
 								(docs) => {
 									if (docs.length) {
@@ -604,32 +565,18 @@ const logger = createLogger({
 					)
 				})
 			} catch (error) {
-				jungleHuntBot.sendMessage(
-					605686296,
-					`🚨 Best Seller List Scaper: Error scraping subcategory #${i +
-						1} in ${category}`
-				)
+				logger.send({
+					emoji: '🚨',
+					message: `Error scraping subcategory #${i +
+						1} in ${category}`,
+					status: 'error',
+					error: error,
+				})
 
-				logger.error(
-					`Error scraping subcategory #${i + 1} in ${category}`
-				)
-				logger.error(error)
+				await cleanupBrowser(browser)
+				await killBrowser(browser)
 
-				if (DEV) {
-					console.log(
-						colors.red(
-							`Error scraping subcategory #${i +
-								1} in ${category}`
-						)
-					)
-					console.error(error)
-
-					notifier.notify({
-						title: 'Jungle Hunt',
-						message: `🚨 Error scraping subcategory #${i +
-							1} in ${category}`,
-					})
-				}
+				process.exit()
 			} finally {
 				mongo.connect(
 					mongoUrl,
@@ -639,224 +586,96 @@ const logger = createLogger({
 					},
 					(error, client) => {
 						if (error) {
-							// Send message to Telegram
-							jungleHuntBot.sendMessage(
-								605686296,
-								`🚨 Best Seller List Scaper: Error connecting to the database for subcategory #${i +
-									1} in ${category}`
+							logger.send({
+								emoji: '🚨',
+								message: `Error connecting to the database for subcategory #${i +
+									1} in ${category}`,
+								status: 'error',
+								error: error,
+							})
+
+							const killEverything = new Promise(
+								async (resovle, reject) => {
+									await cleanupBrowser(browser)
+									await killBrowser(browser)
+									resovle()
+								}
 							)
 
-							logger.error(
-								`Error connecting to the database for subcategory #${i +
-									1} in ${category}`
-							)
-							logger.error(error)
-
-							if (DEV) {
-								console.log(
-									colors.red(
-										`Error connecting to the database for subcategory #${i +
-											1} in ${category}`
-									)
-								)
-								console.error(error)
-
-								notifier.notify({
-									title: 'Jungle Hunt',
-									message: `🚨 Error connecting to the database for subcategory #${i +
-										1} in ${category}`,
-								})
-							}
-
-							return
+							killEverything.then(() => {
+								process.exit()
+							})
 						}
-						const db = client.db('jungleHunt')
 
 						if (asinList.length) {
 							try {
 								database.insertProductStats(
-									db,
+									client.db(process.env.DB_DATABASE),
 									asinList,
 									(result) => {
-										jungleHuntBot.sendMessage(
-											605686296,
-											`🎉 Product Stats inserted for subcategory #${i +
-												1} in ${category}`
-										)
-
-										logger.info(
-											`Product Stats inserted for subcategory #${i +
-												1} in ${category}`
-										)
-
-										if (DEV) {
-											console.log(
-												colors.green(
-													`Product Stats inserted for subcategory #${i +
-														1} in ${category}`
-												)
-											)
-
-											notifier.notify({
-												title: 'Jungle Hunt',
-												message: `🎉 Product Stats inserted for subcategory #${i +
-													1} in ${category}`,
-											})
-										}
+										logger.send({
+											emoji: '✅',
+											message: `Product Stats inserted for subcategory #${i +
+												1} in ${category}`,
+											status: 'success',
+										})
 									}
 								)
 							} catch (error) {
-								// Send message to Telegram
-								jungleHuntBot.sendMessage(
-									605686296,
-									`🚨 Best Seller List Scaper: Error inserting Product Stats for subcategory #${i +
-										1} in ${category}`
-								)
-
-								logger.error(
-									`Error inserting Product Stats for subcategory #${i +
-										1} in ${category}`
-								)
-
-								if (DEV) {
-									console.log(
-										colors.red(
-											`Error inserting Product Stats for subcategory #${i +
-												1} in ${category}`
-										)
-									)
-
-									notifier.notify({
-										title: 'Jungle Hunt',
-										message: `🚨 Error inserting Product Stats for subcategory #${i +
-											1} in ${category}`,
-									})
-								}
+								logger.send({
+									emoji: '🚨',
+									message: `Error inserting Product Stats for subcategory #${i +
+										1} in ${category}`,
+									status: 'error',
+								})
 							}
 						}
 
 						if (asinsToUpdate.length) {
 							try {
 								database.updateProducts(
-									db,
+									client.db(process.env.DB_DATABASE),
 									asinsToUpdate,
 									(result) => {
-										jungleHuntBot.sendMessage(
-											605686296,
-											`🎉 Products updated for subcategory #${i +
-												1} in ${category}`
-										)
-
-										logger.info(
-											`Products updated for subcategory #${i +
-												1} in ${category}`
-										)
-
-										if (DEV) {
-											console.log(
-												colors.green(
-													`Products updated for subcategory #${i +
-														1} in ${category}`
-												)
-											)
-
-											notifier.notify({
-												title: 'Jungle Hunt',
-												message: `🎉 Products updated for subcategory #${i +
-													1} in ${category}`,
-											})
-										}
+										logger.send({
+											emoji: '✅',
+											message: `Products updated for subcategory #${i +
+												1} in ${category}`,
+											status: 'success',
+										})
 									}
 								)
 							} catch (error) {
-								// Send message to Telegram
-								jungleHuntBot.sendMessage(
-									605686296,
-									`🚨 Best Seller List Scaper: Error updating Products for subcategory #${i +
-										1} in ${category}`
-								)
-
-								logger.error(
-									`Error updating Products for subcategory #${i +
-										1} in ${category}`
-								)
-
-								if (DEV) {
-									console.log(
-										colors.red(
-											`Error updating Products for subcategory #${i +
-												1} in ${category}`
-										)
-									)
-
-									notifier.notify({
-										title: 'Jungle Hunt',
-										message: `🚨 Error updating Products for subcategory #${i +
-											1} in ${category}`,
-									})
-								}
+								logger.send({
+									emoji: '🚨',
+									message: `Error updating Products for subcategory #${i +
+										1} in ${category}`,
+									status: 'error',
+								})
 							}
 						}
 
 						if (asinsToInsert.length) {
 							try {
 								database.insertProducts(
-									db,
+									client.db(process.env.DB_DATABASE),
 									asinsToInsert,
 									(result) => {
-										jungleHuntBot.sendMessage(
-											605686296,
-											`🎉 Products inserted for subcategory #${i +
-												1} in ${category}`
-										)
-
-										logger.info(
-											`Products inserted for subcategory #${i +
-												1} in ${category}`
-										)
-
-										if (DEV) {
-											console.log(
-												colors.green(
-													`Products inserted for subcategory #${i +
-														1} in ${category}`
-												)
-											)
-
-											notifier.notify({
-												title: 'Jungle Hunt',
-												message: `🎉 Products inserted for subcategory #${i +
-													1} in ${category}`,
-											})
-										}
+										logger.send({
+											emoji: '✅',
+											message: `Products inserted for subcategory #${i +
+												1} in ${category}`,
+											status: 'success',
+										})
 									}
 								)
 							} catch (error) {
-								jungleHuntBot.sendMessage(
-									605686296,
-									`🚨 Best Seller List Scaper: Error inserting Products for subcategory #${i +
-										1} in ${category}`
-								)
-
-								logger.error(
-									`Error inserting Products for subcategory #${i +
-										1} in ${category}`
-								)
-
-								if (DEV) {
-									console.log(
-										colors.red(
-											`Error inserting Products for subcategory #${i +
-												1} in ${category}`
-										)
-									)
-
-									notifier.notify({
-										title: 'Jungle Hunt',
-										message: `🚨 Error inserting Products for subcategory #${i +
-											1} in ${category}`,
-									})
-								}
+								logger.send({
+									emoji: '🚨',
+									message: `Error inserting Products for subcategory #${i +
+										1} in ${category}`,
+									status: 'error',
+								})
 							}
 						}
 
@@ -871,50 +690,38 @@ const logger = createLogger({
 					)
 				}
 
-				await page.close()
-				await browser.close()
+				await cleanupBrowser(browser)
 
 				if (index + 1 === categories.length && i + 1 === urls.length) {
 					const DATE_FINISHED = new Date()
 					const TIME_ELAPSED = DATE_FINISHED - DATE
-					const MINUTES_ELAPSED = TIME_ELAPSED / 1000 / 60
-					const SECONDS_ELAPSED = MINUTES_ELAPSED % 60
-					const HOURS_ELAPSED =
-						MINUTES_ELAPSED >= 60 ? MINUTES_ELAPSED / 60 : 0
 
-					jungleHuntBot.sendMessage(
-						605686296,
-						`🎉 Best Seller List Scraper: Finished in ${
-							HOURS_ELAPSED > 0 ? `${HOURS_ELAPSED} hours, ` : ''
-						} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`
+					// Remainder of TIME_ELAPSED / days divided by hours
+					const HOURS_ELAPSED = Math.floor(
+						(TIME_ELAPSED % (1000 * 60 * 60 * 24)) /
+							(1000 * 60 * 60)
 					)
 
-					logger.info(
-						`🎉 Best Seller List Scraper: Finished in ${
-							HOURS_ELAPSED > 0 ? `${HOURS_ELAPSED} hours, ` : ''
-						} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`
+					// Remainder of TIME_ELAPSED / hours divided by minutes
+					const MINUTES_ELAPSED = Math.floor(
+						(TIME_ELAPSED % (1000 * 60 * 60)) / (1000 * 60)
 					)
 
-					if (DEV) {
-						console.log(
-							colors.green(
-								`🎉 Best Seller List Scraper: Finished in ${
-									HOURS_ELAPSED > 0
-										? `${HOURS_ELAPSED} hours, `
-										: ''
-								} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`
-							)
-						)
+					// Remainder of TIME_ELAPSED / minutes divided by seconds
+					const SECONDS_ELAPSED = Math.floor(
+						(TIME_ELAPSED % (1000 * 60)) / 1000
+					)
 
-						notifier.notify({
-							title: 'Jungle Hunt',
-							message: `🎉 Best Seller List Scraper: Finished in ${
-								HOURS_ELAPSED > 0
-									? `${HOURS_ELAPSED} hours, `
-									: ''
-							} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`,
-						})
-					}
+					logger.send({
+						emoji: '🎉',
+						message: `Finished in ${
+							HOURS_ELAPSED > 0 ? `${HOURS_ELAPSED} hours, ` : ''
+						} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`,
+						status: 'success',
+					})
+
+					await killBrowser(browser)
+					process.exit()
 				}
 			}
 		}
