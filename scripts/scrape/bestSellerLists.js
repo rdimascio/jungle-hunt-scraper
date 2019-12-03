@@ -71,7 +71,7 @@ const mongoUrl = DEV
 
 	// We don't want to run the scraper at the same time every single day,
 	// so we're going to wait a random time betwen 10 minutes and 2 hours
-	// await delay(randomWaitTimer)
+	await delay(randomWaitTimer)
 
 	logger.send({
 		emoji: '🚀',
