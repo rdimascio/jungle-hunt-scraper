@@ -7,7 +7,7 @@ const os = require('os')
 const path = require('path')
 const rimraf = require('rimraf')
 require('dotenv').config()
-// const kill = require('tree-kill')
+const kill = require('tree-kill')
 const mongo = require('mongodb').MongoClient
 const puppeteer = require('puppeteer-extra')
 const pluginStealth = require('puppeteer-extra-plugin-stealth')
@@ -49,7 +49,7 @@ const mongoUrl = DEV
 		1000 * 60 * 60 * 2,
 		1
 	)
-	// await delay(randomWaitTimer)
+	await delay(randomWaitTimer)
 
 	const DATE = new Date()
 	const HOURS = DATE.getHours()
@@ -169,7 +169,7 @@ const mongoUrl = DEV
 	}
 
 	const killBrowser = async (browser) => {
-		treekill(browser.process().pid, 'SIGKILL')
+		kill(browser.process().pid, 'SIGKILL')
 		// cleanup(userDataDir)
 	}
 
