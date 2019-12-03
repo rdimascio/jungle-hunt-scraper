@@ -1,7 +1,7 @@
 'use strict'
 
 // https://github.com/yagop/node-telegram-bot-api/issues/540
-process.env.NTBA_FIX_319 = 1;
+process.env.NTBA_FIX_319 = 1
 
 // Packages
 require('dotenv').config()
@@ -19,13 +19,11 @@ const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha')
 // Modules
 const database = require('../../helpers/database')
 const changeIpAddress = require('../../helpers/changeIP')
-const isObjectEmpty = require('../../helpers/object')
 const generateRandomNumbers = require('../../helpers/randomNumbers')
 const delay = require('../../helpers/delay')
 const Logger = require('../../helpers/Logger')
 const categoryList = require('../../helpers/categories')
 const logger = new Logger('Best Seller List Scraper')
-// const preparePageForTests = require('../../helpers/preparePageForTests')
 
 // Variables
 const DEV = process.env.NODE_ENV === 'development'
@@ -33,15 +31,6 @@ const publicIps = ['12.205.195.90', '172.119.134.14', '167.71.144.15']
 const mongoUrl = DEV
 	? 'mongodb://localhost:27017'
 	: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_DATABASE}`
-
-// const mkdirAsync = util.promisify(fs.mkdir)
-// const setup = async () => {
-// 	const dataDir = path.join(os.tmpdir(), Date.now())
-// 	await mkdirAsync(dataDir)
-// 	return dataDir
-// }
-
-// const cleanup = (path) => rimraf(path)
 
 ;(async () => {
 	const randomWaitTimer = generateRandomNumbers(
@@ -59,19 +48,26 @@ const mongoUrl = DEV
 	const YEAR = DATE.getFullYear()
 	const DATE_PATH = `${MONTH}-${DAY}-${YEAR}-${HOURS}-${MINUTES}`
 
-	const categories = Object.entries(categoryList)
-
 	const failedAsinData = fs.existsSync(`./data/failed/${DATE_PATH}.json`)
 		? fs.readFileSync(`./data/failed/${DATE_PATH}.json`, 'utf8')
 		: []
 
 	let failedAsins = failedAsinData.length ? JSON.parse(failedAsinData) : []
 
-	// const userDataDir = await setup()
+	const mkdirAsync = util.promisify(fs.mkdir)
+	const setup = async () => {
+		const dataDir = path.join(os.tmpdir(), Date.now().toString())
+		await mkdirAsync(dataDir)
+		return dataDir
+	}
+	const cleanup = (path) => rimraf.sync(path)
+	const userDataDir = await setup()
+
+	const categories = Object.entries(categoryList)
 
 	// We don't want to run the scraper at the same time every single day,
 	// so we're going to wait a random time betwen 10 minutes and 2 hours
-	await delay(randomWaitTimer)
+	// await delay(randomWaitTimer)
 
 	logger.send({
 		emoji: '🚀',
@@ -94,6 +90,7 @@ const mongoUrl = DEV
 			visualFeedback: true,
 		})
 	)
+
 	////////////////////////////////
 	// Browser Functions
 	///////////////////////////////
@@ -103,7 +100,7 @@ const mongoUrl = DEV
 		if (!browser) {
 			try {
 				browser = await puppeteer.launch({
-					// userDataDir,
+					userDataDir,
 					ignoreHTTPSErrors: true,
 					dumpio: false,
 					// headless: true,
@@ -172,7 +169,7 @@ const mongoUrl = DEV
 		// Kill it if it's time
 		if (Date.now() - browser.__BROWSER_START_TIME_MS__ >= maxRunningTime) {
 			treekill(browser.process().pid, 'SIGKILL')
-			// cleanup(userDataDir)
+			cleanup(userDataDir)
 			browser = null
 			await getBrowser()
 		}
@@ -184,7 +181,7 @@ const mongoUrl = DEV
 
 	const killBrowser = async (browser) => {
 		kill(browser.process().pid, 'SIGKILL')
-		// cleanup(userDataDir)
+		cleanup(userDataDir)
 	}
 
 	const shutdown = async (browser) => {
@@ -521,7 +518,7 @@ const mongoUrl = DEV
 
 					const asinList = await page.evaluate(() => {
 						const asins = []
-						const failedAsins = []
+						const failed = []
 						const grid = document.getElementById('zg-ordered-list')
 						const items = grid.querySelectorAll('li')
 
@@ -602,13 +599,13 @@ const mongoUrl = DEV
 								!asinData.reviews ||
 								!asinData.rank
 							) {
-								failedAsins.push(item)
+								failed.push(item)
 							} else {
 								asins.push(asinData)
 							}
 						})
 
-						if (failedAsins.length) {
+						if (failed.length) {
 							// logger.send({
 							// 	emoji: '🚨',
 							// 	message:
@@ -622,7 +619,7 @@ const mongoUrl = DEV
 							}, 3000)
 
 							// Try one last time to scrape the asins that failed
-							failedAsins.forEach((item) => {
+							failed.forEach((item) => {
 								const asinData = scrapeAsinData(item)
 
 								if (
@@ -634,7 +631,7 @@ const mongoUrl = DEV
 								) {
 									// Write to the failed.json
 									if (
-										!failedAsins.some(
+										!failed.some(
 											(item) =>
 												item.asin === asinData.asin
 										)
@@ -700,7 +697,7 @@ const mongoUrl = DEV
 
 				const asinLookup = await findAsins(asinList, {
 					interval: i,
-					category
+					category,
 				})
 
 				asinsToUpdate.push(...asinLookup.found)
@@ -708,9 +705,7 @@ const mongoUrl = DEV
 
 				// Need to set the primary category here,
 				//otherwise it's out of context
-				asinList.forEach(
-					(asin) => (asin.category.primary = category)
-				)
+				asinList.forEach((asin) => (asin.category.primary = category))
 			} catch (error) {
 				logger.send({
 					emoji: '🚨',
@@ -729,7 +724,7 @@ const mongoUrl = DEV
 					},
 					{
 						interval: i,
-						category
+						category,
 					}
 				)
 
@@ -766,7 +761,7 @@ const mongoUrl = DEV
 						emoji: '🎉',
 						message: `Finished in ${
 							HOURS_ELAPSED > 0 ? `${HOURS_ELAPSED} hours, ` : ''
-						} ${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`,
+						}${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`,
 						status: 'success',
 					})
 
