@@ -1,5 +1,7 @@
 'use strict'
 
+const DEV = process.env.NODE_ENV === 'development'
+
 // Packages
 const fs = require('fs')
 const util = require('util')
@@ -21,7 +23,7 @@ const mongoOptions = {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 }
-const mongo = new MongoClient(mongoUrl, mongoOptions)
+const mongo = new mongoClient(mongoUrl, mongoOptions)
 
 // Modules
 const database = require('../../helpers/database')
@@ -35,7 +37,6 @@ const logger = new Logger('Best Seller List Scraper')
 // const preparePageForTests = require('../../helpers/preparePageForTests')
 
 // Variables
-const DEV = process.env.NODE_ENV === 'development'
 const publicIps = ['12.205.195.90', '172.119.134.14', '167.71.144.15']
 
 // const mkdirAsync = util.promisify(fs.mkdir)
