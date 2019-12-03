@@ -41,18 +41,18 @@ const mongoUrl = DEV
 	const maxRunningTime = 60 * 60 * 1000
 
 	const DATE = new Date()
-	const HOURS = DATE.getHours()
-	const MINUTES = DATE.getMinutes()
-	const DAY = DATE.getDate()
-	const MONTH = DATE.getMonth() + 1
-	const YEAR = DATE.getFullYear()
-	const DATE_PATH = `${MONTH}-${DAY}-${YEAR}-${HOURS}-${MINUTES}`
+	// const HOURS = DATE.getHours()
+	// const MINUTES = DATE.getMinutes()
+	// const DAY = DATE.getDate()
+	// const MONTH = DATE.getMonth() + 1
+	// const YEAR = DATE.getFullYear()
+	// const DATE_PATH = `${MONTH}-${DAY}-${YEAR}-${HOURS}-${MINUTES}`
 
-	const failedAsinData = fs.existsSync(`./data/failed/${DATE_PATH}.json`)
-		? fs.readFileSync(`./data/failed/${DATE_PATH}.json`, 'utf8')
-		: []
+	// const failedAsinData = fs.existsSync(`./data/failed/${DATE_PATH}.json`)
+	// 	? fs.readFileSync(`./data/failed/${DATE_PATH}.json`, 'utf8')
+	// 	: []
 
-	let failedAsins = failedAsinData.length ? JSON.parse(failedAsinData) : []
+	// let failedAsins = failedAsinData.length ? JSON.parse(failedAsinData) : []
 
 	const mkdirAsync = util.promisify(fs.mkdir)
 	const setup = async () => {
@@ -521,7 +521,7 @@ const mongoUrl = DEV
 
 					const asinList = await page.evaluate(() => {
 						const asins = []
-						const failed = []
+						const failedAsins = []
 						const grid = document.getElementById('zg-ordered-list')
 						const items = grid.querySelectorAll('li')
 
@@ -602,50 +602,50 @@ const mongoUrl = DEV
 								!asinData.reviews ||
 								!asinData.rank
 							) {
-								failed.push(item)
+								failedAsins.push(item)
 							} else {
 								asins.push(asinData)
 							}
 						})
 
-						if (failed.length) {
-							// logger.send({
-							// 	emoji: '🚨',
-							// 	message:
-							// 		'We have failed asins, waiting 3 seconds to retry',
-							// 	status: 'error',
-							// 	loggers: ['logger', 'console'],
-							// })
+						// if (failedAsins.length) {
+						// 	// logger.send({
+						// 	// 	emoji: '🚨',
+						// 	// 	message:
+						// 	// 		'We have failed asins, waiting 3 seconds to retry',
+						// 	// 	status: 'error',
+						// 	// 	loggers: ['logger', 'console'],
+						// 	// })
 
-							setTimeout(() => {
-								// silently continue
-							}, 3000)
+						// 	setTimeout(() => {
+						// 		// silently continue
+						// 	}, 3000)
 
-							// Try one last time to scrape the asins that failed
-							failed.forEach((item) => {
-								const asinData = scrapeAsinData(item)
+						// 	// Try one last time to scrape the asins that failed
+						// 	failedAsins.forEach((item) => {
+						// 		const asinData = scrapeAsinData(item)
 
-								if (
-									!asinData.asin ||
-									!asinData.price ||
-									!asinData.rating ||
-									!asinData.reviews ||
-									!asinData.rank
-								) {
-									// Write to the failed.json
-									if (
-										!failed.some(
-											(item) =>
-												item.asin === asinData.asin
-										)
-									) {
-										failedAsins.push(asinData)
-									}
-								} else {
-									asins.push(asinData)
-								}
-							})
-						}
+						// 		if (
+						// 			!asinData.asin ||
+						// 			!asinData.price ||
+						// 			!asinData.rating ||
+						// 			!asinData.reviews ||
+						// 			!asinData.rank
+						// 		) {
+						// 			// Write to the failed.json
+						// 			if (
+						// 				!failedAsins.some(
+						// 					(item) =>
+						// 						item.asin === asinData.asin
+						// 				)
+						// 			) {
+						// 				failedAsins.push(asinData)
+						// 			}
+						// 		} else {
+						// 			asins.push(asinData)
+						// 		}
+						// 	})
+						// }
 
 						return asins
 					})
@@ -731,12 +731,12 @@ const mongoUrl = DEV
 					}
 				)
 
-				if (failedAsins.length) {
-					fs.writeFileSync(
-						`./data/failed/${DATE_PATH}.json`,
-						JSON.stringify(failedAsins)
-					)
-				}
+				// if (failedAsins.length) {
+				// 	fs.writeFileSync(
+				// 		`./data/failed/${DATE_PATH}.json`,
+				// 		JSON.stringify(failedAsins)
+				// 	)
+				// }
 
 				await cleanupBrowser(browser)
 
