@@ -1,12 +1,15 @@
 'use strict'
 
+// https://github.com/yagop/node-telegram-bot-api/issues/540
+process.env.NTBA_FIX_319 = 1;
+
 // Packages
+require('dotenv').config()
 const fs = require('fs')
 const util = require('util')
 const os = require('os')
 const path = require('path')
 const rimraf = require('rimraf')
-require('dotenv').config()
 const kill = require('tree-kill')
 const mongo = require('mongodb').MongoClient
 const puppeteer = require('puppeteer-extra')
@@ -41,14 +44,12 @@ const mongoUrl = DEV
 // const cleanup = (path) => rimraf(path)
 
 ;(async () => {
-	// We don't want to run the scraper at the same time every single day,
-	// so we're going to wait a random time betwen 10 minutes and 2 hours
 	const randomWaitTimer = generateRandomNumbers(
 		1000 * 60 * 10,
 		1000 * 60 * 60 * 2,
 		1
 	)
-	await delay(randomWaitTimer)
+	const maxRunningTime = 60 * 60 * 1000
 
 	const DATE = new Date()
 	const HOURS = DATE.getHours()
@@ -58,6 +59,20 @@ const mongoUrl = DEV
 	const YEAR = DATE.getFullYear()
 	const DATE_PATH = `${MONTH}-${DAY}-${YEAR}-${HOURS}-${MINUTES}`
 
+	const categories = Object.entries(categoryList)
+
+	const failedAsinData = fs.existsSync(`./data/failed/${DATE_PATH}.json`)
+		? fs.readFileSync(`./data/failed/${DATE_PATH}.json`, 'utf8')
+		: []
+
+	let failedAsins = failedAsinData.length ? JSON.parse(failedAsinData) : []
+
+	// const userDataDir = await setup()
+
+	// We don't want to run the scraper at the same time every single day,
+	// so we're going to wait a random time betwen 10 minutes and 2 hours
+	// await delay(randomWaitTimer)
+
 	logger.send({
 		emoji: '🚀',
 		title: 'Best Seller List Scraper',
@@ -65,13 +80,9 @@ const mongoUrl = DEV
 		status: 'success',
 	})
 
-	const categories = Object.entries(categoryList)
-	const maxRunningTime = 60 * 60 * 1000
-	let browser = null
-
-	// const userDataDir = await setup()
-
-	// Use our plugins
+	///////////////////////////
+	// Puppeteer Functions
+	///////////////////////////
 	puppeteer.use(pluginStealth())
 	puppeteer.use(require('puppeteer-extra-plugin-anonymize-ua')())
 	puppeteer.use(
@@ -83,6 +94,10 @@ const mongoUrl = DEV
 			visualFeedback: true,
 		})
 	)
+	////////////////////////////////
+	// Browser Functions
+	///////////////////////////////
+	let browser = null
 
 	const getBrowser = async () => {
 		if (!browser) {
@@ -134,13 +149,13 @@ const mongoUrl = DEV
 				browser.__BROWSER_START_TIME_MS__ = Date.now()
 
 				logger.send({
-					emoji: '🚀',
+					emoji: '🦄',
 					message: `Browser launched at ${new Date().toLocaleString()}`,
 					status: 'success',
 				})
 			} catch (error) {
 				logger.send({
-					emoji: '🚨',
+					emoji: '💀',
 					message: `Error launching puppeteer`,
 					status: 'error',
 					error: error,
@@ -172,47 +187,218 @@ const mongoUrl = DEV
 		// cleanup(userDataDir)
 	}
 
+	const shutdown = async (browser) => {
+		await cleanupBrowser(browser)
+		await killBrowser()
+
+		process.exit()
+	}
+
+	////////////////////////
+	// Database Functions
+	///////////////////////
+	const findAsins = async (asins, loopPosition) => {
+		const asinCollection = {
+			found: [],
+			notFound: [],
+		}
+
+		const lookForAsins = new Promise((resolve) => {
+			mongo.connect(
+				mongoUrl,
+				{
+					useNewUrlParser: true,
+					useUnifiedTopology: true,
+				},
+				async (error, client) => {
+					if (error) {
+						logger.send({
+							emoji: '🚨',
+							message: `Error connecting to the database for subcategory #${loopPosition.interval +
+								1} in ${loopPosition.category}`,
+							status: 'error',
+						})
+
+						await shutdown()
+					}
+
+					try {
+						const db = client.db(process.env.DB_DATABASE)
+
+						asins.forEach((asin, index) => {
+							database.findDocuments(
+								db,
+								'products',
+								{asin: asin.asin},
+								(docs) => {
+									if (docs.length) {
+										asinCollection.found.push(asin)
+									} else {
+										asinCollection.notFound.push(asin)
+									}
+
+									if (index + 1 === asins.length) {
+										client.close()
+										resolve()
+									}
+								}
+							)
+						})
+					} catch (error) {
+						logger.send({
+							emoji: '🚨',
+							message: `Error reading Products for subcategory #${loopPosition.interval +
+								1} in ${loopPosition.category}`,
+							status: 'error',
+						})
+
+						await shutdown()
+					}
+				}
+			)
+		})
+
+		return lookForAsins.then(() => asinCollection)
+	}
+
+	const saveAsins = async (asins, loopPosition) => {
+		let success = false
+
+		const save = new Promise((resolve) => {
+			mongo.connect(
+				mongoUrl,
+				{
+					useNewUrlParser: true,
+					useUnifiedTopology: true,
+				},
+				async (error, client) => {
+					if (error) {
+						logger.send({
+							emoji: '🚨',
+							message: `Error connecting to the database for subcategory #${loopPosition.interval +
+								1} in ${loopPosition.category}`,
+							status: 'error',
+							error: error,
+						})
+
+						client.close()
+						await shutdown()
+					}
+
+					const db = client.db(process.env.DB_DATABASE)
+
+					if (asins.insert.length || asins.update.length) {
+						try {
+							database.insertProductStats(
+								db,
+								[
+									...(asins.insert ? asins.insert : []),
+									...(asins.update ? asins.update : []),
+								],
+								(result) => {
+									logger.send({
+										emoji: '✅',
+										message: `Product Stats inserted for subcategory #${loopPosition.interval +
+											1} in ${loopPosition.category}`,
+										status: 'success',
+									})
+								}
+							)
+						} catch (error) {
+							logger.send({
+								emoji: '🚨',
+								message: `Error inserting Product Stats for subcategory #${loopPosition.interval +
+									1} in ${loopPosition.category}`,
+								status: 'error',
+							})
+
+							client.close()
+							await shutdown()
+						}
+					} else {
+						client.close()
+						resolve()
+					}
+
+					if (asins.update.length) {
+						try {
+							database.updateProducts(
+								db,
+								asins.update,
+								(result) => {
+									logger.send({
+										emoji: '✅',
+										message: `Products updated for subcategory #${loopPosition.interval +
+											1} in ${loopPosition.category}`,
+										status: 'success',
+									})
+
+									if (!asins.insert.length) {
+										success = true
+										client.close()
+										resolve()
+									}
+								}
+							)
+						} catch (error) {
+							logger.send({
+								emoji: '🚨',
+								message: `Error updating Products for subcategory #${loopPosition.interval +
+									1} in ${loopPosition.category}`,
+								status: 'error',
+							})
+
+							client.close()
+							await shutdown()
+						}
+					}
+
+					if (asins.insert.length) {
+						try {
+							database.insertProducts(
+								db,
+								asins.insert,
+								(result) => {
+									logger.send({
+										emoji: '✅',
+										message: `Products inserted for subcategory #${loopPosition.interval +
+											1} in ${loopPosition.category}`,
+										status: 'success',
+									})
+
+									success = true
+									client.close()
+									resolve()
+								}
+							)
+						} catch (error) {
+							logger.send({
+								emoji: '🚨',
+								message: `Error inserting Products for subcategory #${loopPosition.interval +
+									1} in ${loopPosition.category}`,
+								status: 'error',
+							})
+
+							client.close()
+							await shutdown()
+						}
+					}
+				}
+			)
+		})
+
+		return save.then(() => success)
+	}
+
 	for (let [index, [category, urls]] of categories.entries()) {
 		for (let i = 0; i < urls.length; i++) {
 			const asinList = []
 			const asinsToUpdate = []
 			const asinsToInsert = []
-
-			const failedAsinData = fs.existsSync(
-				`./data/failed/${DATE_PATH}.json`
-			)
-				? fs.readFileSync(`./data/failed/${DATE_PATH}.json`, 'utf8')
-				: []
-
-			let failedAsins = failedAsinData.length
-				? JSON.parse(failedAsinData)
-				: []
-
 			const browser = await getBrowser()
 			const page = await browser.newPage()
 
-			// enable request interception
-			// await page.setRequestInterception(true)
 			await page.setDefaultNavigationTimeout(0)
-			// await preparePageForTests(page)
-
-			// page.on('request', (request) => {
-			// 	// Do nothing in case of non-navigation requests.
-			// 	if (!request.isNavigationRequest()) {
-			// 		request.continue()
-			// 		return
-			// 	}
-
-			// 	// Add a new header for navigation request.
-			// 	const headers = request.headers()
-			// 	headers['X-Requested-With'] = 'XMLHttpRequest'
-			// 	headers['Accept'] =
-			// 		'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3'
-			// 	headers['Accept-Encoding'] = 'gzip, deflate, br'
-			// 	headers['Accept-Language'] = 'en-US,en;q=0.9'
-			// 	headers['Upgrade-Insecure-Requests'] = '1'
-			// 	request.continue({headers})
-			// })
 
 			page.on('response', (response) => {
 				// Ignore requests that aren't the one we are explicitly doing
@@ -220,16 +406,19 @@ const mongoUrl = DEV
 					response
 						.request()
 						.url()
-						.split('ref')[0] === urls[i].split('ref')[0]
+						.split('ref')[0] === urls[i].split('ref')[0] &&
+					!response.ok()
 				) {
-					if (!response.ok()) {
-						changeIpAddress()
-					}
+					// If the response isn't ok, change our IP
+					changeIpAddress()
 				}
 			})
 
+			//////////////////////////////////
+			// Check to see if Tor is working
+			//////////////////////////////////
+			// First we're going to check our IP address to make sure we're not using our public IP
 			try {
-				// First we're going to check our IP address to make sure we're not using our public IP
 				await page.goto('http://checkip.amazonaws.com/')
 
 				const IP = await page.evaluate(() =>
@@ -243,10 +432,7 @@ const mongoUrl = DEV
 						status: 'error',
 					})
 
-					await cleanupBrowser(browser)
-					await killBrowser()
-
-					process.exit()
+					await shutdown()
 				} else {
 					logger.send({
 						emoji: '👻',
@@ -255,8 +441,23 @@ const mongoUrl = DEV
 						loggers: ['logger', 'console', 'notify'],
 					})
 				}
+			} catch (error) {
+				logger.send({
+					emoji: '🚨',
+					message: `There was an error checking Tor`,
+					status: 'error',
+					error: error,
+				})
 
-				const scrapeAsins = async (pg = 1) => {
+				await shutdown()
+			}
+
+			////////////////////
+			// Scrape the page
+			///////////////////
+			// Now we're getting the heart of the scraper
+			try {
+				const requestNewBestSellerPage = async (pg = 1) => {
 					const randomNumbers = generateRandomNumbers(0, 49, 5)
 					const delayTimer = 3000
 					const maxRetryNumber = 5
@@ -300,9 +501,6 @@ const mongoUrl = DEV
 								page.waitForNavigation(),
 								page.click(`button[type="submit"]`),
 							])
-
-							// changeIpAddress()
-							// await delay(6000000)
 						}
 
 						await delay(2000 * retryNumber)
@@ -311,11 +509,14 @@ const mongoUrl = DEV
 					if (!success) {
 						logger.send({
 							emoji: '🚨',
-							message: `Tor IP retry limit reached. Cancelling connection`,
+							message: `Tor IP retry limit reached. Changing IP, waiting 10 minutes and trying again`,
 							status: 'error',
 						})
 
-						return
+						changeIpAddress()
+						return delay(6000000).then(() =>
+							requestNewBestSellerPage(pg)
+						)
 					}
 
 					const asinList = await page.evaluate(() => {
@@ -411,7 +612,7 @@ const mongoUrl = DEV
 							// logger.send({
 							// 	emoji: '🚨',
 							// 	message:
-							// 		'We have a failed asin, waiting 3 seconds to retry',
+							// 		'We have failed asins, waiting 3 seconds to retry',
 							// 	status: 'error',
 							// 	loggers: ['logger', 'console'],
 							// })
@@ -420,6 +621,7 @@ const mongoUrl = DEV
 								// silently continue
 							}, 3000)
 
+							// Try one last time to scrape the asins that failed
 							failedAsins.forEach((item) => {
 								const asinData = scrapeAsinData(item)
 
@@ -448,6 +650,10 @@ const mongoUrl = DEV
 						return asins
 					})
 
+					/////////////////////
+					// Mock user actions
+					/////////////////////
+					// Hover over random product links in the grid
 					for (let i = 0; i < randomNumbers.length; i++) {
 						await page.waitFor(delayTimer - 1000)
 						try {
@@ -459,6 +665,8 @@ const mongoUrl = DEV
 						}
 					}
 
+					// Hover over the Next or Previous page links,
+					// depending on wait page we're currently on
 					await page.waitFor(delayTimer)
 					try {
 						await page.hover(
@@ -469,13 +677,15 @@ const mongoUrl = DEV
 					} catch (error) {
 						// silently fail
 					}
+
+					// Set a delay
 					await page.waitFor(delayTimer - 1000)
 
 					return asinList
 				}
 
-				asinList.push(...(await scrapeAsins()))
-				asinList.push(...(await scrapeAsins(2)))
+				asinList.push(...(await requestNewBestSellerPage()))
+				asinList.push(...(await requestNewBestSellerPage(2)))
 
 				if (!asinList.length) {
 					logger.send({
@@ -484,108 +694,23 @@ const mongoUrl = DEV
 							1} in ${category}`,
 						status: 'error',
 					})
+
+					break
 				}
 
-				asinList.forEach((asin, index) => {
-					if (
-						isObjectEmpty(asin) ||
-						!asin.asin ||
-						!asin.price ||
-						!asin.rating ||
-						!asin.reviews ||
-						!asin.rank
-					) {
-						// Write to the failed.json
-						if (
-							!failedAsins.some(
-								(item) => item.asin === asinData.asin
-							)
-						) {
-							logger.send({
-								emoji: '🚨',
-								message: `Failed to scrape ${
-									asin.asin
-								} for subcategory #${i +
-									1} in ${category}. Pushing to failed.json`,
-								status: 'error',
-							})
-						}
-
-						return
-					}
-
-					// Need to set the primary category here,
-					//otherwise it's out of context
-					asin.category.primary = category
-
-					mongo.connect(
-						mongoUrl,
-						{
-							useNewUrlParser: true,
-							useUnifiedTopology: true,
-						},
-						(error, client) => {
-							if (error) {
-								logger.send({
-									emoji: '🚨',
-									message: `Error connecting to the database for subcategory #${i +
-										1} in ${category}`,
-									status: 'error',
-								})
-
-								const killEverything = new Promise(
-									async (resovle, reject) => {
-										await cleanupBrowser(browser)
-										await killBrowser(browser)
-										resovle()
-									}
-								)
-
-								killEverything.then(() => {
-									process.exit()
-								})
-							}
-
-							try {
-								const db = client.db(process.env.DB_DATABASE)
-								
-								database.findDocuments(
-									db,
-									'products',
-									{asin: asin.asin},
-									(docs) => {
-										if (docs.length) {
-											asinsToUpdate.push(asin)
-										} else {
-											asinsToInsert.push(asin)
-										}
-	
-										client.close()
-									}
-								)
-							} catch (error) {
-								logger.send({
-									emoji: '🚨',
-									message: `Error reading Products for subcategory #${i +
-										1} in ${category}`,
-									status: 'error',
-								})
-
-								const killEverything = new Promise(
-									async (resovle, reject) => {
-										await cleanupBrowser(browser)
-										await killBrowser(browser)
-										resovle()
-									}
-								)
-
-								killEverything.then(() => {
-									process.exit()
-								})
-							}
-						}
-					)
+				const asinLookup = await findAsins(asinList, {
+					interval: i,
+					category
 				})
+
+				asinsToUpdate.push(...asinLookup.found)
+				asinsToInsert.push(...asinLookup.notFound)
+
+				// Need to set the primary category here,
+				//otherwise it's out of context
+				asinList.forEach(
+					(asin) => (asin.category.primary = category)
+				)
 			} catch (error) {
 				logger.send({
 					emoji: '🚨',
@@ -595,139 +720,16 @@ const mongoUrl = DEV
 					error: error,
 				})
 
-				await cleanupBrowser(browser)
-				await killBrowser(browser)
-
-				process.exit()
+				await shutdown()
 			} finally {
-				mongo.connect(
-					mongoUrl,
+				await saveAsins(
 					{
-						useNewUrlParser: true,
-						useUnifiedTopology: true,
+						insert: asinsToInsert,
+						update: asinsToUpdate,
 					},
-					(error, client) => {
-						if (error) {
-							logger.send({
-								emoji: '🚨',
-								message: `Error connecting to the database for subcategory #${i +
-									1} in ${category}`,
-								status: 'error',
-								error: error,
-							})
-
-							const killEverything = new Promise(
-								async (resovle, reject) => {
-									await cleanupBrowser(browser)
-									await killBrowser(browser)
-									resovle()
-								}
-							)
-
-							killEverything.then(() => {
-								process.exit()
-							})
-						}
-
-						const db = client.db(process.env.DB_DATABASE)
-
-						if (asinList.length) {
-							try {
-								database.insertProductStats(
-									db,
-									asinList,
-									(result) => {
-										logger.send({
-											emoji: '✅',
-											message: `Product Stats inserted for subcategory #${i +
-												1} in ${category}`,
-											status: 'success',
-										})
-									}
-								)
-							} catch (error) {
-								logger.send({
-									emoji: '🚨',
-									message: `Error inserting Product Stats for subcategory #${i +
-										1} in ${category}`,
-									status: 'error',
-								})
-
-								const killEverything = new Promise(
-									async (resovle, reject) => {
-										await cleanupBrowser(browser)
-										await killBrowser(browser)
-										resovle()
-									}
-								)
-
-								killEverything.then(() => {
-									process.exit()
-								})
-							}
-						}
-
-						if (asinsToUpdate.length) {
-							try {
-								database.updateProducts(
-									db,
-									asinsToUpdate,
-									(result) => {
-										logger.send({
-											emoji: '✅',
-											message: `Products updated for subcategory #${i +
-												1} in ${category}`,
-											status: 'success',
-										})
-									}
-								)
-							} catch (error) {
-								logger.send({
-									emoji: '🚨',
-									message: `Error updating Products for subcategory #${i +
-										1} in ${category}`,
-									status: 'error',
-								})
-
-								const killEverything = new Promise(
-									async (resovle, reject) => {
-										await cleanupBrowser(browser)
-										await killBrowser(browser)
-										resovle()
-									}
-								)
-
-								killEverything.then(() => {
-									process.exit()
-								})
-							}
-						}
-
-						if (asinsToInsert.length) {
-							try {
-								database.insertProducts(
-									db,
-									asinsToInsert,
-									(result) => {
-										logger.send({
-											emoji: '✅',
-											message: `Products inserted for subcategory #${i +
-												1} in ${category}`,
-											status: 'success',
-										})
-									}
-								)
-							} catch (error) {
-								logger.send({
-									emoji: '🚨',
-									message: `Error inserting Products for subcategory #${i +
-										1} in ${category}`,
-									status: 'error',
-								})
-							}
-						}
-
-						client.close()
+					{
+						interval: i,
+						category
 					}
 				)
 
@@ -769,7 +771,6 @@ const mongoUrl = DEV
 					})
 
 					await killBrowser(browser)
-					process.exit()
 				}
 			}
 		}
