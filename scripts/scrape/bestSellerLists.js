@@ -31,7 +31,6 @@ const mongoUrl = DEV
 	? 'mongodb://localhost:27017'
 	: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_DATABASE}`
 
-// require('events').EventEmitter.defaultMaxListeners = 12;
 // const mkdirAsync = util.promisify(fs.mkdir)
 // const setup = async () => {
 // 	const dataDir = path.join(os.tmpdir(), Date.now())
@@ -136,7 +135,7 @@ const mongoUrl = DEV
 
 				logger.send({
 					emoji: '🚀',
-					message: `Browser launched at ${browser.__BROWSER_START_TIME_MS__.toLocaleString()}`,
+					message: `Browser launched at ${new Date().toLocaleString()}`,
 					status: 'success',
 				})
 			} catch (error) {
@@ -547,20 +546,43 @@ const mongoUrl = DEV
 								})
 							}
 
-							database.findDocuments(
-								client.db(process.env.DB_DATABASE),
-								'products',
-								{asin: asin.asin},
-								(docs) => {
-									if (docs.length) {
-										asinsToUpdate.push(asin)
-									} else {
-										asinsToInsert.push(asin)
-									}
+							const db = client.db(process.env.DB_DATABASE)
 
-									client.close()
-								}
-							)
+							try {
+								database.findDocuments(
+									db,
+									'products',
+									{asin: asin.asin},
+									(docs) => {
+										if (docs.length) {
+											asinsToUpdate.push(asin)
+										} else {
+											asinsToInsert.push(asin)
+										}
+	
+										client.close()
+									}
+								)
+							} catch (error) {
+								logger.send({
+									emoji: '🚨',
+									message: `Error reading Products for subcategory #${i +
+										1} in ${category}`,
+									status: 'error',
+								})
+
+								const killEverything = new Promise(
+									async (resovle, reject) => {
+										await cleanupBrowser(browser)
+										await killBrowser(browser)
+										resovle()
+									}
+								)
+
+								killEverything.then(() => {
+									process.exit()
+								})
+							}
 						}
 					)
 				})
@@ -607,10 +629,12 @@ const mongoUrl = DEV
 							})
 						}
 
+						const db = client.db(process.env.DB_DATABASE)
+
 						if (asinList.length) {
 							try {
 								database.insertProductStats(
-									client.db(process.env.DB_DATABASE),
+									db,
 									asinList,
 									(result) => {
 										logger.send({
@@ -628,13 +652,25 @@ const mongoUrl = DEV
 										1} in ${category}`,
 									status: 'error',
 								})
+
+								const killEverything = new Promise(
+									async (resovle, reject) => {
+										await cleanupBrowser(browser)
+										await killBrowser(browser)
+										resovle()
+									}
+								)
+
+								killEverything.then(() => {
+									process.exit()
+								})
 							}
 						}
 
 						if (asinsToUpdate.length) {
 							try {
 								database.updateProducts(
-									client.db(process.env.DB_DATABASE),
+									db,
 									asinsToUpdate,
 									(result) => {
 										logger.send({
@@ -652,13 +688,25 @@ const mongoUrl = DEV
 										1} in ${category}`,
 									status: 'error',
 								})
+
+								const killEverything = new Promise(
+									async (resovle, reject) => {
+										await cleanupBrowser(browser)
+										await killBrowser(browser)
+										resovle()
+									}
+								)
+
+								killEverything.then(() => {
+									process.exit()
+								})
 							}
 						}
 
 						if (asinsToInsert.length) {
 							try {
 								database.insertProducts(
-									client.db(process.env.DB_DATABASE),
+									db,
 									asinsToInsert,
 									(result) => {
 										logger.send({
