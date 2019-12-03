@@ -219,7 +219,7 @@ const mongoUrl = DEV
 							status: 'error',
 						})
 
-						await shutdown()
+						await shutdown(browser)
 					}
 
 					try {
@@ -252,7 +252,7 @@ const mongoUrl = DEV
 							status: 'error',
 						})
 
-						await shutdown()
+						await shutdown(browser)
 					}
 				}
 			)
@@ -282,7 +282,7 @@ const mongoUrl = DEV
 						})
 
 						client.close()
-						await shutdown()
+						await shutdown(browser)
 					}
 
 					const db = client.db(process.env.DB_DATABASE)
@@ -313,7 +313,7 @@ const mongoUrl = DEV
 							})
 
 							client.close()
-							await shutdown()
+							await shutdown(browser)
 						}
 					} else {
 						client.close()
@@ -349,7 +349,7 @@ const mongoUrl = DEV
 							})
 
 							client.close()
-							await shutdown()
+							await shutdown(browser)
 						}
 					}
 
@@ -380,7 +380,7 @@ const mongoUrl = DEV
 							})
 
 							client.close()
-							await shutdown()
+							await shutdown(browser)
 						}
 					}
 				}
@@ -432,7 +432,7 @@ const mongoUrl = DEV
 						status: 'error',
 					})
 
-					await shutdown()
+					await shutdown(browser)
 				} else {
 					logger.send({
 						emoji: '👻',
@@ -449,7 +449,7 @@ const mongoUrl = DEV
 					error: error,
 				})
 
-				await shutdown()
+				await shutdown(browser)
 			}
 
 			////////////////////
@@ -718,7 +718,7 @@ const mongoUrl = DEV
 					error: error,
 				})
 
-				await shutdown()
+				await shutdown(browser)
 			} finally {
 				await saveAsins(
 					{
