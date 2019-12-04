@@ -1,8 +1,5 @@
 'use strict'
 
-// https://github.com/yagop/node-telegram-bot-api/issues/540
-process.env.NTBA_FIX_319 = 1
-
 // Packages
 require('dotenv').config()
 const fs = require('fs')
@@ -17,12 +14,12 @@ const pluginStealth = require('puppeteer-extra-plugin-stealth')
 const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha')
 
 // Modules
-const database = require('../../helpers/database')
-const changeIpAddress = require('../../helpers/changeIP')
-const generateRandomNumbers = require('../../helpers/randomNumbers')
-const delay = require('../../helpers/delay')
-const Logger = require('../../helpers/Logger')
-const categoryList = require('../../helpers/categories')
+const database = require('../../util/helpers/database')
+const changeIpAddress = require('../../util/helpers/changeIP')
+const generateRandomNumbers = require('../../util/helpers/randomNumbers')
+const delay = require('../../util/helpers/delay')
+const Logger = require('../../util/modules/Logger')
+const categoryList = require('../../util/helpers/categories')
 const logger = new Logger('Best Seller List Scraper')
 
 // Variables
@@ -41,18 +38,18 @@ const mongoUrl = DEV
 	const maxRunningTime = 60 * 60 * 1000
 
 	const DATE = new Date()
-	// const HOURS = DATE.getHours()
-	// const MINUTES = DATE.getMinutes()
-	// const DAY = DATE.getDate()
-	// const MONTH = DATE.getMonth() + 1
-	// const YEAR = DATE.getFullYear()
-	// const DATE_PATH = `${MONTH}-${DAY}-${YEAR}-${HOURS}-${MINUTES}`
+	const HOURS = DATE.getHours()
+	const MINUTES = DATE.getMinutes()
+	const DAY = DATE.getDate()
+	const MONTH = DATE.getMonth() + 1
+	const YEAR = DATE.getFullYear()
+	const DATE_PATH = `${MONTH}-${DAY}-${YEAR}-${HOURS}-${MINUTES}`
 
-	// const failedAsinData = fs.existsSync(`./data/failed/${DATE_PATH}.json`)
-	// 	? fs.readFileSync(`./data/failed/${DATE_PATH}.json`, 'utf8')
-	// 	: []
+	const failedAsinData = fs.existsSync(`./data/failed/${DATE_PATH}.json`)
+		? fs.readFileSync(`./data/failed/${DATE_PATH}.json`, 'utf8')
+		: []
 
-	// let failedAsins = failedAsinData.length ? JSON.parse(failedAsinData) : []
+	let failedAsins = failedAsinData.length ? JSON.parse(failedAsinData) : []
 
 	const mkdirAsync = util.promisify(fs.mkdir)
 	const setup = async () => {
@@ -67,7 +64,7 @@ const mongoUrl = DEV
 
 	// We don't want to run the scraper at the same time every single day,
 	// so we're going to wait a random time betwen 10 minutes and 2 hours
-	await delay(randomWaitTimer)
+	// await delay(randomWaitTimer)
 
 	logger.send({
 		emoji: '🚀',
@@ -167,10 +164,7 @@ const mongoUrl = DEV
 
 	const cleanupBrowser = async (browser) => {
 		// Kill it if it's time
-		if (
-			browser.__BROWSER_START_TIME_MS__ &&
-			Date.now() - browser.__BROWSER_START_TIME_MS__ >= maxRunningTime
-		) {
+		if (Date.now() - browser.__BROWSER_START_TIME_MS__ >= maxRunningTime) {
 			treekill(browser.process().pid, 'SIGKILL')
 			cleanup(userDataDir)
 			browser = null
@@ -189,7 +183,7 @@ const mongoUrl = DEV
 
 	const shutdown = async (browser) => {
 		await cleanupBrowser(browser)
-		await killBrowser(browser)
+		await killBrowser()
 
 		process.exit()
 	}
@@ -219,7 +213,7 @@ const mongoUrl = DEV
 							status: 'error',
 						})
 
-						await shutdown(browser)
+						await shutdown()
 					}
 
 					try {
@@ -252,7 +246,7 @@ const mongoUrl = DEV
 							status: 'error',
 						})
 
-						await shutdown(browser)
+						await shutdown()
 					}
 				}
 			)
@@ -282,7 +276,7 @@ const mongoUrl = DEV
 						})
 
 						client.close()
-						await shutdown(browser)
+						await shutdown()
 					}
 
 					const db = client.db(process.env.DB_DATABASE)
@@ -313,7 +307,7 @@ const mongoUrl = DEV
 							})
 
 							client.close()
-							await shutdown(browser)
+							await shutdown()
 						}
 					} else {
 						client.close()
@@ -349,7 +343,7 @@ const mongoUrl = DEV
 							})
 
 							client.close()
-							await shutdown(browser)
+							await shutdown()
 						}
 					}
 
@@ -380,7 +374,7 @@ const mongoUrl = DEV
 							})
 
 							client.close()
-							await shutdown(browser)
+							await shutdown()
 						}
 					}
 				}
@@ -432,7 +426,7 @@ const mongoUrl = DEV
 						status: 'error',
 					})
 
-					await shutdown(browser)
+					await shutdown()
 				} else {
 					logger.send({
 						emoji: '👻',
@@ -449,7 +443,7 @@ const mongoUrl = DEV
 					error: error,
 				})
 
-				await shutdown(browser)
+				await shutdown()
 			}
 
 			////////////////////
@@ -521,7 +515,7 @@ const mongoUrl = DEV
 
 					const asinList = await page.evaluate(() => {
 						const asins = []
-						const failedAsins = []
+						const failed = []
 						const grid = document.getElementById('zg-ordered-list')
 						const items = grid.querySelectorAll('li')
 
@@ -602,50 +596,50 @@ const mongoUrl = DEV
 								!asinData.reviews ||
 								!asinData.rank
 							) {
-								failedAsins.push(item)
+								failed.push(item)
 							} else {
 								asins.push(asinData)
 							}
 						})
 
-						// if (failedAsins.length) {
-						// 	// logger.send({
-						// 	// 	emoji: '🚨',
-						// 	// 	message:
-						// 	// 		'We have failed asins, waiting 3 seconds to retry',
-						// 	// 	status: 'error',
-						// 	// 	loggers: ['logger', 'console'],
-						// 	// })
+						if (failed.length) {
+							// logger.send({
+							// 	emoji: '🚨',
+							// 	message:
+							// 		'We have failed asins, waiting 3 seconds to retry',
+							// 	status: 'error',
+							// 	loggers: ['logger', 'console'],
+							// })
 
-						// 	setTimeout(() => {
-						// 		// silently continue
-						// 	}, 3000)
+							setTimeout(() => {
+								// silently continue
+							}, 3000)
 
-						// 	// Try one last time to scrape the asins that failed
-						// 	failedAsins.forEach((item) => {
-						// 		const asinData = scrapeAsinData(item)
+							// Try one last time to scrape the asins that failed
+							failed.forEach((item) => {
+								const asinData = scrapeAsinData(item)
 
-						// 		if (
-						// 			!asinData.asin ||
-						// 			!asinData.price ||
-						// 			!asinData.rating ||
-						// 			!asinData.reviews ||
-						// 			!asinData.rank
-						// 		) {
-						// 			// Write to the failed.json
-						// 			if (
-						// 				!failedAsins.some(
-						// 					(item) =>
-						// 						item.asin === asinData.asin
-						// 				)
-						// 			) {
-						// 				failedAsins.push(asinData)
-						// 			}
-						// 		} else {
-						// 			asins.push(asinData)
-						// 		}
-						// 	})
-						// }
+								if (
+									!asinData.asin ||
+									!asinData.price ||
+									!asinData.rating ||
+									!asinData.reviews ||
+									!asinData.rank
+								) {
+									// Write to the failed.json
+									if (
+										!failed.some(
+											(item) =>
+												item.asin === asinData.asin
+										)
+									) {
+										failedAsins.push(asinData)
+									}
+								} else {
+									asins.push(asinData)
+								}
+							})
+						}
 
 						return asins
 					})
@@ -718,7 +712,7 @@ const mongoUrl = DEV
 					error: error,
 				})
 
-				await shutdown(browser)
+				await shutdown()
 			} finally {
 				await saveAsins(
 					{
@@ -731,12 +725,12 @@ const mongoUrl = DEV
 					}
 				)
 
-				// if (failedAsins.length) {
-				// 	fs.writeFileSync(
-				// 		`./data/failed/${DATE_PATH}.json`,
-				// 		JSON.stringify(failedAsins)
-				// 	)
-				// }
+				if (failedAsins.length) {
+					fs.writeFileSync(
+						`./data/failed/${DATE_PATH}.json`,
+						JSON.stringify(failedAsins)
+					)
+				}
 
 				await cleanupBrowser(browser)
 

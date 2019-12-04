@@ -5,11 +5,7 @@ const colors = require('colors')
 const {createLogger, format, transports} = require('winston')
 const {combine, timestamp, label, printf} = format
 const notifier = require('node-notifier')
-const TelegramBot = require('node-telegram-bot-api')
-
-const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN
-const telegramUserId = process.env.TELEGRAM_USER_ID
-const jungleHuntBot = new TelegramBot(telegramBotToken)
+const bot = require('./Telegram')
 
 const DATE = new Date()
 const DAY = DATE.getDate()
@@ -22,7 +18,7 @@ class Logger {
 	constructor(title) {
 		this.title = title
 		this.notify = notifier
-		this.telegram = jungleHuntBot
+		this.bot = bot
 		this.format = this._loggerFormat()
 		this.logger = this._createLogger()
 	}
@@ -58,26 +54,26 @@ class Logger {
 	send(options) {
 		const INCLUDE_ALL = !options.loggers || options.loggers === 'all'
 
-		if (INCLUDE_ALL || options.loggers.includes('telegram')) {
-			try {
-				this.telegram.sendMessage(
-					telegramUserId,
-					[options.emoji, `${this.title}:`, options.message].join(' ')
-				)
-			} catch (error) {
-				this.logger.error('Failed to send message to Telegram')
+		if (!DEV) {
+			if (INCLUDE_ALL || options.loggers.includes('telegram')) {
+				try {
+					this.bot.sendMessage(
+						telegramUserId,
+						[options.emoji, `${this.title}:`, options.message].join(' ')
+					)
+				} catch (error) {
+					this.logger.error('Failed to send message to Telegram')
+				}
 			}
-		}
-
-		if (INCLUDE_ALL || options.loggers.includes('logger')) {
-			this.logger[options.status === 'error' ? 'error' : 'info'](options.message)
-
-			if (options.error) {
-				this.logger.error(options.error)
+	
+			if (INCLUDE_ALL || options.loggers.includes('logger')) {
+				this.logger[options.status === 'error' ? 'error' : 'info'](options.message)
+	
+				if (options.error) {
+					this.logger.error(options.error)
+				}
 			}
-		}
-
-		if (DEV) {
+		} else {
 			if (INCLUDE_ALL || options.loggers.includes('console')) {
 				console.log(
 					colors[options.status === 'error' ? 'red' : 'green'](

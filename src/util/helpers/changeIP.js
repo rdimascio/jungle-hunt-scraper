@@ -1,7 +1,7 @@
 'use strict'
 
 require('dotenv').config()
-const exec = require('child_process').exec
+const {exec} = require('child_process')
 
 // Change the IP address using Tor
 const changeIpAddress = () => {
