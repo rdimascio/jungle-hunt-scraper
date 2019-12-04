@@ -54,7 +54,7 @@ class Logger {
 	send(options) {
 		const INCLUDE_ALL = !options.loggers || options.loggers === 'all'
 
-		if (DEV) {
+		if (!DEV) {
 			if (INCLUDE_ALL || options.loggers.includes('telegram')) {
 				try {
 					this.bot.sendMessage(
