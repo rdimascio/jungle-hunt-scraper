@@ -107,7 +107,9 @@ const mongoUrl = DEV
 				browser = await puppeteer.launch({
 					userDataDir,
 					ignoreHTTPSErrors: true,
-					dumpio: false,
+					handleSIGINT: false,
+					handleSIGTERM: false,
+					handleSIGHUP: false,
 					// headless: true,
 					devtools: false,
 					// ignoreDefaultArgs: true,
@@ -208,6 +210,11 @@ const mongoUrl = DEV
 
 		process.exit()
 	}
+
+	// We can handle our own termination signals
+	process.on('SIGINT', async () => await shutdown(browser))
+	process.on('SIGTERM', async () => await shutdown(browser))
+	process.on('SIGHUP', async () => await shutdown(browser))
 
 	////////////////////////
 	// Database Functions
