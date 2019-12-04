@@ -30,6 +30,7 @@ const mongoUrl = DEV
 	: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_DATABASE}`
 
 ;(async () => {
+	let terminated = false
 	const randomWaitTimer = generateRandomNumbers(
 		1000 * 60 * 10,
 		1000 * 60 * 60 * 2,
@@ -51,6 +52,19 @@ const mongoUrl = DEV
 
 	// let failedAsins = failedAsinData.length ? JSON.parse(failedAsinData) : []
 
+	const categories = Object.entries(categoryList)
+
+	// We don't want to run the scraper at the same time every single day,
+	// so we're going to wait a random time betwen 10 minutes and 2 hours
+	// await delay(randomWaitTimer)
+
+	logger.send({
+		emoji: '🚀',
+		title: 'Best Seller List Scraper',
+		message: `Started scraping at ${DATE.toLocaleString()}`,
+		status: 'success',
+	})
+
 	const mkdirAsync = util.promisify(fs.mkdir)
 	const setup = async () => {
 		const dataDir = path.join(os.tmpdir(), Date.now().toString())
@@ -65,21 +79,20 @@ const mongoUrl = DEV
 
 		return dataDir
 	}
-	const cleanup = (path) => new Promise((resolve) => rimraf(path, resolve))
+	const cleanup = (path) => {
+		return new Promise((resolve) => {
+			rimraf(path, () => {
+				logger.send({
+					emoji: '📁',
+					title: 'Best Seller List Scraper',
+					message: `Removed temporary directory at ${path}`,
+					status: 'success',
+				})
+				resolve()
+			})
+		})
+	}
 	const userDataDir = await setup()
-
-	const categories = Object.entries(categoryList)
-
-	// We don't want to run the scraper at the same time every single day,
-	// so we're going to wait a random time betwen 10 minutes and 2 hours
-	// await delay(randomWaitTimer)
-
-	logger.send({
-		emoji: '🚀',
-		title: 'Best Seller List Scraper',
-		message: `Started scraping at ${DATE.toLocaleString()}`,
-		status: 'success',
-	})
 
 	///////////////////////////
 	// Puppeteer Functions
@@ -108,8 +121,6 @@ const mongoUrl = DEV
 					userDataDir,
 					ignoreHTTPSErrors: true,
 					handleSIGINT: false,
-					handleSIGTERM: false,
-					handleSIGHUP: false,
 					// headless: true,
 					devtools: false,
 					// ignoreDefaultArgs: true,
@@ -178,6 +189,7 @@ const mongoUrl = DEV
 			browser.__BROWSER_START_TIME_MS__ &&
 			Date.now() - browser.__BROWSER_START_TIME_MS__ >= maxRunningTime
 		) {
+			console.log('creating a new browser')
 			kill(browser.process().pid, 'SIGKILL')
 			await cleanup(userDataDir)
 			browser = null
@@ -189,7 +201,7 @@ const mongoUrl = DEV
 		// Cleanup the browser's pages
 		const pages = browser ? await browser.pages() : null
 
-		return pages ? Promise.all(pages.map((page) => page.close())) : false
+		return pages ? Promise.all(pages.map((page) => page && page.close())) : false
 	}
 
 	const killBrowser = async (browser) => {
@@ -207,14 +219,16 @@ const mongoUrl = DEV
 	const shutdown = async (browser) => {
 		await cleanupBrowser(browser, false)
 		await killBrowser(browser)
+		await delay(2000)
 
 		process.exit()
 	}
 
 	// We can handle our own termination signals
-	process.on('SIGINT', async () => await shutdown(browser))
-	process.on('SIGTERM', async () => await shutdown(browser))
-	process.on('SIGHUP', async () => await shutdown(browser))
+	process.on('SIGINT', async () => {
+		terminated = true
+		await shutdown(browser)
+	})
 
 	////////////////////////
 	// Database Functions
@@ -241,7 +255,7 @@ const mongoUrl = DEV
 							status: 'error',
 						})
 
-						await shutdown(browser)
+						if (!terminated) await shutdown(browser)
 					}
 
 					try {
@@ -274,7 +288,7 @@ const mongoUrl = DEV
 							status: 'error',
 						})
 
-						await shutdown(browser)
+						if (!terminated) await shutdown(browser)
 					}
 				}
 			)
@@ -304,7 +318,7 @@ const mongoUrl = DEV
 						})
 
 						client.close()
-						await shutdown(browser)
+						if (!terminated) await shutdown(browser)
 					}
 
 					const db = client.db(process.env.DB_DATABASE)
@@ -335,7 +349,7 @@ const mongoUrl = DEV
 							})
 
 							client.close()
-							await shutdown(browser)
+							if (!terminated) await shutdown(browser)
 						}
 					} else {
 						client.close()
@@ -371,7 +385,7 @@ const mongoUrl = DEV
 							})
 
 							client.close()
-							await shutdown(browser)
+							if (!terminated) await shutdown(browser)
 						}
 					}
 
@@ -402,7 +416,8 @@ const mongoUrl = DEV
 							})
 
 							client.close()
-							await shutdown(browser)
+							
+							if (!terminated) await shutdown(browser)
 						}
 					}
 				}
@@ -411,6 +426,7 @@ const mongoUrl = DEV
 
 		return save.then(() => success)
 	}
+
 
 	for (let [index, [category, urls]] of categories.entries()) {
 		for (let i = 0; i < urls.length; i++) {
@@ -454,7 +470,7 @@ const mongoUrl = DEV
 						status: 'error',
 					})
 
-					await shutdown(browser)
+					if (!terminated) await shutdown(browser)
 				} else {
 					logger.send({
 						emoji: '👻',
@@ -471,7 +487,7 @@ const mongoUrl = DEV
 					error: error,
 				})
 
-				await shutdown(browser)
+				if (!terminated) await shutdown(browser)
 			}
 
 			////////////////////
@@ -740,7 +756,7 @@ const mongoUrl = DEV
 					error: error,
 				})
 
-				await shutdown(browser)
+				if (!terminated) await shutdown(browser)
 			} finally {
 				await saveAsins(
 					{
