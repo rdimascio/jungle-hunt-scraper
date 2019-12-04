@@ -18,7 +18,7 @@ class Logger {
 	constructor(title) {
 		this.title = title
 		this.notify = notifier
-		this.bot = bot
+		this.bot = bot()
 		this.format = this._loggerFormat()
 		this.logger = this._createLogger()
 	}
