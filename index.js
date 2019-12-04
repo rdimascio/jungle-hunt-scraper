@@ -5,5 +5,5 @@ const bot = require('./src/util/modules/Telegram')
 
 // Matches "/start best sellers"
 bot.onText(/\/start best sellers/, (msg, match) => {
-	exec('npm run start:best-sellers')
+	exec('node ./src/scripts/scrape/bestSellerLists.js')
 })
