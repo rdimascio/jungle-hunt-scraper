@@ -1,7 +1,8 @@
 const fs = require('fs')
+const path = './logs/lastScrapeTime.txt'
 
 const lastScrapeTime = () =>
-	fs.readFileSync('./lastScrapeTime.txt', 'utf8', (err, data) =>
+	fs.existsSync(path) && fs.readFileSync(path, 'utf8', (err, data) =>
 		err ? err : data
 	)
 
