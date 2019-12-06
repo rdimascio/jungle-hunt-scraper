@@ -42,8 +42,8 @@ const logger = createLogger({
 // 	})
 // }
 
-const insertProducts = (db, products, callback) => {
-	const collection = db.collection('products')
+const insertProducts = (db, col, products, callback) => {
+	const collection = db.collection(col)
 
 	const formattedProducts = products.map((product) => {
 		const insertObject = {}
@@ -68,8 +68,8 @@ const insertProducts = (db, products, callback) => {
 	}
 }
 
-const insertProductStats = (db, products, callback) => {
-	const collection = db.collection('productStats')
+const insertStats = (db, col, products, callback) => {
+	const collection = db.collection(col)
 
 	const formattedProducts = products.map((product) => {
 		const productStats = {
@@ -103,8 +103,8 @@ const insertProductStats = (db, products, callback) => {
 	}
 }
 
-const updateProduct = (db, doc, product, callback) => {
-	const collection = db.collection('products')
+const updateProduct = (db, col, doc, product, callback) => {
+	const collection = db.collection(col)
 	const metrics = ['price', 'rank', 'reviews', 'rating']
 	const newDoc = {}
 
@@ -136,8 +136,8 @@ const updateProduct = (db, doc, product, callback) => {
 	)
 }
 
-const updateProducts = (db, products, callback) => {
-	const collection = db.collection('products')
+const updateProducts = (db, col, products, callback) => {
+	const collection = db.collection(col)
 
 	const formattedProducts = products.map((product) => {
 		const insertObject = {}
@@ -170,7 +170,7 @@ const updateProducts = (db, products, callback) => {
 	}
 }
 
-const findDocuments = (db, col, doc = {}, callback) => {
+const findProducts = (db, col, doc = {}, callback) => {
 	const collection = db.collection(col)
 
 	collection.find(doc).toArray(function(err, docs) {
@@ -182,8 +182,8 @@ const findDocuments = (db, col, doc = {}, callback) => {
 module.exports = {
 	// insertDocument,
 	insertProducts,
-	insertProductStats,
+	insertStats,
 	updateProduct,
 	updateProducts,
-	findDocuments,
+	findProducts,
 }

@@ -39,8 +39,27 @@ const puppeteer = require('puppeteer');
 		// 		}
 		// 	}
 		// });
+		await page.setRequestInterception(true)
 
-		await page.goto('http://checkip.amazonaws.com/');
+		page.on('request', (request) => {
+			// Do nothing in case of non-navigation requests.
+			if (!request.isNavigationRequest()) {
+				request.continue()
+				return
+			}
+
+			// Add a new header for navigation request.
+			const headers = request.headers()
+			headers['X-Requested-With'] = 'XMLHttpRequest'
+			// headers['Accept'] =
+			// 	'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3'
+			// headers['Accept-Encoding'] = 'gzip, deflate, br'
+			// headers['Accept-Language'] = 'en-US,en;q=0.9'
+			// headers['Upgrade-Insecure-Requests'] = '1'
+			request.continue({headers})
+		})
+
+		await page.goto('http://cors-anywhere.herokuapp.com/http://checkip.amazonaws.com/');
 
 		const IP = await page.evaluate(() => document.body.textContent.trim());
 

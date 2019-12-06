@@ -1,11 +1,25 @@
 'use strict'
 
 const puppeteer = require('puppeteer-extra')
+// const AddHeadersPlugin = require("puppeteer-extra-plugin-stealth")
+// const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha')
 const pluginStealth = require('puppeteer-extra-plugin-stealth')
-const preparePageForTests = require('../../../helpers/preparePageForTests')
+// const preparePageForTests = require('../../../util/helpers/preparePageForTests')
+
+const HEADERS = {
+	'X-Requested-With': 'XMLHttpRequest',
+	'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
+	'Accept-Encoding': 'gzip, deflate, br',
+	'Upgrade-Insecure-Requests': '1'
+}
+
+// const addHeaders = AddHeadersPlugin({extraHeaders: HEADERS})
 
 ;(async () => {
-	puppeteer.use(pluginStealth())
+	// const STEALTH = pluginStealth(HEADERS)
+	// puppeteer.use(addHeaders)
+	// puppeteer.use(pluginStealth())
+	// puppeteer.use(require('puppeteer-extra-plugin-anonymize-ua')())
 
 	const browser = await puppeteer.launch({
 		// ignoreHTTPSErrors: true,
@@ -23,28 +37,28 @@ const preparePageForTests = require('../../../helpers/preparePageForTests')
 			/* TODO : https://peter.sh/experiments/chromium-command-line-switches/
 			there is still a whole bunch of stuff to disable
 			*/
-			//'--crash-test', // Causes the browser process to crash on startup, useful to see if we catch that correctly
-			// not idea if those 2 aa options are usefull with disable gl thingy
-			// '--disable-canvas-aa', // Disable antialiasing on 2d canvas
-			// '--disable-2d-canvas-clip-aa', // Disable antialiasing on 2d canvas clips
-			// '--disable-gl-drawing-for-tests', // BEST OPTION EVER! Disables GL drawing operations which produce pixel output. With this the GL output will not be correct but tests will run faster.
-			// // '--disable-dev-shm-usage', // ???
-			// // '--no-zygote', // wtf does that mean ?
-			// '--use-gl=desktop', // better cpu usage with --use-gl=desktop rather than --use-gl=swiftshader, still needs more testing.
-			// '--enable-webgl',
-			// '--hide-scrollbars',
-			// '--mute-audio',
-			// '--no-first-run',
-			// '--disable-infobars',
-			// '--disable-breakpad',
-			// '--ignore-gpu-blacklist',
-			// '--window-size=1280,1024', // see defaultViewport
-			// '--no-sandbox',
-			// '--disable-setuid-sandbox',
-			// '--ignore-certificate-errors',
-			// '--disable-dev-shm-usage',
-			// '--disable-accelerated-2d-canvas',
-			// '--disable-gpu',
+			// '--crash-test', // Causes the browser process to crash on startup, useful to see if we catch that correctly
+			//not idea if those 2 aa options are usefull with disable gl thingy
+			'--disable-canvas-aa', // Disable antialiasing on 2d canvas
+			'--disable-2d-canvas-clip-aa', // Disable antialiasing on 2d canvas clips
+			'--disable-gl-drawing-for-tests', // BEST OPTION EVER! Disables GL drawing operations which produce pixel output. With this the GL output will not be correct but tests will run faster.
+			// '--disable-dev-shm-usage', // ???
+			// '--no-zygote', // wtf does that mean ?
+			'--use-gl=desktop', // better cpu usage with --use-gl=desktop rather than --use-gl=swiftshader, still needs more testing.
+			'--enable-webgl',
+			'--hide-scrollbars',
+			'--mute-audio',
+			'--no-first-run',
+			'--disable-infobars',
+			'--disable-breakpad',
+			'--ignore-gpu-blacklist',
+			'--window-size=1280,1024', // see defaultViewport
+			'--no-sandbox',
+			'--disable-setuid-sandbox',
+			'--ignore-certificate-errors',
+			'--disable-dev-shm-usage',
+			'--disable-accelerated-2d-canvas',
+			'--disable-gpu',
 			'--proxy-server=socks5://127.0.0.1:9050',
 			// '--proxy-bypass-list=*',
 		],
@@ -57,11 +71,31 @@ const preparePageForTests = require('../../../helpers/preparePageForTests')
 	// await page.setDefaultNavigationTimeout(0)
 	// await preparePageForTests(page)
 
+	await page.setRequestInterception(true)
+
+	page.on('request', (request) => {
+		// Do nothing in case of non-navigation requests.
+		if (!request.isNavigationRequest()) {
+			request.continue()
+			return
+		}
+
+		// Add a new header for navigation request.
+		const headers = request.headers()
+		headers['X-Requested-With'] = 'XMLHttpRequest'
+		request.continue({headers})
+	})
+
 	// page.on('request', (request) => {
 	// 	// Do nothing in case of non-navigation requests.
 	// 	if (!request.isNavigationRequest()) {
 	// 		request.continue()
 	// 		return
+	// 	}
+
+	// 	{
+	// 		'X-Requested-With': 'XMLHttpRequest',
+
 	// 	}
 
 	// 	// Add a new header for navigation request.
@@ -75,8 +109,10 @@ const preparePageForTests = require('../../../helpers/preparePageForTests')
 	// 	request.continue({headers})
 	// })
 
-	await page.goto('https://bot.sannysoft.com')
+	await page.goto(
+		'https://www.amazon.com/discover/?ref=sbl_hm_sa'
+	)
 	await page.waitFor(5000)
-	await page.screenshot({path: './scripts/scrape/bot-detect/testresult.png', fullPage: true})
+	await page.screenshot({path: './testresult.png', fullPage: true})
 	await browser.close()
 })()

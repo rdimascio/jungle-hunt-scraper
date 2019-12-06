@@ -8,29 +8,61 @@ const path = require('path')
 const util = require('util')
 const rimraf = require('rimraf')
 const kill = require('tree-kill')
+
+// Mongo
 const mongo = require('mongodb').MongoClient
+
+// Puppeteer
 const puppeteer = require('puppeteer-extra')
 const pluginStealth = require('puppeteer-extra-plugin-stealth')
 const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha')
 
-// Modules
+// Helpers
 const database = require('../../util/helpers/database')
 const changeIpAddress = require('../../util/helpers/changeIP')
 const generateRandomNumbers = require('../../util/helpers/randomNumbers')
 const delay = require('../../util/helpers/delay')
 const Logger = require('../../util/modules/Logger')
-const categoryList = require('../../util/helpers/categories')
+const getListType = require('../../util/helpers/getListType')
+const getLastScrapeTime = require('../../util/helpers/getLastScrapeTime')
+const bestSellerCategories = require('../../../data/categories/bestSeller')
+const mostGiftedCategories = require('../../../data/categories/mostGifted')
+const newReleaseCategories = require('../../../data/categories/newReleases')
+const mostWishedForCategories = require('../../../data/categories/mostWishedFor')
 const logger = new Logger('Best Seller List Scraper')
 
 // Variables
 const DEV = process.env.NODE_ENV === 'development'
+const BASE = 'https://www.amazon.com'
 const publicIps = ['12.205.195.90', '172.119.134.14', '167.71.144.15']
 const mongoUrl = DEV
 	? 'mongodb://localhost:27017'
 	: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_DATABASE}`
 
 ;(async () => {
+	const now = new Date()
+	const lastScrapeTime = parseFloat(getLastScrapeTime())
+
+	if (
+		!DEV &&
+		new Date(lastScrapeTime).setHours(0, 0, 0, 0) ===
+			now.setHours(0, 0, 0, 0)
+	) {
+		logger.send({
+			emoji: '🚨',
+			message: `We've already ran the script today at ${new Date(
+				lastScrapeTime
+			)}`,
+			status: 'error',
+		})
+
+		process.exit()
+	}
+
+	fs.writeFileSync('./lastScrapeTime.txt', now.getTime())
+
 	let terminated = false
+
 	const randomWaitTimer = generateRandomNumbers(
 		1000 * 60 * 10,
 		1000 * 60 * 60 * 2,
@@ -38,7 +70,7 @@ const mongoUrl = DEV
 	)
 	const maxRunningTime = 60 * 60 * 1000
 
-	const DATE = new Date()
+	const DATE = now
 	// const HOURS = DATE.getHours()
 	// const MINUTES = DATE.getMinutes()
 	// const DAY = DATE.getDate()
@@ -52,7 +84,12 @@ const mongoUrl = DEV
 
 	// let failedAsins = failedAsinData.length ? JSON.parse(failedAsinData) : []
 
-	const categories = Object.entries(categoryList)
+	const categories = [
+		...Object.entries(bestSellerCategories),
+		...Object.entries(mostGiftedCategories),
+		...Object.entries(newReleaseCategories),
+		...Object.entries(mostWishedForCategories),
+	]
 
 	// We don't want to run the scraper at the same time every single day,
 	// so we're going to wait a random time betwen 10 minutes and 2 hours
@@ -201,7 +238,9 @@ const mongoUrl = DEV
 		// Cleanup the browser's pages
 		const pages = browser ? await browser.pages() : null
 
-		return pages ? Promise.all(pages.map((page) => page && page.close())) : false
+		return pages
+			? Promise.all(pages.map((page) => page && page.close()))
+			: false
 	}
 
 	const killBrowser = async (browser) => {
@@ -226,6 +265,12 @@ const mongoUrl = DEV
 
 	// We can handle our own termination signals
 	process.on('SIGINT', async () => {
+		logger.send({
+			emoji: '🚨',
+			message: `Process terminated with SIGINT`,
+			status: 'error',
+		})
+
 		terminated = true
 		await shutdown(browser)
 	})
@@ -233,7 +278,13 @@ const mongoUrl = DEV
 	////////////////////////
 	// Database Functions
 	///////////////////////
-	const findAsins = async (asins, loopPosition) => {
+	/**
+	 *
+	 * @param {Array} asins the list of 100 asins from the page we just scraped
+	 * @param {String} listType the type of list we just scraped. i.e. Best Seller, Most Gifted, etc. Determines the collection we save the data
+	 * @param {Object} loopPosition the position we're at in the loop. properties include iterator and category
+	 */
+	const findAsins = async (asins, listType, loopPosition) => {
 		const asinCollection = {
 			found: [],
 			notFound: [],
@@ -262,9 +313,9 @@ const mongoUrl = DEV
 						const db = client.db(process.env.DB_DATABASE)
 
 						asins.forEach((asin, index) => {
-							database.findDocuments(
+							database.findProducts(
 								db,
-								'products',
+								`${listType}Products`,
 								{asin: asin.asin},
 								(docs) => {
 									if (docs.length) {
@@ -297,7 +348,7 @@ const mongoUrl = DEV
 		return lookForAsins.then(() => asinCollection)
 	}
 
-	const saveAsins = async (asins, loopPosition) => {
+	const saveAsins = async (asins, listType, loopPosition) => {
 		let success = false
 
 		const save = new Promise((resolve) => {
@@ -325,8 +376,9 @@ const mongoUrl = DEV
 
 					if (asins.insert.length || asins.update.length) {
 						try {
-							database.insertProductStats(
+							database.insertStats(
 								db,
+								`${listType}Stats`,
 								[
 									...(asins.insert ? asins.insert : []),
 									...(asins.update ? asins.update : []),
@@ -360,6 +412,7 @@ const mongoUrl = DEV
 						try {
 							database.updateProducts(
 								db,
+								`${listType}Products`,
 								asins.update,
 								(result) => {
 									logger.send({
@@ -393,6 +446,7 @@ const mongoUrl = DEV
 						try {
 							database.insertProducts(
 								db,
+								`${listType}Products`,
 								asins.insert,
 								(result) => {
 									logger.send({
@@ -416,7 +470,7 @@ const mongoUrl = DEV
 							})
 
 							client.close()
-							
+
 							if (!terminated) await shutdown(browser)
 						}
 					}
@@ -427,12 +481,13 @@ const mongoUrl = DEV
 		return save.then(() => success)
 	}
 
-
 	for (let [index, [category, urls]] of categories.entries()) {
 		for (let i = 0; i < urls.length; i++) {
 			const asinList = []
 			const asinsToUpdate = []
 			const asinsToInsert = []
+			const LIST_TYPE = getListType(urls[i].split('/')[2])
+
 			const browser = await getBrowser()
 			const page = await browser.newPage()
 
@@ -499,6 +554,15 @@ const mongoUrl = DEV
 					const randomNumbers = generateRandomNumbers(0, 49, 5)
 					const delayTimer = 3000
 					const maxRetryNumber = 5
+					const ref = LIST_TYPE.ref
+					const path =
+						pg === 1
+							? urls[i]
+							: `${
+									urls[i].split('ref')[0]
+							  }ref=zg_${ref}_pg_2?_encoding=UTF8&pg=2`
+					const url = BASE + path
+
 					let success = false
 
 					for (
@@ -506,13 +570,6 @@ const mongoUrl = DEV
 						retryNumber <= maxRetryNumber;
 						retryNumber++
 					) {
-						const url =
-							pg === 1
-								? urls[i]
-								: `${
-										urls[i].split('ref')[0]
-								  }ref=zg_bs_pg_2?_encoding=UTF8&pg=2`
-
 						const response = await page.goto(url, {
 							waitUntil: 'networkidle2',
 							timeout: 0,
@@ -566,6 +623,21 @@ const mongoUrl = DEV
 						const scrapeAsinData = (element) => {
 							const asinData = {}
 							asinData.category = {}
+
+							// switch (window.location.pathname.split('/')[2]) {
+							// 	case 'zgbs':
+							// 		asinData.type = 'bestSeller'
+							// 		break
+							// 	case 'most-wished-for':
+							// 		asinData.type = 'mostWishedFor'
+							// 		break
+							// 	case 'most-gifted':
+							// 		asinData.type = 'mostGifted'
+							// 		break
+							// 	case 'new-releases':
+							// 		asinData.type = 'newReleases'
+							// 		break
+							// }
 
 							asinData.category.secondary = document.querySelector(
 								'.category'
@@ -736,7 +808,7 @@ const mongoUrl = DEV
 					break
 				}
 
-				const asinLookup = await findAsins(asinList, {
+				const asinLookup = await findAsins(asinList, LIST_TYPE.name, {
 					interval: i,
 					category,
 				})
@@ -763,6 +835,7 @@ const mongoUrl = DEV
 						insert: asinsToInsert,
 						update: asinsToUpdate,
 					},
+					LIST_TYPE.name,
 					{
 						interval: i,
 						category,
@@ -776,7 +849,7 @@ const mongoUrl = DEV
 				// 	)
 				// }
 
-				await cleanupBrowser(browser)
+				if (!terminated) await cleanupBrowser(browser)
 
 				if (index + 1 === categories.length && i + 1 === urls.length) {
 					const DATE_FINISHED = new Date()
@@ -806,7 +879,7 @@ const mongoUrl = DEV
 						status: 'success',
 					})
 
-					await killBrowser(browser)
+					if (!terminated) await killBrowser(browser)
 				}
 			}
 		}
