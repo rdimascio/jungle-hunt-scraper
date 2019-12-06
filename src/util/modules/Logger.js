@@ -41,11 +41,11 @@ class Logger {
 			defaultMeta: {service: 'user-service'},
 			transports: [
 				new transports.File({
-					filename: `./data/logs/error-${MONTH}-${DAY}-${YEAR}.log`,
+					filename: `./logs/error-${MONTH}-${DAY}-${YEAR}.log`,
 					level: 'error',
 				}),
 				new transports.File({
-					filename: `./data/logs/info-${MONTH}-${DAY}-${YEAR}.log`,
+					filename: `./logs/info-${MONTH}-${DAY}-${YEAR}.log`,
 				}),
 			],
 		})

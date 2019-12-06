@@ -1,4 +1,6 @@
 node_modules/
 .env
-data/
+logs/
+failed/
 *.log
+lastScrapeTime.txt
