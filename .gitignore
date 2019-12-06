@@ -4,3 +4,4 @@ logs/
 failed/
 *.log
 lastScrapeTime.txt
+prettier.config.js

@@ -59,8 +59,6 @@ const mongoUrl = DEV
 		process.exit()
 	}
 
-	fs.writeFileSync('./lastScrapeTime.txt', now.getTime())
-
 	let terminated = false
 
 	const randomWaitTimer = generateRandomNumbers(
@@ -878,6 +876,8 @@ const mongoUrl = DEV
 						}${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`,
 						status: 'success',
 					})
+
+					fs.writeFileSync('./logs/lastScrapeTime.txt', now.getTime())
 
 					if (!terminated) await killBrowser(browser)
 				}
