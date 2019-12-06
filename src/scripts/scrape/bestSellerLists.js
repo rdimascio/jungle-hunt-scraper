@@ -89,7 +89,7 @@ const mongoUrl = DEV
 	const categories = [
 		...Object.entries(bestSellerCategories),
 		...Object.entries(mostGiftedCategories),
-		...Object.entries(newReleaseCategories),
+		// ...Object.entries(newReleaseCategories),
 		...Object.entries(mostWishedForCategories),
 	]
 
@@ -553,19 +553,21 @@ const mongoUrl = DEV
 			// Now we're getting the heart of the scraper
 			try {
 				const requestNewBestSellerPage = async (pg = 1) => {
+					let proxy = false
+					let success = false
+
 					const randomNumbers = generateRandomNumbers(0, 49, 5)
 					const delayTimer = 3000
 					const maxRetryNumber = 5
 					const ref = LIST_TYPE.ref
+					const PROXY = proxy ? 'https://cors-anywhere.herokuapps.com/' : ''
 					const path =
 						pg === 1
 							? urls[i]
 							: `${
 									urls[i].split('ref')[0]
 							  }ref=zg_${ref}_pg_2?_encoding=UTF8&pg=2`
-					const url = BASE + path
-
-					let success = false
+					const url = PROXY + BASE + path
 
 					for (
 						let retryNumber = 1;
@@ -581,6 +583,13 @@ const mongoUrl = DEV
 
 						if (response.ok() && title !== 'Robot Check') {
 							success = true
+
+							logger.send({
+								emoji: '👍',
+								message: `We've avoided detection`,
+								status: 'info',
+							})
+
 							await page.waitFor(3000)
 							break
 						}
@@ -588,16 +597,27 @@ const mongoUrl = DEV
 						if (title === 'Robot Check') {
 							logger.send({
 								emoji: '🚨',
-								message: `We hit a captcha page. Trying to crack it...`,
+								message: `We hit a captcha page. Changing IP and waiting 10 minutes...`,
 								status: 'error',
 							})
 
-							await page.solveRecaptchas()
+							proxy = true
 
-							await Promise.all([
-								page.waitForNavigation(),
-								page.click(`button[type="submit"]`),
-							])
+							changeIpAddress()
+							await delay(6000000)
+
+							// logger.send({
+							// 	emoji: '🚨',
+							// 	message: `We hit a captcha page. Trying to crack it...`,
+							// 	status: 'error',
+							// })
+
+							// await page.solveRecaptchas()
+
+							// await Promise.all([
+							// 	page.waitForNavigation(),
+							// 	page.click(`button[type="submit"]`),
+							// ])
 						}
 
 						await delay(2000 * retryNumber)
@@ -606,14 +626,22 @@ const mongoUrl = DEV
 					if (!success) {
 						logger.send({
 							emoji: '🚨',
-							message: `Tor IP retry limit reached. Changing IP, waiting 10 minutes and trying again`,
+							message: `Tor IP retry limit reached. Shutting down`,
 							status: 'error',
 						})
 
-						changeIpAddress()
-						return delay(6000000).then(() =>
-							requestNewBestSellerPage(pg)
-						)
+						if (!terminated) await shutdown(browser)
+
+						// logger.send({
+						// 	emoji: '🚨',
+						// 	message: `Tor IP retry limit reached. Changing IP, waiting 10 minutes and trying again`,
+						// 	status: 'error',
+						// })
+
+						// changeIpAddress()
+						// return delay(6000000).then(() =>
+						// 	requestNewBestSellerPage(pg)
+						// )
 					}
 
 					const asinList = await page.evaluate(() => {

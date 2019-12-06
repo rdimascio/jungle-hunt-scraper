@@ -5,3 +5,4 @@ failed/
 *.log
 lastScrapeTime.txt
 prettier.config.js
+todo.md

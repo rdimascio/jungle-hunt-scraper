@@ -20,7 +20,7 @@ const categoryList = {
 
 	],
 	outdoor: [
-		'/gp/most-gifted/sporting-goods/706814011/ref=zg_bsnr_tab_t_mg',
+		
 	],
 	photography: [
 		'/gp/most-wished-for/electronics/502394/ref=zg_mw_nav_e_1_e',
