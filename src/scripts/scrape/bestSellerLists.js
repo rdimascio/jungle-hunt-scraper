@@ -42,9 +42,11 @@ const mongoUrl = DEV
 ;(async () => {
 	const now = new Date()
 	const lastScrapeTime = parseFloat(getLastScrapeTime())
+	const CURRENTLY_SCRAPING = process.env.CURRENTLY_SCRAPING || 0
 
 	if (
 		!DEV &&
+		!CURRENTLY_SCRAPING &&
 		new Date(lastScrapeTime).setHours(0, 0, 0, 0) ===
 			now.setHours(0, 0, 0, 0)
 	) {
@@ -58,6 +60,8 @@ const mongoUrl = DEV
 
 		process.exit()
 	}
+
+	process.env.CURRENTLY_SCRAPING = 1
 
 	let terminated = false
 
