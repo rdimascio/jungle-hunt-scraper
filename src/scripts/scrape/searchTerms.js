@@ -72,7 +72,7 @@ const Mailgun = require('mailgun-js')({
 				messageData.text = `Uh oh... Your ${searchTermsList[termIndex].placement} placement for the keyword "${searchTermsList[termIndex].keyword}" is not showing 😰`
 			}
 
-			Mailgun.messages().send(data, async (error, body) => {
+			Mailgun.messages().send(messageData, async (error, body) => {
 				if (error) {
 					console.log(error)
 				}
