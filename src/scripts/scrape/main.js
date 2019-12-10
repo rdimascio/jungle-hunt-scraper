@@ -21,8 +21,8 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 	// This is SUPER important since we're launching headless
 	// with the handleSIGINT property set to false
 	process.on('SIGINT', async () => {
-		log.kill(logger)
-		await headless.shutdown()
+		if (log && logger) log.kill(logger)
+		if (headless) await headless.shutdown()
 	})
 
 	const listArg = args.l
@@ -61,7 +61,6 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 	// For each list
 	for (let [listIndex, [list, details]] of lists.entries()) {
 		if (listArg && list !== camelCase(listArg)) {
-			console.log(listArgs)
 			continue
 		}
 
