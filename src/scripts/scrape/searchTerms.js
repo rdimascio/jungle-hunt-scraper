@@ -8,7 +8,7 @@ const scrapeTerms = require('../../util/helpers/scrapeTerms')
 const searchTermsList = require('../../../data/terms/keywordList')
 const Mailgun = require('mailgun-js')({
 	apiKey: process.env.MAILGUN_API_KEY,
-	domain: 'app.junglehunt.io',
+	domain: process.env.MAILGUN_DOMAIN
 })
 
 ;(async () => {
@@ -61,8 +61,9 @@ const Mailgun = require('mailgun-js')({
 			const screenshot = request(termData.screenshot)
 
 			const data = {
-				from: 'Jungle Hunt <no-reply@app.junglehunt.io>',
-				to: 'jessicas@channelbakers.com, norab@channelbakers.com',
+				from: 'Visibly <postmaster@web.visibly.app>',
+				// to: 'jessicas@channelbakers.com, norab@channelbakers.com',
+				to: 'ryand@channelbakers.com, armandd@channelbakers.com',
 				subject: 'Keyword Update',
 				text: `Your ${
 					searchTermsList[termIndex].placement
