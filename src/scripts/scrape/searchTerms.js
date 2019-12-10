@@ -63,26 +63,27 @@ const Mailgun = require('mailgun-js')({
 				subject: `Keyword Update: ${searchTermsList[termIndex].keyword}`,
 				from: 'Visibly <postmaster@web.visibly.app>',
 				to: 'jessicas@channelbakers.com, norab@channelbakers.com',
+				text = `Uh oh... Your ${searchTermsList[termIndex].placement} placement for the keyword "${searchTermsList[termIndex].keyword}" is not showing 😰`,
 				attachment: screenshot,
 			}
 
-			if (termData.success) {
-				messageData.text = `Woohoo! Your ${searchTermsList[termIndex].placement} placement for the keyword "${searchTermsList[termIndex].keyword}" is showing 👍`
-			} else {
-				messageData.text = `Uh oh... Your ${searchTermsList[termIndex].placement} placement for the keyword "${searchTermsList[termIndex].keyword}" is not showing 😰`
+			if (!termData.success) {
+				Mailgun.messages().send(messageData, async (error, body) => {
+					if (error) {
+						logger.send({
+							emoji: '🚨',
+							message: `Error sending email for keyword: ${searchTermsList[termIndex].keyword}`,
+							status: 'error',
+							error,
+						})
+					}
+	
+					if (lastTerm) {
+						await headless.shutdown()
+						process.exit()
+					}
+				})
 			}
-
-			Mailgun.messages().send(messageData, async (error, body) => {
-				if (error) {
-					console.log(error)
-				}
-
-				if (lastTerm) {
-					console.log(body)
-					await headless.shutdown()
-					process.exit()
-				}
-			})
 		}
 
 		// if (lastTerm) {
