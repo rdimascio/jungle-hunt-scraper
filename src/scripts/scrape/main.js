@@ -60,7 +60,10 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 
 	// For each list
 	for (let [listIndex, [list, details]] of lists.entries()) {
-		if (listArg && list !== camelCase(listArg)) continue
+		if (listArg && list !== camelCase(listArg)) {
+			console.log(listArgs)
+			continue
+		}
 
 		logger = new Logger(`${details.name} List Scraper`)
 

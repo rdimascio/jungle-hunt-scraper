@@ -69,24 +69,27 @@ const Mailgun = require('mailgun-js')({
 
 			const sendEmail = new Promise((resolve, reject) => {
 				if (!termData.success) {
-					Mailgun.messages().send(messageData, async (error, body) => {
-						if (error) {
-							logger.send({
-								emoji: '🚨',
-								message: `Error sending email for keyword: ${searchTermsList[termIndex].keyword}`,
-								status: 'error',
-								error,
-							})
-						}
+					Mailgun.messages().send(
+						messageData,
+						async (error, body) => {
+							if (error) {
+								logger.send({
+									emoji: '🚨',
+									message: `Error sending email for keyword: ${searchTermsList[termIndex].keyword}`,
+									status: 'error',
+									error,
+								})
+							}
 
-						resolve()
-					})
+							resolve()
+						}
+					)
 				} else {
 					resolve()
 				}
 			})
 
-			sendEmail.then(() => {
+			sendEmail.then(async () => {
 				if (lastTerm) {
 					await headless.shutdown()
 					process.exit()
