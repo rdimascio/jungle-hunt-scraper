@@ -56,8 +56,6 @@ const logMessages = {
 			}${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`,
 			status: 'success',
 		})
-
-		fs.writeFileSync('./logs/lastScrapeTime.txt', startTime.getTime())
 	},
 	kill: (logger) => {
 		logger.send({

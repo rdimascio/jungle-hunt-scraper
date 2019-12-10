@@ -15,13 +15,10 @@ const bot = require('./util/lib/Telegram')
 	jungleHuntBot.on('message', (msg) => {
 		if (msg.chat.id == process.env.TELEGRAM_USER_ID) {
 
-			switch (msg.text) {
-				case '/start:best-sellers':
-					exec('node scripts/scrape/bestSellerLists.js')
-					break
-				case '/start:most-wished':
-					exec('node scripts/scrape/mostWishedFor.js')
-			}
+			let flag = msg.text.split(':')[1]
+			flag = flag ? ` -l ${flag}` : ''
+
+			exec(`node src/scripts/scrape/main.js${flag}`)
 
 		}
 	})

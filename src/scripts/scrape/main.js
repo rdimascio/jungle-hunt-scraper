@@ -15,12 +15,27 @@ const newReleaseCategories = require('../../../data/categories/newReleases')
 const mostWishedForCategories = require('../../../data/categories/mostWishedFor')
 
 ;(async () => {
+	let headless, logger
+
+	// We can handle our own termination signals, thank you
+	// This is SUPER important since we're launching headless
+	// with the handleSIGINT property set to false
+	process.on('SIGINT', async () => {
+		log.kill(logger)
+		await headless.shutdown()
+	})
+
+	const listArg = args.l
+	const listData = {}
+
 	const start = new Date()
 	const DEV = process.env.NODE_ENV === 'development'
-	const lastScrapeTime = parseFloat(getLastScrapeTime())
+	let lastScrapeTime = getLastScrapeTime()
+	lastScrapeTime = lastScrapeTime ? parseFloat(lastScrapeTime) : false
 
 	if (
 		!DEV &&
+		lastScrapeTime &&
 		new Date(lastScrapeTime).setHours(0, 0, 0, 0) ===
 			start.setHours(0, 0, 0, 0)
 	) {
@@ -59,20 +74,11 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 	}
 
 	const lists = Object.entries(listsToScrape)
-	const listData = {}
-	let headless
-	let logger
-
-	// We can handle our own termination signals, thank you
-	// This is SUPER important since we're launching headless
-	// with the handleSIGINT property set to false
-	process.on('SIGINT', async () => {
-		log.kill(logger)
-		await headless.shutdown()
-	})
 
 	// For each list
 	for (let [listIndex, [list, details]] of lists.entries()) {
+		if (listArg && list !== camelCase(listArg)) continue
+
 		listData.list = {
 			type: list,
 			index: listIndex + 1,
@@ -89,7 +95,7 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 			1000 * 60 * 60,
 			1
 		)
-		
+
 		await delay(randomWaitTimer)
 
 		logger = new Logger(`${details.name} List Scraper`)
@@ -154,6 +160,7 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 				// This is the very last url of the last category in the last list,
 				// so let's exit the process when we're done, mmkay?
 				if (lastList) {
+					fs.writeFileSync('./logs/lastScrapeTime.txt', start.getTime())
 					process.exit()
 				}
 			}
