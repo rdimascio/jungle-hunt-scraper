@@ -63,7 +63,7 @@ const Mailgun = require('mailgun-js')({
 				subject: `Keyword Update: ${searchTermsList[termIndex].keyword}`,
 				from: 'Visibly <postmaster@web.visibly.app>',
 				to: 'jessicas@channelbakers.com, norab@channelbakers.com',
-				text = `Uh oh... Your ${searchTermsList[termIndex].placement} placement for the keyword "${searchTermsList[termIndex].keyword}" is not showing 😰`,
+				text: `Uh oh... Your ${searchTermsList[termIndex].placement} placement for the keyword "${searchTermsList[termIndex].keyword}" is not showing 😰`,
 				attachment: screenshot,
 			}
 
