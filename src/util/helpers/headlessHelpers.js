@@ -318,11 +318,33 @@ const getAsinData = async (page) => {
 	})
 }
 
+const getTermData = async (page, termData) => {
+	return await page.evaluate(() => {
+		const response = {}
+		const asins = []
+
+		const headline = document.querySelector('span[data-component-type="s-top-slot"]')
+		const adAsins = headline.querySelectorAll('[data-asin]')
+
+		const scrapeAdData = (element) => {
+			const asin = element.getAttribute('data-asin')
+
+			return asin
+		}
+
+		adAsins.forEach((asin) => asins.push(scrapeAdData(asin)))
+		response.asins = asins
+
+		return response
+	})
+}
+
 
 
 module.exports = {
 	changeIP,
 	getAsinData,
+	getTermData,
 	mockUserActions,
 	passBotDetection,
 	isBrowserUsingTor,

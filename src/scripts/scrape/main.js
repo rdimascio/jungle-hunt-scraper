@@ -4,6 +4,7 @@ const Logger = require('../../util/lib/Logger')
 const Browser = require('../../util/lib/Browser')
 const delay = require('../../util/helpers/delay')
 const log = require('../../util/helpers/logMessages')
+const args = require('minimist')(process.argv.slice(2))
 const saveAsins = require('../../util/helpers/saveAsins')
 const scrapeLists = require('../../util/helpers/scrapeLists')
 const generateRandomNumbers = require('../../util/helpers/randomNumbers')
@@ -126,7 +127,7 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 				// Scrape dat shit
 				listData.asins = await scrapeLists(listData, headless, logger)
 
-				await headless.cleanupBrowser(false)
+				await headless.cleanupBrowser()
 
 				// Save all that data to the base
 				if (listData.asins.length) {

@@ -4,7 +4,6 @@ const logMessages = {
 	start: (logger, listName, startTime) => {
 		logger.send({
 			emoji: '🚀',
-			title: 'Best Seller List Scraper',
 			message: `Started scraping ${listName} at ${startTime.toLocaleString()}`,
 			status: 'success',
 		})

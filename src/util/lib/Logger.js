@@ -59,7 +59,7 @@ class Logger {
 				try {
 					this.bot.sendMessage(
 						process.env.TELEGRAM_USER_ID,
-						[options.emoji, `${this.title}:`, options.message].join(' ')
+						[options.emoji, `**[${this.title}]**:`, options.message].join(' ')
 					)
 				} catch (error) {
 					this.logger.error('Failed to send message to Telegram')
