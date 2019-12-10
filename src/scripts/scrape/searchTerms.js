@@ -8,7 +8,7 @@ const scrapeTerms = require('../../util/helpers/scrapeTerms')
 const searchTermsList = require('../../../data/terms/keywordList')
 const Mailgun = require('mailgun-js')({
 	apiKey: process.env.MAILGUN_API_KEY,
-	domain: process.env.MAILGUN_DOMAIN
+	domain: process.env.MAILGUN_DOMAIN,
 })
 
 ;(async () => {
@@ -59,18 +59,17 @@ const Mailgun = require('mailgun-js')({
 			})
 
 			const screenshot = request(termData.screenshot)
-
-			const data = {
+			const messageData = {
+				subject: `Keyword Update: ${searchTermsList[termIndex].keyword}`,
 				from: 'Visibly <postmaster@web.visibly.app>',
-				// to: 'jessicas@channelbakers.com, norab@channelbakers.com',
-				to: 'ryand@channelbakers.com, armandd@channelbakers.com',
-				subject: 'Keyword Update',
-				text: `Your ${
-					searchTermsList[termIndex].placement
-				} placement for the keyword "${searchTermsList[termIndex].keyword}" is ${
-					termData.success ? '' : 'not '
-				}showing`,
-				attachment: screenshot
+				to: 'jessicas@channelbakers.com, norab@channelbakers.com',
+				attachment: screenshot,
+			}
+
+			if (termData.success) {
+				messageData.text = `Woohoo! Your ${searchTermsList[termIndex].placement} placement for the keyword "${searchTermsList[termIndex].keyword}" is showing 👍`
+			} else {
+				messageData.text = `Uh oh... Your ${searchTermsList[termIndex].placement} placement for the keyword "${searchTermsList[termIndex].keyword}" is not showing 😰`
 			}
 
 			Mailgun.messages().send(data, async (error, body) => {
