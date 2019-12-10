@@ -33,23 +33,6 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 	let lastScrapeTime = getLastScrapeTime()
 	lastScrapeTime = lastScrapeTime ? parseFloat(lastScrapeTime) : false
 
-	if (
-		!DEV &&
-		lastScrapeTime &&
-		new Date(lastScrapeTime).setHours(0, 0, 0, 0) ===
-			start.setHours(0, 0, 0, 0)
-	) {
-		logger.send({
-			emoji: '🚨',
-			message: `We've already ran the script today at ${new Date(
-				lastScrapeTime
-			)}`,
-			status: 'error',
-		})
-
-		process.exit()
-	}
-
 	const listsToScrape = {
 		bestSeller: {
 			name: 'Best Seller',
@@ -79,6 +62,26 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 	for (let [listIndex, [list, details]] of lists.entries()) {
 		if (listArg && list !== camelCase(listArg)) continue
 
+		logger = new Logger(`${details.name} List Scraper`)
+
+		if (
+			!DEV &&
+			lastScrapeTime &&
+			new Date(lastScrapeTime).setHours(0, 0, 0, 0) ===
+				start.setHours(0, 0, 0, 0)
+		) {
+			logger.send({
+				emoji: '🚨',
+				message: `We've already ran the script today at ${new Date(
+					lastScrapeTime
+				)}`,
+				status: 'error',
+			})
+
+			process.exit()
+			break
+		}
+
 		listData.list = {
 			type: list,
 			index: listIndex + 1,
@@ -97,8 +100,6 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 		)
 
 		await delay(randomWaitTimer)
-
-		logger = new Logger(`${details.name} List Scraper`)
 
 		log.start(logger, listData.list.name, listData.list.start)
 		headless = new Browser({logger})
@@ -160,7 +161,10 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 				// This is the very last url of the last category in the last list,
 				// so let's exit the process when we're done, mmkay?
 				if (lastList) {
-					fs.writeFileSync('./logs/lastScrapeTime.txt', start.getTime())
+					fs.writeFileSync(
+						'./logs/lastScrapeTime.txt',
+						start.getTime()
+					)
 					process.exit()
 				}
 			}
