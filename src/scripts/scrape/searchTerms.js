@@ -77,12 +77,12 @@ const Mailgun = require('mailgun-js')({
 							error,
 						})
 					}
-	
-					if (lastTerm) {
-						await headless.shutdown()
-						process.exit()
-					}
 				})
+			}
+
+			if (lastTerm) {
+				await headless.shutdown()
+				process.exit()
 			}
 		}
 
