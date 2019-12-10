@@ -2,7 +2,7 @@
 
 require('dotenv').config()
 const {exec} = require('child_process')
-const bot = require('./src/util/modules/Telegram')
+const bot = require('./util/lib/Telegram')
 // const TelegramBot = require('node-telegram-bot-api')
 
 // const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN
@@ -13,8 +13,16 @@ const bot = require('./src/util/modules/Telegram')
 	const jungleHuntBot = bot(true)
 
 	jungleHuntBot.on('message', (msg) => {
-		if (msg.chat.id == process.env.TELEGRAM_USER_ID && msg.text === '/start:best-sellers') {
-			exec('node ./src/scripts/scrape/bestSellerLists.js')
+		if (msg.chat.id == process.env.TELEGRAM_USER_ID) {
+
+			switch (msg.text) {
+				case '/start:best-sellers':
+					exec('node scripts/scrape/bestSellerLists.js')
+					break
+				case '/start:most-wished':
+					exec('node scripts/scrape/mostWishedFor.js')
+			}
+
 		}
 	})
 })()

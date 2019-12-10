@@ -22,13 +22,14 @@ const database = require('../../util/helpers/database')
 const changeIpAddress = require('../../util/helpers/changeIP')
 const generateRandomNumbers = require('../../util/helpers/randomNumbers')
 const delay = require('../../util/helpers/delay')
-const Logger = require('../../util/modules/Logger')
+
 const getListType = require('../../util/helpers/getListType')
 const getLastScrapeTime = require('../../util/helpers/getLastScrapeTime')
 const bestSellerCategories = require('../../../data/categories/bestSeller')
 const mostGiftedCategories = require('../../../data/categories/mostGifted')
 const newReleaseCategories = require('../../../data/categories/newReleases')
 const mostWishedForCategories = require('../../../data/categories/mostWishedFor')
+const Logger = require('../../util/modules/Logger')
 const logger = new Logger('Best Seller List Scraper')
 
 // Variables
@@ -42,11 +43,9 @@ const mongoUrl = DEV
 ;(async () => {
 	const now = new Date()
 	const lastScrapeTime = parseFloat(getLastScrapeTime())
-	const CURRENTLY_SCRAPING = process.env.CURRENTLY_SCRAPING || 0
 
 	if (
 		!DEV &&
-		!CURRENTLY_SCRAPING &&
 		new Date(lastScrapeTime).setHours(0, 0, 0, 0) ===
 			now.setHours(0, 0, 0, 0)
 	) {
@@ -60,8 +59,6 @@ const mongoUrl = DEV
 
 		process.exit()
 	}
-
-	process.env.CURRENTLY_SCRAPING = 1
 
 	let terminated = false
 
@@ -86,12 +83,19 @@ const mongoUrl = DEV
 
 	// let failedAsins = failedAsinData.length ? JSON.parse(failedAsinData) : []
 
-	const categories = [
-		...Object.entries(bestSellerCategories),
-		...Object.entries(mostGiftedCategories),
-		// ...Object.entries(newReleaseCategories),
-		...Object.entries(mostWishedForCategories),
-	]
+	// const categories = [
+	// 	...Object.entries(bestSellerCategories),
+	// 	...Object.entries(mostGiftedCategories),
+	// 	...Object.entries(newReleaseCategories),
+	// 	...Object.entries(mostWishedForCategories),
+	// ]
+
+	const categories = {
+		bestSeller: [...Object.entries(bestSellerCategories)],
+		mostGifted: [...Object.entries(mostGiftedCategories)],
+		newReleases: [...Object.entries(newReleaseCategories)],
+		mostWishedFor: [...Object.entries(mostWishedForCategories)],
+	}
 
 	// We don't want to run the scraper at the same time every single day,
 	// so we're going to wait a random time betwen 10 minutes and 2 hours
@@ -228,7 +232,6 @@ const mongoUrl = DEV
 			browser.__BROWSER_START_TIME_MS__ &&
 			Date.now() - browser.__BROWSER_START_TIME_MS__ >= maxRunningTime
 		) {
-			console.log('creating a new browser')
 			kill(browser.process().pid, 'SIGKILL')
 			await cleanup(userDataDir)
 			browser = null
@@ -560,7 +563,9 @@ const mongoUrl = DEV
 					const delayTimer = 3000
 					const maxRetryNumber = 5
 					const ref = LIST_TYPE.ref
-					const PROXY = proxy ? 'https://cors-anywhere.herokuapps.com/' : ''
+					const PROXY = proxy
+						? 'https://cors-anywhere.herokuapps.com/'
+						: ''
 					const path =
 						pg === 1
 							? urls[i]

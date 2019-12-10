@@ -14,6 +14,9 @@ const categoryList = {
 		'/Best-Sellers-Computers-Accessories-Computer-Keyboards/zgbs/pc/12879431/ref=zg_bs_nav_pc_4_11036491',
 		'/Best-Sellers-Computers-Accessories-Computer-Mice/zgbs/pc/11036491/ref=zg_bs_nav_pc_3_11548956011',
 		'/Best-Sellers-Electronics-Televisions/zgbs/electronics/172659/ref=zg_bs_nav_e_2_1266092011',
+		'/Best-Sellers-Electronics-Unlocked-Cell-Phones/zgbs/electronics/2407749011/ref=zg_bs_nav_e_2_2811119011',
+		'/Best-Sellers-Electronics-LED-LCD-TVs/zgbs/electronics/6459737011/ref=zg_bs_nav_e_4_6463520011',
+		'/Best-Sellers-Electronics-OLED-TVs/zgbs/electronics/6463520011/ref=zg_bs_nav_e_4_6459737011',
 	],
 	mens: [
 		'/Best-Sellers-Mens-Fashion/zgbs/fashion/7147441011/ref=zg_bs_nav_1_fashion',
@@ -21,6 +24,9 @@ const categoryList = {
 		'/Best-Sellers-Mens-Shoes/zgbs/fashion/679255011/ref=zg_bs_nav_2_7147441011',
 		'/Best-Sellers-Mens-Watches/zgbs/fashion/6358539011/ref=zg_bs_nav_2_7147441011',
 		'/Best-Sellers-Mens-Sunglasses-Eyewear-Accessories/zgbs/fashion/7072330011/ref=zg_bs_nav_3_2474937011',
+		'/Best-Sellers-Mens-Suit-Separates/zgbs/fashion/10820205011/ref=zg_bs_nav_4_1045684',
+		'/Best-Sellers-Mens-Polo-Shirts/zgbs/fashion/1045640/ref=zg_bs_nav_4_2476517011',
+		'/Best-Sellers-Mens-Dress-Shirts/zgbs/fashion/1045626/ref=zg_bs_nav_5_1045640',
 	],
 	womens: [
 		'/Best-Sellers-Womens-Fashion/zgbs/fashion/7147440011/ref=zg_bs_nav_1_fashion',
@@ -29,6 +35,7 @@ const categoryList = {
 		'/Best-Sellers-Womens-Handbags-Purses-Wallets/zgbs/fashion/15743631/ref=zg_bs_nav_2_7147440011',
 		'/Best-Sellers-Womens-Shoes/zgbs/fashion/679337011/ref=zg_bs_nav_2_7147440011',
 		'/Best-Sellers-Womens-Jewelry/zgbs/fashion/7192394011/ref=zg_bs_nav_2_7147440011',
+		'/Best-Sellers-Womens-Bras/zgbs/fashion/1044960/ref=zg_bs_unv_6_2376204011_1',
 	],
 	baby: [
 		'/Best-Sellers-Home-Kitchen-Nursery-D%C3%A9cor/zgbs/home-garden/166875011/ref=zg_bs_nav_ba_2_695338011',
@@ -36,7 +43,7 @@ const categoryList = {
 		'/Best-Sellers-Baby-Boys-Accessories/zgbs/fashion/2478436011/ref=zg_bs_nav_2_7147444011',
 		'/Best-Sellers-Toys-Games-Baby-Toddler/zgbs/toys-and-games/196601011/ref=zg_bsnr_tab_t_bs',
 		'/Best-Sellers-Toys-Games-Baby-Rattles-Plush-Rings/zgbs/toys-and-games/196612011/ref=zg_bsnr_tab_t_bs',
-		'/Best-Sellers-Baby-Teether-Toys/zgbs/baby-products/166861011/ref=zg_bsnr_tab_t_bs'
+		'/Best-Sellers-Baby-Teether-Toys/zgbs/baby-products/166861011/ref=zg_bsnr_tab_t_bs',
 	],
 	homeware: [
 		'/Best-Sellers-Home-Kitchen/zgbs/home-garden/ref=zg_bs_nav_0',
@@ -49,7 +56,7 @@ const categoryList = {
 		'/Best-Sellers-Home-Kitchen-Bar-Tools-Drinkware/zgbs/home-garden/289728/ref=zg_bs_nav_hg_3_13162311',
 		'/Best-Sellers-Kitchen-Dining-Beer-Mugs-Steins/zgbs/kitchen/13217761/ref=zg_bs_nav_k_3_289728',
 		'/Best-Sellers-Handmade-Clocks/zgbs/handmade/11434561011/ref=zg_bs_nav_hnd_3_11434552011',
-		'/Best-Sellers-Handmade-Artwork/zgbs/handmade/11433412011/ref=zg_bs_nav_hnd_2_11403478011'
+		'/Best-Sellers-Handmade-Artwork/zgbs/handmade/11433412011/ref=zg_bs_nav_hnd_2_11403478011',
 	],
 	sports: [
 		'/Best-Sellers-Sports-Outdoors-Running-Equipment/zgbs/sporting-goods/3416071/ref=zg_bs_nav_sg_2_10971181011',
@@ -68,10 +75,24 @@ const categoryList = {
 		'/Best-Sellers-Electronics-Digital-Cameras/zgbs/electronics/281052/ref=zg_bs_nav_e_2_502394',
 		'/Best-Sellers-Electronics-Camera-Bags-Cases/zgbs/electronics/172437/ref=zg_bs_nav_e_2_502394',
 		'/Best-Sellers-Camera-Photo-Camcorders/zgbs/photo/172421/ref=zg_bs_nav_e_3_7161073011',
-		'/Best-Sellers-Handmade-Camera-Photo-Accessories/zgbs/handmade/14345424011/ref=zg_bs_nav_hnd_2_11403474011'
+		'/Best-Sellers-Handmade-Camera-Photo-Accessories/zgbs/handmade/14345424011/ref=zg_bs_nav_hnd_2_11403474011',
 	],
 	toys: [
 		'/Best-Sellers-Toys-Games-Action-Figures/zgbs/toys-and-games/2514571011/ref=zg_bs_nav_t_2_165993011',
+	],
+	health: [
+		'/Best-Sellers-Health-Personal-Care-Allergy-Medicine/zgbs/hpc/3760991/ref=zg_bs_nav_hpc_4_3760951',
+		'/Best-Sellers-Beauty-Skin-Care-Products/zgbs/beauty/11060451/ref=zg_bs_pg_2?_encoding=UTF8&pg=2',
+		'/Best-Sellers-Health-Personal-Care-Mouthwashes/zgbs/hpc/3778161/ref=zg_bs_nav_hpc_2_10079992011',
+	],
+	software: [
+		'/Best-Sellers-Software-Antivirus/zgbs/software/2251986011/ref=zg_bs_nav_sw_3_2251987011',
+	],
+	gaming: [
+		'/Best-Sellers-Video-Games-PC-Game-Headsets/zgbs/videogames/402053011/ref=zg_bs_nav_vg_3_318813011',
+		'/Best-Sellers-Video-Games-PC-Gaming-Mice/zgbs/videogames/402052011/ref=zg_bs_nav_vg_4_402053011',
+		'/Best-Sellers-Video-Games-PC-Gaming-Keyboards/zgbs/videogames/402051011/ref=zg_bs_nav_vg_4_402052011',
+		'/Best-Sellers-Home-Kitchen-Gaming-Chairs/zgbs/home-garden/18682062011/ref=zg_bs_unv_hg_4_668180011_1',
 	],
 }
 
