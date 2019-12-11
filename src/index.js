@@ -16,28 +16,30 @@ const bot = require('./util/lib/Telegram')
 	jungleHuntBot.on('message', (msg) => {
 		if (msg.chat.id == process.env.TELEGRAM_USER_ID) {
 			if (msg.text.includes('/start')) {
-				let flag = msg.text.includes(':')
-					? msg.text.split(':')[1]
-					: false
-				flag = flag ? ` -l ${flag}` : ''
+				// let flag = msg.text.includes(':')
+				// 	? msg.text.split(':')[1]
+				// 	: false
+				// flag = flag ? ` -l ${flag}` : ''
 
-				jungleHuntBot.sendMessage(msg.chat.id, `Started with: ${flag}`)
-				flag
-					? exec(`node ./scripts/scrape/main.js${flag}`)
-					: exec(`node ./scripts/scrape/main.js`)
-			} else if (msg.text.includes('/stop')) {
-				find('name', 'main.js', true).then(function(list) {
-					list.forEach((process) => {
-						exec(`kill -9 ${process.pid}`)
-					})
-				})
-
-				find('name', 'puppeteer', true).then(function(list) {
-					list.forEach((process) => {
-						exec(`kill -9 ${process.pid}`)
-					})
-				})
+				// jungleHuntBot.sendMessage(msg.chat.id, `Started with: ${flag}`)
+				// flag
+				// 	? exec(`node ./scripts/scrape/main.js${flag}`)
+				exec('node ./scripts/scrape/main.js')
 			}
+			
+			// else if (msg.text.includes('/stop')) {
+			// 	find('name', 'main.js', true).then(function(list) {
+			// 		list.forEach((process) => {
+			// 			exec(`kill -9 ${process.pid}`)
+			// 		})
+			// 	})
+
+			// 	find('name', 'puppeteer', true).then(function(list) {
+			// 		list.forEach((process) => {
+			// 			exec(`kill -9 ${process.pid}`)
+			// 		})
+			// 	})
+			// }
 		}
 	})
 })()
