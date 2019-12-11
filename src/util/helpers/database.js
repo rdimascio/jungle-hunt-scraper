@@ -24,11 +24,11 @@ const logger = createLogger({
 		// - Write all logs error (and below) to `error.log`.
 		//
 		new transports.File({
-			filename: `./data/logs/${MONTH}-${DAY}-${YEAR}-error.log`,
+			filename: `./logs/${MONTH}-${DAY}-${YEAR}-error.log`,
 			level: 'error',
 		}),
 		new transports.File({
-			filename: `./data/logs/${MONTH}-${DAY}-${YEAR}-info.log`,
+			filename: `./logs/${MONTH}-${DAY}-${YEAR}-info.log`,
 		}),
 	],
 })
