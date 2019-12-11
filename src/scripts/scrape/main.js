@@ -66,23 +66,23 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 
 		logger = new Logger(`${details.name} List Scraper`)
 
-		if (
-			!DEV &&
-			lastScrapeTime &&
-			new Date(lastScrapeTime).setHours(0, 0, 0, 0) ===
-				start.setHours(0, 0, 0, 0)
-		) {
-			logger.send({
-				emoji: '🚨',
-				message: `We've already ran the script today at ${new Date(
-					lastScrapeTime
-				)}`,
-				status: 'error',
-			})
+		// if (
+		// 	!DEV &&
+		// 	lastScrapeTime &&
+		// 	new Date(lastScrapeTime).setHours(0, 0, 0, 0) ===
+		// 		start.setHours(0, 0, 0, 0)
+		// ) {
+		// 	logger.send({
+		// 		emoji: '🚨',
+		// 		message: `We've already ran the script today at ${new Date(
+		// 			lastScrapeTime
+		// 		)}`,
+		// 		status: 'error',
+		// 	})
 
-			process.exit()
-			break
-		}
+		// 	process.exit()
+		// 	break
+		// }
 
 		listData.list = {
 			type: list,
@@ -101,7 +101,7 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 			1
 		)
 
-		await delay(randomWaitTimer)
+		// await delay(randomWaitTimer)
 
 		log.start(logger, listData.list.name, listData.list.start)
 		headless = new Browser({logger})

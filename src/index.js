@@ -21,7 +21,10 @@ const bot = require('./util/lib/Telegram')
 					: false
 				flag = flag ? ` -l ${flag}` : ''
 
-				exec(`node src/scripts/scrape/main.js${flag}`)
+				jungleHuntBot.sendMessage(msg.chat.id, `Started with: ${flag}`)
+				flag
+					? exec(`node ./scripts/scrape/main.js${flag}`)
+					: exec(`node ./scripts/scrape/main.js`)
 			} else if (msg.text.includes('/stop')) {
 				find('name', 'main.js', true).then(function(list) {
 					list.forEach((process) => {
