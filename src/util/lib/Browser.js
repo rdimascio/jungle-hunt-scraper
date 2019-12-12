@@ -57,7 +57,7 @@ class Browser {
 	}
 
 	setupDirectory() {
-		const dataDir = path.join(os.tmpdir(), Date.now().toString())
+		const dataDir = path.join(`${os.tmpdir()}/puppeteer`, Date.now().toString())
 		this.directory = dataDir
 		mkdir(dataDir)
 
@@ -190,10 +190,12 @@ class Browser {
 		if (this._browser)
 			kill(this._browser.process().pid, 'SIGKILL')
 
-		// find('name', /puppeteer/g, true)
-		// 	.then(function (list) {
-		// 		console.log(list);
-		// 	})
+		find('name', 'puppeteer', true)
+			.then(function (list) {
+				list.forEach((process) => {
+					kill(process.pid, 'SIGKILL')
+				})
+			})
 
 		await this.cleanupDirectory(this.directory)
 

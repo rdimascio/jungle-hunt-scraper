@@ -1,6 +1,10 @@
 'use strict'
 
+const fs = require('fs')
+const os = require('os')
 require('dotenv').config()
+const rimraf = require('rimraf')
+const kill = require('tree-kill')
 const find = require('find-process')
 const {exec} = require('child_process')
 const bot = require('./util/lib/Telegram')
@@ -16,26 +20,44 @@ const bot = require('./util/lib/Telegram')
 	jungleHuntBot.on('message', (msg) => {
 		if (msg.chat.id == process.env.TELEGRAM_USER_ID) {
 			if (msg.text.includes('/start')) {
-				let flag = msg.text.includes(':')
-					? msg.text.split(':')[1]
-					: false
-				flag = flag ? ` -l ${flag}` : ''
+				if (msg.text.includes(':')) {
+					const args = msg.text.split(':')
+					const list = args[1]
+					const category = args[2]
+					const subCategory = args[3]
 
-				jungleHuntBot.sendMessage(msg.chat.id, `Started with: ${flag}`)
-				flag
-					? exec(`node scripts/scrape/main.js${flag}`)
-					: exec('node scripts/scrape/main.js')
+					if (args.length === 4) {
+						exec(`node scripts/scrape/main.js -s "${list}, ${category}, ${subCategory}"`)
+					} else {
+						let launchArgs = `-l ${list}`
+						launchArgs += category ? ` -c ${category}` : ''
+
+						exec(`node scripts/scrape/main.js ${launchArgs}`)
+					}
+				} else {
+					exec('node scripts/scrape/main.js')
+				}
 			} else if (msg.text.includes('/stop')) {
 				find('name', 'main.js', true).then(function(list) {
 					list.forEach((process) => {
-						exec(`kill -9 ${process.pid}`)
+						kill(process.pid, 'SIGKILL')
 					})
 				})
 
 				find('name', 'puppeteer', true).then(function(list) {
 					list.forEach((process) => {
-						exec(`kill -9 ${process.pid}`)
+						kill(process.pid, 'SIGKILL')
 					})
+				})
+
+				const removeDirectories = new Promise((resolve) => {
+					rimraf(`${os.tmpdir()}/puppeteer`, () => {
+						resolve()
+					})
+				})
+
+				removeDirectories.then(() => {
+					fs.mkdirSync(`${os.tmpdir()}/puppeteer`)
 				})
 			}
 		}
