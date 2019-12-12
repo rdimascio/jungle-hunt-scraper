@@ -6,7 +6,9 @@ const delay = require('../../util/helpers/delay')
 const log = require('../../util/helpers/logMessages')
 const args = require('minimist')(process.argv.slice(2))
 const saveAsins = require('../../util/helpers/saveAsins')
+const camelCase = require('../../util/helpers/camelCase')
 const scrapeLists = require('../../util/helpers/scrapeLists')
+const camelToClass = require('../../util/helpers/camelToClass')
 const generateRandomNumbers = require('../../util/helpers/randomNumbers')
 const getLastScrapeTime = require('../../util/helpers/getLastScrapeTime')
 const bestSellerCategories = require('../../../data/categories/bestSeller')
@@ -21,11 +23,22 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 	// This is SUPER important since we're launching headless
 	// with the handleSIGINT property set to false
 	process.on('SIGINT', async () => {
-		if (log && logger) log.kill(logger)
-		if (headless) await headless.shutdown()
+		try {
+			if (log && logger) log.kill(logger)
+			if (headless) await headless.shutdown()
+		} catch(error) {
+			console.log(error)
+			process.exit()
+		}
 	})
 
-	const listArg = args.l
+	let listArgs = args.l || args.list
+	listArgs = listArgs && listArgs.split(',')
+	let categoryArgs = args.c || args.cat
+	categoryArgs = categoryArgs && categoryArgs.split(',')
+	let startPosition = args.s || args.start
+	startPosition = startPosition && startPosition.split(',')
+
 	const listData = {}
 
 	const start = new Date()
@@ -58,31 +71,59 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 
 	const lists = Object.entries(listsToScrape)
 
+	const getListIndex = (listName) => {
+		let i = null
+		lists.forEach((list, index) => {
+			if (list.includes(listName)) {
+				i = index
+			}
+		})
+
+		return i
+	}
+
+	const getCategoryIndex = (listName, categoryName) => {
+		let i = null
+
+		listsToScrape[listName].categories.forEach((category, index) => {
+			if (category.includes(categoryName)) {
+				i = index
+			}
+		})
+
+		return i
+	}
+
 	// For each list
 	for (let [listIndex, [list, details]] of lists.entries()) {
-		if (listArg && list !== camelCase(listArg)) {
+		if (
+			listArgs &&
+			!listArgs.includes('all') &&
+			!listArgs.includes(camelToClass(list))
+		)
 			continue
-		}
+
+		if (startPosition && getListIndex(camelCase(startPosition[0].split(' ').join(''))) > listIndex) continue
 
 		logger = new Logger(`${details.name} List Scraper`)
 
-		// if (
-		// 	!DEV &&
-		// 	lastScrapeTime &&
-		// 	new Date(lastScrapeTime).setHours(0, 0, 0, 0) ===
-		// 		start.setHours(0, 0, 0, 0)
-		// ) {
-		// 	logger.send({
-		// 		emoji: '🚨',
-		// 		message: `We've already ran the script today at ${new Date(
-		// 			lastScrapeTime
-		// 		)}`,
-		// 		status: 'error',
-		// 	})
+		if (
+			!DEV &&
+			lastScrapeTime &&
+			new Date(lastScrapeTime).setHours(0, 0, 0, 0) ===
+				start.setHours(0, 0, 0, 0)
+		) {
+			logger.send({
+				emoji: '🚨',
+				message: `We've already ran the script today at ${new Date(
+					lastScrapeTime
+				)}`,
+				status: 'error',
+			})
 
-		// 	process.exit()
-		// 	break
-		// }
+			process.exit()
+			break
+		}
 
 		listData.list = {
 			type: list,
@@ -111,6 +152,22 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 			categoryIndex,
 			[category, urls],
 		] of details.categories.entries()) {
+			if (
+				categoryArgs &&
+				!categoryArgs.includes('all') &&
+				!categoryArgs.includes(category)
+			) {
+				continue
+			}
+
+			if (
+				startPosition &&
+				startPosition[1] &&
+				camelCase(startPosition[0]) === list &&
+				getCategoryIndex(list, startPosition[1].split(' ').join('')) > categoryIndex
+			)
+				continue
+			
 			listData.category = {
 				current: category,
 				index: categoryIndex + 1,
@@ -119,16 +176,26 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 
 			// For each url in the category in the list
 			for (let urlIndex = 0; urlIndex < urls.length; urlIndex++) {
+				if (
+					startPosition &&
+					startPosition[2] &&
+					camelCase(startPosition[0]) === listData.list.type &&
+					startPosition[1].split(' ').join('') === listData.category.current &&
+					parseFloat(startPosition[2].split(' ').join('')) - 1 > urlIndex
+				)
+					continue
+
 				listData.urls = {
 					current: urls[urlIndex],
 					count: urls.length,
 					index: urlIndex + 1,
 				}
-
+			
 				const lastList =
 					listData.list.index === lists.length &&
 					listData.category.index === listData.category.count &&
 					listData.urls.index === listData.urls.count
+
 				const lastPage =
 					listData.category.index === listData.category.count &&
 					listData.urls.index === listData.urls.count
@@ -156,7 +223,8 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 				// This is the last url of the last category of this list,
 				// so let's shutdown the browser while we wait for the next list to start
 				if (lastPage) {
-					await headless.shutdown()
+					await headless.shutdown(false)
+					headless = null
 					log.finish(logger, listData.list.name, listData.list.start)
 				}
 

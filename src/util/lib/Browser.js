@@ -175,7 +175,7 @@ class Browser {
 			this.browser = null
 
 			if (newBrowser) {
-				await this.create()
+				await this.browserInstance()
 			}
 		}
 		// Cleanup the browser's pages

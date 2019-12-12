@@ -14,9 +14,11 @@ const scrapeLists = async (data, headless, logger) => {
 	const BASE = 'https://www.amazon.com'
 	const ASINS = []
 
-	process.on('SIGINT', async () => {
+	const processTerminated = () => {
 		isTerminated = true
-	})
+	}
+
+	process.on('SIGINT', processTerminated)
 
 	try {
 		const chrome = await headless.browser
@@ -59,7 +61,7 @@ const scrapeLists = async (data, headless, logger) => {
 			const URL = buildURL(pageNumber)
 
 			// Try 5 times to get to the page undetected
-			if (!(await passBotDetection(page, URL, logger))) {
+			if (!(await passBotDetection(page, URL, logger, data))) {
 				logger.send({
 					emoji: '🚨',
 					message: `Tor IP retry limit reached. Shutting down`,
@@ -98,11 +100,13 @@ const scrapeLists = async (data, headless, logger) => {
 	} catch (error) {
 		logger.send({
 			emoji: '🚨',
-			message: `Error scraping subcategory #${data.category.index} in ${data.category.current}`,
+			message: `Error scraping subcategory #${data.urls.index} in ${data.category.current}`,
 			status: 'error',
-			error: error,
+			error,
 		})
 		if (!isTerminated) await headless.shutdown()
+	} finally {
+		process.removeListener('SIGINT', processTerminated)
 	}
 	
 	// finally {

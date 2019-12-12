@@ -8,7 +8,7 @@ const changeIP = () => {
 	exec(
 		process.env.NODE_ENV === 'development'
 			? '(echo authenticate ""; echo signal newnym; echo quit) | nc localhost 9051'
-			: 'sudo systemctl reload tor',
+			: 'systemctl reload tor',
 		async (error, stdout, stderr) => {
 			if (stdout.match(/250/g).length === 3) {
 				console.log('IP was changed')
@@ -66,11 +66,11 @@ const mockUserActions = async (page) => {
 	await page.waitFor(delayTimer - 1000)
 }
 
-const passBotDetection = async (page, url, logger) => {
+const passBotDetection = async (page, url, logger, data) => {
 	let proxy = false
 	let success = false
 
-	const PROXY = proxy ? 'https://cors-anywhere.herokuapps.com/' : ''
+	const PROXY = proxy ? 'https://jungle-hunt-proxy.herokuapps.com/' : ''
 	const MAX_ATTEMPT = 5
 
 	for (let attempt = 1; attempt <= MAX_ATTEMPT; attempt++) {
@@ -85,11 +85,13 @@ const passBotDetection = async (page, url, logger) => {
 			if (response.ok() && title !== 'Robot Check') {
 				success = true
 	
-				logger.send({
-					emoji: '👍',
-					message: `We've avoided detection`,
-					status: 'info',
-				})
+				if (process.env.NODE_ENV === 'development') {
+					logger.send({
+						emoji: '👍',
+						message: `We've avoided detection on subcategory #${data.urls.index} in ${data.category.current}`,
+						status: 'info',
+					})
+				}
 	
 				await page.waitFor(3000)
 				break
@@ -118,10 +120,18 @@ const passBotDetection = async (page, url, logger) => {
 				// 	page.click(`button[type="submit"]`),
 				// ])
 			}
-	
-			await delay(2000 * retryNumber)
+
+			proxy = true
+
+			changeIP()
+			await delay(4000 * retryNumber)
 		} catch(error) {
-			console.log(error)
+			logger.send({
+				emoji: '🚨',
+				message: `Error passing bot detection`,
+				status: 'error',
+				error
+			})
 			return
 		}
 	}
