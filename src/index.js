@@ -27,12 +27,12 @@ const bot = require('./util/lib/Telegram')
 					const subCategory = args[3]
 
 					if (args.length === 4) {
-						exec(`node scripts/scrape/main.js -s "${list}, ${category}, ${subCategory}"`)
+						exec(`node /app/src/scripts/scrape/main.js -s "${list}, ${category}, ${subCategory}"`)
 					} else {
 						let launchArgs = `-l ${list}`
 						launchArgs += category ? ` -c ${category}` : ''
 
-						exec(`node scripts/scrape/main.js ${launchArgs}`)
+						exec(`node /app/src/scripts/scrape/main.js ${launchArgs}`)
 					}
 				} else {
 					exec('node scripts/scrape/main.js')
