@@ -1,4 +1,5 @@
 const os = require('os')
+const fs = require('fs')
 const path = require('path')
 const rimraf = require('rimraf')
 const kill = require('tree-kill')
@@ -57,6 +58,10 @@ class Browser {
 	}
 
 	setupDirectory() {
+
+		if (!fs.existsSync(`${os.tmpdir()}/puppeteer`))
+			fs.mkdirSync(`${os.tmpdir()}/puppeteer`);
+
 		const dataDir = path.join(`${os.tmpdir()}/puppeteer`, Date.now().toString())
 		this.directory = dataDir
 		mkdir(dataDir)
