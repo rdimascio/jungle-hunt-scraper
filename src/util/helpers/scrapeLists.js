@@ -32,14 +32,14 @@ const scrapeLists = async (data, headless, logger) => {
 		/////////////////////////////////
 		// First we're going to check our IP address
 		// to make sure we're not using our public IP
-		if (!(await isBrowserUsingTor(page))) {
+		if (!(await isBrowserUsingTor(page)) && !isTerminated) {
 			logger.send({
 				emoji: '🚨',
 				message: `Tor failed to anonymize our IP. Using IP: ${IP}`,
 				status: 'error',
 			})
 
-			if (!isTerminated) await headless.shutdown()
+			await headless.shutdown()
 		}
 
 		// Focus down here 👇
@@ -61,14 +61,14 @@ const scrapeLists = async (data, headless, logger) => {
 			const URL = buildURL(pageNumber)
 
 			// Try 5 times to get to the page undetected
-			if (!(await passBotDetection(page, URL, logger, data))) {
+			if (!(await passBotDetection(page, URL, logger, data)) && !isTerminated) {
 				logger.send({
 					emoji: '🚨',
 					message: `Tor IP retry limit reached. Shutting down`,
 					status: 'error',
 				})
 
-				if (!isTerminated) await headless.shutdown()
+				await headless.shutdown()
 			}
 
 			// Mock user actions
@@ -98,13 +98,15 @@ const scrapeLists = async (data, headless, logger) => {
 
 		return ASINS
 	} catch (error) {
-		logger.send({
-			emoji: '🚨',
-			message: `Error scraping subcategory #${data.urls.index} in ${data.category.current}`,
-			status: 'error',
-			error,
-		})
-		if (!isTerminated) await headless.shutdown()
+		if (!isTerminated) {
+			logger.send({
+				emoji: '🚨',
+				message: `Error scraping subcategory #${data.urls.index} in ${data.category.current}`,
+				status: 'error',
+				error,
+			})
+			await headless.shutdown()
+		}
 	} finally {
 		process.removeListener('SIGINT', processTerminated)
 	}

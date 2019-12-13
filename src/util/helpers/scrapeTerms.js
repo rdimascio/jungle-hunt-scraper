@@ -28,7 +28,7 @@ const scrapeTerms = async (termData, headless, logger) => {
 		const buildURL = () => BASE + `/s?k=${encodeURIComponent(termData.keyword)}&ref=nb_sb_noss`
 
 		await preparePageForTor(page, buildURL())
-		// await preparePageForTests(page)
+		await preparePageForTests(page)
 
 		//////////////////////////////////
 		// Check to see if Tor is working
