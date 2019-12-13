@@ -24,15 +24,15 @@ class Browser {
 		///////////////////////////
 		puppeteer.use(pluginStealth())
 		puppeteer.use(require('puppeteer-extra-plugin-anonymize-ua')())
-		puppeteer.use(
-			RecaptchaPlugin({
-				provider: {
-					id: '2captcha',
-					token: '5a48a12a57d25d67de11e965dba8a655',
-				},
-				visualFeedback: true,
-			})
-		)
+		// puppeteer.use(
+		// 	RecaptchaPlugin({
+		// 		provider: {
+		// 			id: '2captcha',
+		// 			token: '5a48a12a57d25d67de11e965dba8a655',
+		// 		},
+		// 		visualFeedback: true,
+		// 	})
+		// )
 
 		// return (async () => {
 		// 	return await this.init()
@@ -194,7 +194,7 @@ class Browser {
 		if (this._browser)
 			kill(this._browser.process().pid, 'SIGKILL')
 
-		find('name', 'puppeteer', true)
+		find('name', 'chrome', false)
 			.then(function (list) {
 				list.forEach((process) => {
 					kill(process.pid, 'SIGKILL')

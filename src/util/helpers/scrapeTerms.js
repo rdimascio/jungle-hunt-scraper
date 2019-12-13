@@ -28,7 +28,7 @@ const scrapeTerms = async (termData, headless, logger) => {
 		const buildURL = () => BASE + `/s?k=${encodeURIComponent(termData.keyword)}&ref=nb_sb_noss`
 
 		await preparePageForTor(page, buildURL())
-		await preparePageForTests(page)
+		// await preparePageForTests(page)
 
 		//////////////////////////////////
 		// Check to see if Tor is working
@@ -71,9 +71,15 @@ const scrapeTerms = async (termData, headless, logger) => {
 			// Hover over random product links in the grid
 			// await mockUserActions(page)
 
+			const screenshotOptions = {}
+
+			if (termData.placement !== 'brand') {
+				screenshotOptions.fullPage = true
+			}
+
 			// Get the data from the page and return it
 			const searchTermData = await getTermData(page)
-			const screenshot = await page.screenshot({fullPage: true})
+			const screenshot = await page.screenshot(screenshotOptions)
 
 			const s3params = {
 				Bucket: 'jungle-hunt/search-terms',

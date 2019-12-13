@@ -45,7 +45,7 @@ const Mailgun = require('mailgun-js')({
 			1
 		)
 
-		await delay(randomWaitTimer)
+		// await delay(randomWaitTimer)
 
 		headless = new Browser({logger})
 

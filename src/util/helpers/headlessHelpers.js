@@ -66,7 +66,7 @@ const mockUserActions = async (page) => {
 	await page.waitFor(delayTimer - 1000)
 }
 
-const passBotDetection = async (page, url, logger, data) => {
+const passBotDetection = async (page, url, logger, data = false) => {
 	let proxy = false
 	let success = false
 
@@ -88,7 +88,7 @@ const passBotDetection = async (page, url, logger, data) => {
 				if (process.env.NODE_ENV === 'development') {
 					logger.send({
 						emoji: '👍',
-						message: `We've avoided detection on subcategory #${data.urls.index} in ${data.category.current}`,
+						message: `We've avoided detection${data ? ` on subcategory #${data.urls.index} in ${data.category.current}` : ''}`,
 						status: 'info',
 					})
 				}
@@ -166,42 +166,36 @@ const preparePageForTests = async (page) => {
 		Object.defineProperty(navigator, 'webdriver', {
 			get: () => false,
 		})
-	})
 
-	// Pass the Chrome Test.
-	await page.evaluateOnNewDocument(() => {
+		// Pass the Chrome Test.
 		// We can mock this in as much depth as we need for the test.
 		window.navigator.chrome = {
 			runtime: {},
 			// etc.
 		}
-	})
-
-	// Pass the Permissions Test.
-	await page.evaluateOnNewDocument(() => {
-		const originalQuery = window.navigator.permissions.query
-		return (window.navigator.permissions.query = (parameters) =>
-			parameters.name === 'notifications'
-				? Promise.resolve({state: Notification.permission})
-				: originalQuery(parameters))
-	})
-
-	// Pass the Plugins Length Test.
-	await page.evaluateOnNewDocument(() => {
+		
+		// Pass the Plugins Length Test.
 		// Overwrite the `plugins` property to use a custom getter.
 		Object.defineProperty(navigator, 'plugins', {
 			// This just needs to have `length > 0` for the current test,
 			// but we could mock the plugins too if necessary.
 			get: () => [1, 2, 3, 4, 5],
 		})
-	})
 
-	// Pass the Languages Test.
-	await page.evaluateOnNewDocument(() => {
+		// Pass the Languages Test.
 		// Overwrite the `plugins` property to use a custom getter.
 		Object.defineProperty(navigator, 'languages', {
 			get: () => ['en-US', 'en'],
 		})
+
+		// Pass the Permissions Test.
+		const originalQuery = window.navigator.permissions.query
+		return (window.navigator.permissions.query = (parameters) =>
+			parameters.name === 'notifications'
+				? Promise.resolve({state: Notification.permission})
+				: originalQuery(parameters))
+
+
 	})
 }
 
