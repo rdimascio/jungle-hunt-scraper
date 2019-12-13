@@ -20,7 +20,7 @@ const bot = require('./util/lib/Telegram')
 				if (msg.text.includes(':')) {
 					if (msg.text.includes('search-terms')) {
 						exec('node /app/src/scripts/scrape/searchTerms.js', (error) =>
-							console.log(error)
+							jungleHuntBot.sendMessage(msg.chat.id, error)
 						)
 					} else {
 						const args = msg.text.split(':')
@@ -31,7 +31,7 @@ const bot = require('./util/lib/Telegram')
 						if (args.length === 4) {
 							exec(
 								`node /app/src/scripts/scrape/main.js -s "${list}, ${category}, ${subCategory}"`,
-								(error) => console.log(error)
+								(error) => jungleHuntBot.sendMessage(msg.chat.id, error)
 							)
 						} else {
 							let launchArgs = `-l ${list}`
@@ -39,13 +39,13 @@ const bot = require('./util/lib/Telegram')
 	
 							exec(
 								`node /app/src/scripts/scrape/main.js ${launchArgs}`,
-								(error) => console.log(error)
+								(error) => jungleHuntBot.sendMessage(msg.chat.id, error)
 							)
 						}
 					}
 				} else {
 					exec('node /app/src/scripts/scrape/main.js', (error) =>
-						console.log(error)
+						jungleHuntBot.sendMessage(msg.chat.id, error)
 					)
 				}
 			} else if (msg.text.includes('/stop')) {
