@@ -4,8 +4,10 @@ require('dotenv').config()
 const request = require('request')
 const Logger = require('../../util/lib/Logger')
 const Browser = require('../../util/lib/Browser')
+const delay = require('../../util/helpers/delay')
 const scrapeTerms = require('../../util/helpers/scrapeTerms')
 const searchTermsList = require('../../../data/terms/keywordList')
+const generateRandomNumbers = require('../../util/helpers/randomNumbers')
 const Mailgun = require('mailgun-js')({
 	apiKey: process.env.MAILGUN_API_KEY,
 	domain: process.env.MAILGUN_DOMAIN,
@@ -29,6 +31,17 @@ const Mailgun = require('mailgun-js')({
 
 	// For each url in the category in the list
 	for (let termIndex = 0; termIndex < searchTermsList.length; termIndex++) {
+
+		// We don't want to run the scraper at the same time every single day,
+		// so we're going to wait a random time betwen 1 and 20 minutes
+		const randomWaitTimer = generateRandomNumbers(
+			1000 * 60 * 1,
+			1000 * 60 * 20,
+			1
+		)
+
+		await delay(randomWaitTimer)
+
 		const lastTerm = termIndex + 1 === searchTermsList.length
 
 		// Scrape dat shit

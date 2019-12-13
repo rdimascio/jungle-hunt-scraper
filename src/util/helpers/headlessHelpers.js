@@ -346,7 +346,7 @@ const getTermData = async (page) => {
 		const getProductData = (element) => element.closest('.s-result-item').getAttribute('data-asin')
 
 		brandAsins.forEach((asin) => asins.brand.push(getBrandData(asin)))
-		sponsoredProducts.forEach((asin) => asin.product.push(getProductData(asin)))
+		sponsoredProducts.forEach((asin) => asins.product.push(getProductData(asin)))
 
 		response.asins = asins
 
