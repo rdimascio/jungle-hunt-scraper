@@ -147,7 +147,7 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 			1
 		)
 
-		// await delay(randomWaitTimer)
+		await delay(randomWaitTimer)
 
 		log.start(logger, listData.list.name, listData.list.start)
 		headless = new Browser({logger})
@@ -198,8 +198,6 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 					count: urls.length,
 					index: urlIndex + 1,
 				}
-
-				console.log(listData)
 
 				const lastCategory = categoryArgs
 					? Math.max([
