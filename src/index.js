@@ -18,24 +18,30 @@ const bot = require('./util/lib/Telegram')
 		if (msg.chat.id == process.env.TELEGRAM_USER_ID) {
 			if (msg.text.includes('/start')) {
 				if (msg.text.includes(':')) {
-					const args = msg.text.split(':')
-					const list = args[1]
-					const category = args[2]
-					const subCategory = args[3]
-
-					if (args.length === 4) {
-						exec(
-							`node /app/src/scripts/scrape/main.js -s "${list}, ${category}, ${subCategory}"`,
-							(error) => console.log(error)
+					if (msg.text.includes('search-terms')) {
+						exec('node /app/src/scripts/scrape/searchTerms.js', (error) =>
+							console.log(error)
 						)
 					} else {
-						let launchArgs = `-l ${list}`
-						launchArgs += category ? ` -c ${category}` : ''
-
-						exec(
-							`node /app/src/scripts/scrape/main.js ${launchArgs}`,
-							(error) => console.log(error)
-						)
+						const args = msg.text.split(':')
+						const list = args[1]
+						const category = args[2]
+						const subCategory = args[3]
+	
+						if (args.length === 4) {
+							exec(
+								`node /app/src/scripts/scrape/main.js -s "${list}, ${category}, ${subCategory}"`,
+								(error) => console.log(error)
+							)
+						} else {
+							let launchArgs = `-l ${list}`
+							launchArgs += category ? ` -c ${category}` : ''
+	
+							exec(
+								`node /app/src/scripts/scrape/main.js ${launchArgs}`,
+								(error) => console.log(error)
+							)
+						}
 					}
 				} else {
 					exec('node /app/src/scripts/scrape/main.js', (error) =>
@@ -45,13 +51,18 @@ const bot = require('./util/lib/Telegram')
 			} else if (msg.text.includes('/stop')) {
 				const processes = await psList()
 				const puppeteer = processes.filter((ps) => ps.name === 'chrome')
-				const scraper = processes.filter((ps) =>
+				const listScraper = processes.filter((ps) =>
 					ps.cmd.includes('node /app/src/scripts/scrape/main.js')
 				)
+				const searchTermScraper = processes.filter((ps) =>
+					ps.cmd.includes('node /app/src/scripts/scrape/searchTerms.js')
+				)
 				const puppeteerPids = puppeteer.map((ps) => ps.pid)
-				const scraperPid = scraper.map((ps) => ps.pid)
+				const listScraperPid = listScraper.map((ps) => ps.pid)
+				const searchTermScraperPid = searchTermScraper.map((ps) => ps.pid)
 
-				kill(scraperPid, 'SIGKILL')
+				kill(listScraperPid, 'SIGKILL')
+				kill(searchTermScraperPid, 'SIGKILL')
 				puppeteerPids.forEach((pid) => {
 					kill(pid, 'SIGKILL')
 				})
