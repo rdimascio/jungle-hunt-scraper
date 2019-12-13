@@ -200,17 +200,6 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 					index: urlIndex + 1,
 				}
 
-				console.log(listData)
-
-				console.log(
-					listData.list.index,
-					Math.max([
-						...listArgs.map((list) =>
-							getListIndex(camelCase(list.split(' ').join('')))
-						),
-					]) + 1
-				)
-
 				const lastList = listArgs
 					? listData.list.index ===
 							Math.max([
