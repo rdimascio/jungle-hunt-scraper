@@ -53,7 +53,7 @@ const Mailgun = require('mailgun-js')({
 			// )
 
 			logger.send({
-				emoji: '🚀',
+				emoji: '🎉',
 				message: `Finished scraping keyword: ${searchTermsList[termIndex].keyword}`,
 				status: 'success',
 			})

@@ -25,10 +25,9 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 	// with the handleSIGINT property set to false
 	process.on('SIGINT', async () => {
 		try {
-			if (log && logger) log.kill(logger)
-			if (headless) await headless.shutdown()
+			log.kill(logger)
+			await headless.shutdown()
 		} catch (error) {
-			console.log(error)
 			process.exit()
 		}
 	})
@@ -148,7 +147,7 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 			1
 		)
 
-		await delay(randomWaitTimer)
+		// await delay(randomWaitTimer)
 
 		log.start(logger, listData.list.name, listData.list.start)
 		headless = new Browser({logger})
@@ -200,35 +199,42 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 					index: urlIndex + 1,
 				}
 
+				console.log(listData)
+
+				const lastCategory = categoryArgs
+					? Math.max([
+							...categoryArgs.map((category) =>
+								getCategoryIndex(
+									listData.list.type,
+									category
+								)
+							),
+					  ]) + 1
+					: listData.category.index === listData.category.count
+
+				const lastPage = listData.urls.index === listData.urls.count
+
 				const lastList = listArgs
 					? listData.list.index ===
-							Math.max([
-								...listArgs.map((list) =>
-									getListIndex(
-										camelCase(list.split(' ').join(''))
-									)
-								),
-							]) +
-								1 &&
-					  listData.category.index === listData.category.count &&
-					  listData.urls.index === listData.urls.count
-					: listData.list.index === lists.length &&
-					  listData.category.index === listData.category.count &&
-					  listData.urls.index === listData.urls.count
-
-				const lastPage =
-					listData.category.index === listData.category.count &&
-					listData.urls.index === listData.urls.count
+					  Math.max([
+							...listArgs.map((list) =>
+								getListIndex(
+									camelCase(list.split(' ').join(''))
+								)
+							),
+					  ]) +
+							1
+					: listData.list.index === lists.length
 
 				// Scrape dat shit
-				listData.asins = await scrapeLists(listData, headless, logger)
+				const asins = await scrapeLists(listData, headless, logger)
 
 				await headless.cleanupBrowser()
 
 				// Save all that data to the base
-				if (listData.asins.length) {
+				if (asins.length) {
 					const dbResponse = await saveAsins(
-						listData.asins,
+						asins,
 						listData.list.type,
 						{
 							interval: listData.urls.index,
@@ -242,7 +248,7 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 
 				// This is the last url of the last category of this list,
 				// so let's shutdown the browser while we wait for the next list to start
-				if (lastPage) {
+				if (lastCategory && lastPage) {
 					await headless.shutdown(false)
 					headless = null
 					log.finish(logger, listData.list.name, listData.list.start)
@@ -250,7 +256,12 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 
 				// This is the very last url of the last category in the last list,
 				// so let's exit the process when we're done, mmkay?
-				if (lastList) {
+				if (
+					lastList &&
+					lastCategory &&
+					lastPage &&
+					(!startPosition || !listArgs)
+				) {
 					fs.writeFileSync(
 						'./logs/lastScrapeTime.txt',
 						start.getTime()
