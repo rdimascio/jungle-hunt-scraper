@@ -13,7 +13,7 @@ const bot = require('./util/lib/Telegram')
 ;(async () => {
 	const jungleHuntBot = bot(true)
 
-	jungleHuntBot.on('message', (msg) => {
+	jungleHuntBot.on('message', async (msg) => {
 		if (msg.chat.id == process.env.TELEGRAM_USER_ID) {
 			if (msg.text.includes('/start')) {
 				if (msg.text.includes(':')) {
@@ -23,25 +23,35 @@ const bot = require('./util/lib/Telegram')
 					const subCategory = args[3]
 
 					if (args.length === 4) {
-						exec(`node /app/src/scripts/scrape/main.js -s "${list}, ${category}, ${subCategory}"`)
+						exec(
+							`node /app/src/scripts/scrape/main.js -s "${list}, ${category}, ${subCategory}"`,
+							(error) => console.log(error)
+						)
 					} else {
 						let launchArgs = `-l ${list}`
 						launchArgs += category ? ` -c ${category}` : ''
 
-						exec(`node /app/src/scripts/scrape/main.js ${launchArgs}`)
+						exec(
+							`node /app/src/scripts/scrape/main.js ${launchArgs}`,
+							(error) => console.log(error)
+						)
 					}
 				} else {
-					exec('node /app/src/scripts/scrape/main.js')
+					exec('node /app/src/scripts/scrape/main.js', (error) =>
+						console.log(error)
+					)
 				}
 			} else if (msg.text.includes('/stop')) {
 				const processes = await psList()
-				const puppeteer = processes.filter(ps => ps.name === 'chrome')
-				const scraper = processes.filter(ps => ps.cmd.includes('node /app/src/scripts/scrape/main.js'))
-				const puppeteerPids = puppeteer.map(ps => ps.pid)
-				const scraperPid = scraper.map(ps => ps.id)
+				const puppeteer = processes.filter((ps) => ps.name === 'chrome')
+				const scraper = processes.filter((ps) =>
+					ps.cmd.includes('node /app/src/scripts/scrape/main.js')
+				)
+				const puppeteerPids = puppeteer.map((ps) => ps.pid)
+				const scraperPid = scraper.map((ps) => ps.id)
 
 				kill(scraperPid, 'SIGINT')
-				puppeteerPids.forEach(pid => {
+				puppeteerPids.forEach((pid) => {
 					kill(pid, 'SIGKILL')
 				})
 
