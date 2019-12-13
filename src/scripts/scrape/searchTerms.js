@@ -15,7 +15,7 @@ const Mailgun = require('mailgun-js')({
 
 ;(async () => {
 	const logger = new Logger(`Search Term Scraper`)
-	const headless = new Browser({logger})
+	let headless
 
 	// We can handle our own termination signals, thank you
 	// This is SUPER important since we're launching headless
@@ -35,6 +35,7 @@ const Mailgun = require('mailgun-js')({
 
 	// For each url in the category in the list
 	for (let termIndex = 0; termIndex < searchTermsList.length; termIndex++) {
+		const lastTerm = termIndex + 1 === searchTermsList.length
 
 		// We don't want to run the scraper at the same time every single day,
 		// so we're going to wait a random time betwen 1 and 20 minutes
@@ -46,7 +47,7 @@ const Mailgun = require('mailgun-js')({
 
 		await delay(randomWaitTimer)
 
-		const lastTerm = termIndex + 1 === searchTermsList.length
+		headless = new Browser({logger})
 
 		// Scrape dat shit
 		const termData = await scrapeTerms(
@@ -56,6 +57,8 @@ const Mailgun = require('mailgun-js')({
 		)
 
 		await headless.cleanupBrowser()
+		await headless.shutdown(false)
+		headless = null
 
 		if (termData.status === 'OK') {
 			logger.send({
@@ -130,7 +133,6 @@ const Mailgun = require('mailgun-js')({
 
 			sendEmail.then(async () => {
 				if (lastTerm) {
-					await headless.shutdown()
 					process.exit()
 				}
 			})

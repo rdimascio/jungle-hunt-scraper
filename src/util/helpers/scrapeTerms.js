@@ -15,15 +15,17 @@ const scrapeTerms = async (termData, headless, logger) => {
 	let isTerminated = false
 	const BASE = 'https://www.amazon.com'
 
-	process.on('SIGINT', async () => {
+	const processTerminated = () => {
 		isTerminated = true
-	})
+	}
+
+	process.on('SIGINT', processTerminated)
 
 	try {
 		const chrome = await headless.browser
 		const page = await chrome.newPage()
 
-		const buildURL = () => BASE + `/s?k=${termData.keyword}&ref=nb_sb_noss`
+		const buildURL = () => BASE + `/s?k=${encodeURIComponent(termData.keyword)}&ref=nb_sb_noss`
 
 		await preparePageForTor(page, buildURL())
 		await preparePageForTests(page)
@@ -33,14 +35,14 @@ const scrapeTerms = async (termData, headless, logger) => {
 		/////////////////////////////////
 		// First we're going to check our IP address
 		// to make sure we're not using our public IP
-		if (!(await isBrowserUsingTor(page))) {
+		if (!(await isBrowserUsingTor(page)) && !isTerminated) {
 			logger.send({
 				emoji: '🚨',
 				message: `Tor failed to anonymize our IP. Using IP: ${IP}`,
 				status: 'error',
 			})
 
-			if (!isTerminated) await headless.shutdown()
+			await headless.shutdown()
 		}
 
 		///////////////////
@@ -55,14 +57,14 @@ const scrapeTerms = async (termData, headless, logger) => {
 			}-${new Date().toISOString()}.png`
 
 			// Try 5 times to get to the page undetected
-			if (!(await passBotDetection(page, URL, logger))) {
+			if (!(await passBotDetection(page, URL, logger)) && !isTerminated) {
 				logger.send({
 					emoji: '🚨',
 					message: `Tor IP retry limit reached. Shutting down`,
 					status: 'error',
 				})
 
-				if (!isTerminated) await headless.shutdown()
+				await headless.shutdown()
 			}
 
 			// Mock user actions
@@ -97,17 +99,20 @@ const scrapeTerms = async (termData, headless, logger) => {
 		response = await requestNewSearchPage()
 		response.status = 'OK'
 
-		await headless.cleanupBrowser()
-
 		return response
 	} catch (error) {
-		logger.send({
-			emoji: '🚨',
-			message: `Error scraping search term "${termData.keyword}"`,
-			status: 'error',
-			error: error,
-		})
-		if (!isTerminated) await headless.shutdown()
+		if (!isTerminated) {
+			logger.send({
+				emoji: '🚨',
+				message: `Error scraping search term "${termData.keyword}"`,
+				status: 'error',
+				error: error,
+			})
+
+			await headless.shutdown()
+		}
+	} finally {
+		process.removeListener('SIGINT', processTerminated)
 	}
 
 	// finally {

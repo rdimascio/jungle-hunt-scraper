@@ -123,7 +123,6 @@ class Browser {
 						// '--disable-canvas-aa', // Disable antialiasing on 2d canvas
 						// '--disable-2d-canvas-clip-aa', // Disable antialiasing on 2d canvas clips
 						'--disable-gl-drawing-for-tests', // BEST OPTION EVER! Disables GL drawing operations which produce pixel output. With this the GL output will not be correct but tests will run faster.
-						// '--disable-dev-shm-usage', // ???
 						// '--no-zygote', // wtf does that mean ?
 						'--use-gl=desktop', // better cpu usage with --use-gl=desktop rather than --use-gl=swiftshader, still needs more testing.
 						'--enable-webgl',
@@ -137,7 +136,7 @@ class Browser {
 						'--no-sandbox',
 						'--disable-setuid-sandbox',
 						'--ignore-certificate-errors',
-						'--disable-dev-shm-usage',
+						'--disable-dev-shm-usage', // https://github.com/puppeteer/puppeteer/blob/master/docs/troubleshooting.md#tips
 						'--disable-accelerated-2d-canvas',
 						'--disable-gpu',
 						'--proxy-server=socks5://127.0.0.1:9050',
