@@ -40,18 +40,7 @@ const Mailgun = require('mailgun-js')({
 
 		await headless.cleanupBrowser()
 
-		// Save all that data to the base
 		if (termData.status === 'OK') {
-			// const dbResponse = await saveAsins(
-			// 	listData.asins,
-			// 	listData.list.type,
-			// 	{
-			// 		interval: listData.urls.index,
-			// 		category: listData.category.current,
-			// 	},
-			// 	logger
-			// )
-
 			logger.send({
 				emoji: '🎉',
 				message: `Finished scraping keyword: ${searchTermsList[termIndex].keyword}`,
@@ -62,15 +51,30 @@ const Mailgun = require('mailgun-js')({
 			const messageData = {
 				subject: `Keyword Update: ${searchTermsList[termIndex].keyword}`,
 				from: 'Visibly <postmaster@web.visibly.app>',
-				to: 'jessicas@channelbakers.com, norab@channelbakers.com',
-				text: `Uh oh... Your ${searchTermsList[termIndex].placement} placement for the keyword "${searchTermsList[termIndex].keyword}" is not showing 😰`,
+				to: searchTermsList[termIndex].emails
+					.concat('ryand@channelbakers.com')
+					.join(','),
 				attachment: screenshot,
 			}
 
+			const failedMessageData = {
+				...messageData,
+				text: `Uh oh... Your ${searchTermsList[termIndex].placement} placement for the keyword "${searchTermsList[termIndex].keyword}" is not showing 😰`,
+			}
+
+			const successMessageData = {
+				...messageData,
+				text: `Woohoo! Your ${searchTermsList[termIndex].placement} placement for the keyword "${searchTermsList[termIndex].keyword}" is showing 🎉`,
+			}
+
 			const sendEmail = new Promise((resolve, reject) => {
-				if (!termData.success) {
+				if (
+					!termData.success &&
+					(searchTermsList[termIndex].sendOn === 'fail' ||
+						searchTermsList[termIndex].sendOn === 'all')
+				) {
 					Mailgun.messages().send(
-						messageData,
+						failedMessageData,
 						async (error, body) => {
 							if (error) {
 								logger.send({
@@ -84,7 +88,25 @@ const Mailgun = require('mailgun-js')({
 							resolve()
 						}
 					)
-				} else {
+				} else if (
+					searchTermsList[termIndex].sendOn === 'success' ||
+					searchTermsList[termIndex].sendOn === 'all'
+				) {
+					Mailgun.messages().send(
+						successMessageData,
+						async (error, body) => {
+							if (error) {
+								logger.send({
+									emoji: '🚨',
+									message: `Error sending email for keyword: ${searchTermsList[termIndex].keyword}`,
+									status: 'error',
+									error,
+								})
+							}
+
+							resolve()
+						}
+					)
 					resolve()
 				}
 			})
@@ -95,6 +117,17 @@ const Mailgun = require('mailgun-js')({
 					process.exit()
 				}
 			})
+
+			// Save to the database
+			// const dbResponse = await saveTerms(
+			// 	listData.asins,
+			// 	listData.list.type,
+			// 	{
+			// 		interval: listData.urls.index,
+			// 		category: listData.category.current,
+			// 	},
+			// 	logger
+			// )
 		}
 	}
 })()

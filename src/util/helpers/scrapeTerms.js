@@ -1,5 +1,5 @@
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3();
+const AWS = require('aws-sdk')
+const s3 = new AWS.S3()
 const browser = require('../helpers/headlessHelpers')
 const {
 	getTermData,
@@ -45,12 +45,14 @@ const scrapeTerms = async (termData, headless, logger) => {
 
 		///////////////////
 		// Scrape the page
-		//////////////////
+		///////////////////
 		// Now we're getting the heart of the scraper
 		const requestNewSearchPage = async () => {
 			const response = {}
 			const URL = buildURL()
-			const newFileName = `${termData.keyword}-${termData.placement}-${new Date().toISOString()}.png`;
+			const newFileName = `${termData.keyword}-${
+				termData.placement
+			}-${new Date().toISOString()}.png`
 
 			// Try 5 times to get to the page undetected
 			if (!(await passBotDetection(page, URL, logger))) {
@@ -68,19 +70,23 @@ const scrapeTerms = async (termData, headless, logger) => {
 			// await mockUserActions(page)
 
 			// Get the data from the page and return it
-			const searchTermData = await getTermData(page, termData)
-			const screenshot = await page.screenshot();
-			
+			const searchTermData = await getTermData(page)
+			const screenshot = await page.screenshot({fullPage: true})
+
 			const s3params = {
 				Bucket: 'jungle-hunt/search-terms',
 				Key: newFileName,
-				Body: screenshot
+				Body: screenshot,
 			}
 
-			await s3.putObject(s3params).promise();
+			await s3.putObject(s3params).promise()
 
-			if (searchTermData.asins.length) {
-				const matchingAsins = termData.asins.filter((asin) => searchTermData.asins.includes(asin))
+			if (searchTermData.asins[termData.placement].length) {
+				const matchingAsins = termData.asins.filter((asin) =>
+					searchTermData.asins[termData.placement].includes(asin)
+				)
+
+				response.asins = searchTermData.asins
 				response.success = matchingAsins.length ? true : false
 				response.screenshot = `https://jungle-hunt.s3-us-west-1.amazonaws.com/search-terms/${newFileName}`
 			}

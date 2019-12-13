@@ -43,7 +43,6 @@ const bot = require('./util/lib/Telegram')
 					)
 				}
 			} else if (msg.text.includes('/stop')) {
-				console.log('Stopping...')
 				const processes = await psList()
 				const puppeteer = processes.filter((ps) => ps.name === 'chrome')
 				const scraper = processes.filter((ps) =>
@@ -52,11 +51,8 @@ const bot = require('./util/lib/Telegram')
 				const puppeteerPids = puppeteer.map((ps) => ps.pid)
 				const scraperPid = scraper.map((ps) => ps.pid)
 
-				console.log('Scraper PID:', scraperPid)
-				console.log('Chrome PIDs:', puppeteerPids)
 				kill(scraperPid, 'SIGKILL')
 				puppeteerPids.forEach((pid) => {
-					console.log(pid)
 					kill(pid, 'SIGKILL')
 				})
 

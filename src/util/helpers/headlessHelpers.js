@@ -328,28 +328,31 @@ const getAsinData = async (page) => {
 	})
 }
 
-const getTermData = async (page, termData) => {
+const getTermData = async (page) => {
 	return await page.evaluate(() => {
 		const response = {}
-		const asins = []
-
-		const headline = document.querySelector('span[data-component-type="s-top-slot"]')
-		const adAsins = headline.querySelectorAll('[data-asin]')
-
-		const scrapeAdData = (element) => {
-			const asin = element.getAttribute('data-asin')
-
-			return asin
+		const asins = {
+			brand: [],
+			product: [],
 		}
 
-		adAsins.forEach((asin) => asins.push(scrapeAdData(asin)))
+		const brand = document.querySelector('span[data-component-type="s-top-slot"]')
+		const brandAsins = brand.querySelectorAll('[data-asin]')
+
+		const searchResults = document.querySelector('span[data-component-type="s-search-results"]')
+		const sponsoredProducts = searchResults.querySelectorAll('[data-component-type="sp-sponsored-result"]')
+
+		const getBrandData = (element) => element.getAttribute('data-asin')
+		const getProductData = (element) => element.closest('.s-result-item').getAttribute('data-asin')
+
+		brandAsins.forEach((asin) => asins.brand.push(getBrandData(asin)))
+		sponsoredProducts.forEach((asin) => asin.product.push(getProductData(asin)))
+
 		response.asins = asins
 
 		return response
 	})
 }
-
-
 
 module.exports = {
 	changeIP,
