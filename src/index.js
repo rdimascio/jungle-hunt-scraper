@@ -25,17 +25,18 @@ const bot = require('./util/lib/Telegram')
 
 					if (args.length === 4) {
 						command = `node /app/src/scripts/scrape/main.js -s "${list}, ${category}, ${subCategory}"`
+						exec(command)
 					} else {
 						let launchArgs = `-l ${list}`
 						launchArgs += category ? ` -c ${category}` : ''
 
 						command = `node /app/src/scripts/scrape/main.js ${launchArgs}`
+						exec(command)
 					}
 				} else {
 					command = 'node /app/src/scripts/scrape/main.js'
+					exec(command)
 				}
-
-				exec(command)
 			} else if (msg.text.includes('/stop')) {
 				const processes = await psList()
 				const puppeteer = processes.filter(ps => ps.name === 'chrome')
