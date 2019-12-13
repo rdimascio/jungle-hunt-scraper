@@ -24,15 +24,18 @@ const bot = require('./util/lib/Telegram')
 					const subCategory = args[3]
 
 					if (args.length === 4) {
-						exec(`node /app/src/scripts/scrape/main.js -s "${list}, ${category}, ${subCategory}"`)
+						command = `node /app/src/scripts/scrape/main.js -s "${list}, ${category}, ${subCategory}"`
+						exec(command)
 					} else {
 						let launchArgs = `-l ${list}`
 						launchArgs += category ? ` -c ${category}` : ''
 
-						exec(`node /app/src/scripts/scrape/main.js ${launchArgs}`)
+						command = `node /app/src/scripts/scrape/main.js ${launchArgs}`
+						exec(command)
 					}
 				} else {
-					exec('node /app/src/scripts/scrape/main.js')
+					command = 'node /app/src/scripts/scrape/main.js'
+					exec(command)
 				}
 			} else if (msg.text.includes('/stop')) {
 				const processes = await psList()
