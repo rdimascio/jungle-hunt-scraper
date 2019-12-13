@@ -21,12 +21,16 @@ const Mailgun = require('mailgun-js')({
 	// This is SUPER important since we're launching headless
 	// with the handleSIGINT property set to false
 	process.on('SIGINT', async () => {
-		logger.send({
-			emoji: '🚨',
-			message: `Process terminated with SIGINT`,
-			status: 'error',
-		})
-		await headless.shutdown()
+		try {
+			logger.send({
+				emoji: '🚨',
+				message: `Process terminated with SIGINT`,
+				status: 'error',
+			})
+			await headless.shutdown()
+		} catch (error) {
+			process.exit()
+		}
 	})
 
 	// For each url in the category in the list
