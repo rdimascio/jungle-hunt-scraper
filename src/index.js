@@ -3,6 +3,7 @@
 const fs = require('fs')
 const os = require('os')
 require('dotenv').config()
+const path = require('path')
 const rimraf = require('rimraf')
 const kill = require('tree-kill')
 const psList = require('ps-list')
@@ -42,21 +43,26 @@ const bot = require('./util/lib/Telegram')
 					)
 				}
 			} else if (msg.text.includes('/stop')) {
+				console.log('Stopping...')
 				const processes = await psList()
 				const puppeteer = processes.filter((ps) => ps.name === 'chrome')
 				const scraper = processes.filter((ps) =>
 					ps.cmd.includes('node /app/src/scripts/scrape/main.js')
 				)
 				const puppeteerPids = puppeteer.map((ps) => ps.pid)
-				const scraperPid = scraper.map((ps) => ps.id)
+				const scraperPid = scraper.map((ps) => ps.pid)
 
-				kill(scraperPid, 'SIGINT')
+				console.log('Scraper PID:', scraperPid)
+				console.log('Chrome PIDs:', puppeteerPids)
+				kill(scraperPid, 'SIGKILL')
 				puppeteerPids.forEach((pid) => {
+					console.log(pid)
 					kill(pid, 'SIGKILL')
 				})
 
 				const removeDirectories = new Promise((resolve) => {
-					rimraf(`${os.tmpdir()}/puppeteer`, () => {
+					const browserPath = path.join(`${os.tmpdir()}`, 'puppeteer')
+					rimraf(browserPath, () => {
 						resolve()
 					})
 				})
