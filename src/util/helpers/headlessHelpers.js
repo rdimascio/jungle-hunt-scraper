@@ -8,14 +8,14 @@ const changeIP = () => {
 	exec(
 		process.env.NODE_ENV === 'development'
 			? '(echo authenticate ""; echo signal newnym; echo quit) | nc localhost 9051'
-			: 'systemctl reload tor',
-		async (error, stdout, stderr) => {
-			if (stdout.match(/250/g).length === 3) {
-				console.log('IP was changed')
-			} else {
-				console.log('IP tried to change but failed')
-			}
-		}
+			: 'systemctl reload tor'
+		// async (error, stdout, stderr) => {
+		// 	if (stdout.match(/250/g).length === 3) {
+		// 		console.log('IP was changed')
+		// 	} else {
+		// 		console.log('IP tried to change but failed')
+		// 	}
+		// }
 	)
 }
 
