@@ -32,7 +32,7 @@ const scrapeLists = async (data, headless, logger) => {
 		/////////////////////////////////
 		// First we're going to check our IP address
 		// to make sure we're not using our public IP
-		if (!(await isBrowserUsingTor(page)) && !isTerminated) {
+		if (!(await isBrowserUsingTor(page, logger)) && !isTerminated) {
 			logger.send({
 				emoji: '🚨',
 				message: `Tor failed to anonymize our IP. Using IP: ${IP}`,

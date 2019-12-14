@@ -35,13 +35,7 @@ const scrapeTerms = async (termData, headless, logger) => {
 		/////////////////////////////////
 		// First we're going to check our IP address
 		// to make sure we're not using our public IP
-		if (!(await isBrowserUsingTor(page)) && !isTerminated) {
-			logger.send({
-				emoji: '🚨',
-				message: `Tor failed to anonymize our IP. Using IP: ${IP}`,
-				status: 'error',
-			})
-
+		if (!(await isBrowserUsingTor(page, logger)) && !isTerminated) {
 			await headless.shutdown()
 		}
 

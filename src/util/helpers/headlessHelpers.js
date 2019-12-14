@@ -19,19 +19,31 @@ const changeIP = () => {
 	)
 }
 
-const isBrowserUsingTor = async (page) => {
+const isBrowserUsingTor = async (page, logger) => {
 	const publicIps = ['12.205.195.90', '172.119.134.14', '167.71.144.15']
 
 	try {
-		await page.goto('http://checkip.amazonaws.com/')
+		await page.goto('https://checkip.amazonaws.com/')
 		const IP = await page.evaluate(() => document.body.textContent.trim())
 
-		if (!publicIps.includes(IP)) {
+		if (IP && !publicIps.includes(IP)) {
 			return true
 		}
 
+		logger.send({
+			emoji: '🚨',
+			message: `Tor failed to anonymize our IP. Using IP: ${IP}`,
+			status: 'error',
+		})
+
 		return false
 	} catch (error) {
+		logger.send({
+			emoji: '🚨',
+			message: `There was an error checking our IP`,
+			status: 'error',
+			error
+		})
 		return false
 	}
 }
