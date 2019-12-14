@@ -145,18 +145,19 @@ const bot = require('./util/lib/Telegram')
 
 				jungleHuntBot.sendMessage(
 					msg.chat.id,
-					`We're currently using ${usedCpuPercentage}% CPU`
+					`We're currently using ${usedCpuPercentage.toFixed(2)}% CPU`
 				)
 				break
 			case 'memory':
 				const memory = system.mem
 				const usedMemoryPercentage = await memory
 					.used()
-					.then(
-						(info) =>
+					.then((info) =>
+						Math.ceil(
 							(parseFloat(info.usedMemMb) /
 								parseFloat(info.totalMemMb)) *
-							100
+								100
+						)
 					)
 
 				jungleHuntBot.sendMessage(
