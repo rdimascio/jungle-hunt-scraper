@@ -5,6 +5,7 @@ const request = require('request')
 const Logger = require('../../util/lib/Logger')
 const Browser = require('../../util/lib/Browser')
 const delay = require('../../util/helpers/delay')
+const args = require('minimist')(process.argv.slice(2))
 const scrapeTerms = require('../../util/helpers/scrapeTerms')
 const searchTermsList = require('../../../data/terms/keywordList')
 const generateRandomNumbers = require('../../util/helpers/randomNumbers')
@@ -39,13 +40,15 @@ const Mailgun = require('mailgun-js')({
 
 		// We don't want to run the scraper at the same time every single day,
 		// so we're going to wait a random time betwen 1 and 20 minutes
-		const randomWaitTimer = generateRandomNumbers(
-			1000 * 60 * 1,
-			1000 * 60 * 20,
-			1
-		)
+		if ((args.d || args.delay) && termIndex === 0) {
+			const randomWaitTimer = generateRandomNumbers(
+				1000 * 60 * 10,
+				1000 * 60 * 60,
+				1
+			)
 
-		await delay(randomWaitTimer)
+			await delay(randomWaitTimer)
+		}
 
 		headless = new Browser({logger})
 

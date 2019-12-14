@@ -18,7 +18,9 @@ const newReleaseCategories = require('../../../data/categories/newReleases')
 const mostWishedForCategories = require('../../../data/categories/mostWishedFor')
 
 ;(async () => {
-	let headless, logger
+	let headless,
+		logger,
+		iteration = 0
 
 	// We can handle our own termination signals, thank you
 	// This is SUPER important since we're launching headless
@@ -40,7 +42,6 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 	startPosition = startPosition && startPosition.split(',')
 
 	const listData = {}
-
 	const start = new Date()
 	const DEV = process.env.NODE_ENV === 'development'
 	let lastScrapeTime = getLastScrapeTime()
@@ -141,13 +142,15 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 
 		// We don't want to run the scraper at the same time every single day,
 		// so we're going to wait a random time betwen 10 minutes and 1 hour
-		const randomWaitTimer = generateRandomNumbers(
-			1000 * 60 * 10,
-			1000 * 60 * 60,
-			1
-		)
+		if ((args.d || args.delay) && iteration === 0) {
+			const randomWaitTimer = generateRandomNumbers(
+				1000 * 60 * 10,
+				1000 * 60 * 60,
+				1
+			)
 
-		await delay(randomWaitTimer)
+			await delay(randomWaitTimer)
+		}
 
 		log.start(logger, listData.list.name, listData.list.start)
 		headless = new Browser({logger})
@@ -202,10 +205,7 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 				const lastCategory = categoryArgs
 					? Math.max([
 							...categoryArgs.map((category) =>
-								getCategoryIndex(
-									listData.list.type,
-									category
-								)
+								getCategoryIndex(listData.list.type, category)
 							),
 					  ]) + 1
 					: listData.category.index === listData.category.count
@@ -228,6 +228,8 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 				const asins = await scrapeLists(listData, headless, logger)
 
 				await headless.cleanupBrowser()
+
+				iteration++
 
 				// Save all that data to the base
 				if (asins.length) {
