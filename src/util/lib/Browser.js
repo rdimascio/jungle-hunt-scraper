@@ -71,6 +71,7 @@ class Browser {
 			title: 'Best Seller List Scraper',
 			message: `Set up temporary directory at ${dataDir}`,
 			status: 'success',
+			loggers: ['console, notify, logger']
 		})
 
 		return dataDir
@@ -84,6 +85,7 @@ class Browser {
 					title: 'Best Seller List Scraper',
 					message: `Removed temporary directory at ${path}`,
 					status: 'success',
+					loggers: ['console, notify, logger']
 				})
 				resolve()
 			})
@@ -208,6 +210,7 @@ class Browser {
 			title: 'Best Seller List Scraper',
 			message: `Browser has been killed and cleaned`,
 			status: 'success',
+			loggers: ['console, notify, logger']
 		})
 	}
 

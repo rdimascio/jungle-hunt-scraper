@@ -1,5 +1,3 @@
-const fs = require('fs')
-
 const logMessages = {
 	start: (logger, listName, startTime) => {
 		logger.send({
@@ -22,6 +20,7 @@ const logMessages = {
 					listData.urls.index
 				} in ${listData.category.current} in ${listData.list.name}`,
 				status: 'success',
+				loggers: ['console, notify, logger']
 			})
 		} else {
 			logger.send({
