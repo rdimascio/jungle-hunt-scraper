@@ -26,6 +26,7 @@
     "mailgun-js": "^0.22.0",
     "minimist": "^1.2.0",
     "mongodb": "^3.3.5",
+    "node-cron": "^2.0.3",
     "node-notifier": "^6.0.0",
     "node-telegram-bot-api": "^0.40.0",
     "ps-list": "^6.3.0",

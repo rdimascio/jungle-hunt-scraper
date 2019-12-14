@@ -6,8 +6,8 @@ require('dotenv').config()
 const path = require('path')
 const axios = require('axios')
 const rimraf = require('rimraf')
-const kill = require('tree-kill')
 const psList = require('ps-list')
+const cron = require('node-cron')
 const {exec} = require('child_process')
 const bot = require('./util/lib/Telegram')
 
@@ -104,7 +104,7 @@ const bot = require('./util/lib/Telegram')
 					msg.chat.id,
 					'Houston, we have a problem with the list scraper'
 				)
-				
+
 				killItWithFire(msg)
 			}
 		)
@@ -118,7 +118,7 @@ const bot = require('./util/lib/Telegram')
 					msg.chat.id,
 					'Houston, we have a problem with the search term scraper'
 				)
-				
+
 				killItWithFire(msg)
 			}
 		)
@@ -173,25 +173,38 @@ const bot = require('./util/lib/Telegram')
 		} else if (msg.text.includes('/giphy')) {
 			const giphy = await getRandomGiphy(msg.text.split(' ')[1])
 			if (giphy.success) {
-				jungleHuntBot.sendDocument(
-					msg.chat.id,
-					giphy.image
-				)
+				jungleHuntBot.sendDocument(msg.chat.id, giphy.image)
 			} else {
-				jungleHuntBot.sendMessage(
-					msg.chat.id,
-					'I failed you...'
-				)
+				jungleHuntBot.sendMessage(msg.chat.id, 'I failed you...')
 			}
 		} else {
-			jungleHuntBot.sendMessage(
-				msg.chat.id,
-				'Huh?'
-			)
+			jungleHuntBot.sendMessage(msg.chat.id, 'Huh?')
 		}
 	}
 
 	jungleHuntBot.on('message', async (msg) => {
 		await messageHandler(msg)
 	})
+
+	// Run the search term scraper hourly
+	cron.schedule(
+		'17 * * * *',
+		() => {
+			startSearchTermScraper(msg, true)
+		},
+		{
+			timezone: 'America/Los_Angeles',
+		}
+	)
+
+	// Run the list scraper daily
+	cron.schedule(
+		'45 17 * * *',
+		() => {
+			startListScraper(msg, [], true)
+		},
+		{
+			timezone: 'America/Los_Angeles',
+		}
+	)
 })()
