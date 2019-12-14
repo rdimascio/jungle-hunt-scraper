@@ -71,7 +71,7 @@ const bot = require('./util/lib/Telegram')
 		)
 	}
 
-	const killChrome = (processes) => {
+	const killChrome = (msg, processes) => {
 		const puppeteer = processes.filter((ps) => ps.name === 'chrome')
 		const puppeteerPids = puppeteer.map((ps) => ps.pid)
 		puppeteerPids.forEach((pid) => {
@@ -94,7 +94,7 @@ const bot = require('./util/lib/Telegram')
 		})
 	}
 
-	const killListScraper = (processes) => {
+	const killListScraper = (msg, processes) => {
 		const listScraper = processes.filter((ps) =>
 			ps.cmd.includes('node /app/src/scripts/scrape/main.js')
 		)
@@ -104,7 +104,7 @@ const bot = require('./util/lib/Telegram')
 		})
 	}
 
-	const killSearchTermScraper = (processes) => {
+	const killSearchTermScraper = (msg, processes) => {
 		const searchTermScraper = processes.filter((ps) =>
 			ps.cmd.includes('node /app/src/scripts/scrape/searchTerms.js')
 		)
@@ -114,11 +114,11 @@ const bot = require('./util/lib/Telegram')
 		})
 	}
 
-	const killItWithFire = async () => {
+	const killItWithFire = async (msg) => {
 		const ps = await psList()
-		killChrome(ps)
-		killListScraper(ps)
-		killSearchTermScraper(ps)
+		killChrome(msg, ps)
+		killListScraper(msg, ps)
+		killSearchTermScraper(msg, ps)
 		removeDirectories()
 	}
 
@@ -168,7 +168,7 @@ const bot = require('./util/lib/Telegram')
 				msg.chat.id,
 				'https://i.giphy.com/media/kgKrO1A3JbWTK/source.gif'
 			)
-			await killItWithFire()
+			await killItWithFire(msg)
 		} else if (command === 'giphy') {
 			const giphy = await getRandomGiphy(msg.text.split(' ')[1])
 			if (giphy.success) {
@@ -185,7 +185,7 @@ const bot = require('./util/lib/Telegram')
 		} else {
 			jungleHuntBot.sendMessage(
 				msg.chat.id,
-				command[1]
+				command
 			)
 		}
 	}
