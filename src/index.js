@@ -166,7 +166,7 @@ const bot = require('./util/lib/Telegram')
 				await killItWithFire()
 				break
 			case 'giphy':
-				const giphy = await getRandomGiphy(msg.split(' ')[1])
+				const giphy = await getRandomGiphy(msg.text.split(' ')[1])
 				if (giphy.success) {
 					jungleHuntBot.sendAnimation(
 						msg.chat.id,
@@ -182,7 +182,7 @@ const bot = require('./util/lib/Telegram')
 			default:
 				jungleHuntBot.sendMessage(
 					msg.chat.id,
-					"Sorry, I didn't catch that. Here's a random gif"
+					'What do you want'
 				)
 		}
 	}
