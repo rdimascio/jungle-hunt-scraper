@@ -175,5 +175,5 @@ const bot = require('./util/lib/Telegram')
 		}
 	}
 
-	jungleHuntBot.on('message', messageHandler)
+	jungleHuntBot.on('message', (msg) => messageHandler(msg))
 })()
