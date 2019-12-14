@@ -137,7 +137,7 @@ const bot = require('./util/lib/Telegram')
 			.get(url.join(''))
 			.then((res) => {
 				response.success = true
-				response.image = res.data.image_url
+				response.image = res.data.data.image_url
 			})
 			.catch((err) => {
 				response.success = false
