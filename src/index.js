@@ -161,7 +161,7 @@ const bot = require('./util/lib/Telegram')
 					msg.chat.id,
 					'https://i.giphy.com/media/kgKrO1A3JbWTK/source.gif'
 				)
-				killItWithFire()
+				await killItWithFire()
 				break
 			default:
 				jungleHuntBot.sendMessage(
