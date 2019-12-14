@@ -140,7 +140,7 @@ const bot = require('./util/lib/Telegram')
 	}
 
 	const messageHandler = async (msg) => {
-		if (msg.chat.id !== process.env.TELEGRAM_USER_ID) {
+		if (msg.chat.id != process.env.TELEGRAM_USER_ID) {
 			jungleHuntBot.sendMessage(msg.chat.id, 'Do I know you?')
 			return
 		}
