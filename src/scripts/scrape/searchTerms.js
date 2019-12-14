@@ -71,9 +71,6 @@ const Mailgun = require('mailgun-js')({
 		await headless.shutdown(false)
 		headless = null
 
-		console.log(termData)
-		process.exit()
-
 		if (termData.status === 'OK') {
 			const screenshot = request(termData.screenshot)
 			const messageData = {

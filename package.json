@@ -28,6 +28,7 @@
     "mongodb": "^3.3.5",
     "node-cron": "^2.0.3",
     "node-notifier": "^6.0.0",
+    "node-os-utils": "^1.1.0",
     "node-telegram-bot-api": "^0.40.0",
     "ps-list": "^6.3.0",
     "puppeteer": "^2.0.0",

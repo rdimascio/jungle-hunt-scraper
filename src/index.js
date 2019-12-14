@@ -9,6 +9,7 @@ const rimraf = require('rimraf')
 const psList = require('ps-list')
 const cron = require('node-cron')
 const {exec} = require('child_process')
+const system = require('node-os-utils')
 const bot = require('./util/lib/Telegram')
 
 ;(async () => {
@@ -34,7 +35,11 @@ const bot = require('./util/lib/Telegram')
 		const puppeteerPids = puppeteer.map((ps) => ps.pid)
 		puppeteerPids.forEach((pid) => {
 			exec(`kill -9 ${pid}`, (error) => {
-				jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, error)
+				if (error)
+					jungleHuntBot.sendMessage(
+						process.env.TELEGRAM_USER_ID,
+						error
+					)
 			})
 		})
 	}
@@ -58,7 +63,8 @@ const bot = require('./util/lib/Telegram')
 		)
 		const listScraperPid = listScraper.map((ps) => ps.pid)
 		exec(`kill -9 ${listScraperPid}`, (error) => {
-			jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, error)
+			if (error)
+				jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, error)
 		})
 	}
 
@@ -68,7 +74,8 @@ const bot = require('./util/lib/Telegram')
 		)
 		const searchTermScraperPid = searchTermScraper.map((ps) => ps.pid)
 		exec(`kill -9 ${searchTermScraperPid}`, (error) => {
-			jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, error)
+			if (error)
+				jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, error)
 		})
 	}
 
@@ -99,13 +106,15 @@ const bot = require('./util/lib/Telegram')
 				${initArgs}
 				${delay ? ' -d' : ''}
 			`,
-			(error) => {
-				jungleHuntBot.sendMessage(
-					process.env.TELEGRAM_USER_ID,
-					'Houston, we have a problem with the list scraper'
-				)
+			async (error) => {
+				if (error) {
+					jungleHuntBot.sendMessage(
+						process.env.TELEGRAM_USER_ID,
+						'Houston, we have a problem with the list scraper'
+					)
 
-				killItWithFire()
+					await killItWithFire()
+				}
 			}
 		)
 	}
@@ -113,15 +122,69 @@ const bot = require('./util/lib/Telegram')
 	const startSearchTermScraper = (delay = false) => {
 		exec(
 			`node /app/src/scripts/scrape/searchTerms.js${delay ? ' -d' : ''}`,
-			(error) => {
-				jungleHuntBot.sendMessage(
-					process.env.TELEGRAM_USER_ID,
-					'Houston, we have a problem with the search term scraper'
-				)
+			async (error) => {
+				if (error) {
+					jungleHuntBot.sendMessage(
+						process.env.TELEGRAM_USER_ID,
+						'Houston, we have a problem with the search term scraper'
+					)
 
-				killItWithFire()
+					await killItWithFire()
+				}
 			}
 		)
+	}
+
+	const showServerStats = (msg) => {
+		const command = msg.text.split(':')[1]
+
+		switch(command) {
+			case 'cpu':
+				const cpu = system.cpu
+				const usedCpuPercentage = await cpu.usage()
+					.then((info) => info)
+
+				jungleHuntBot.sendMessage(msg.chat.id, `We're currently using ${usedCpuPercentage}% CPU`)
+				break
+			case 'memory':
+				const memory = system.mem
+				const usedMemoryPercentage = memory.used()
+					.then((info) => (parseFloat(info.usedMemMb) / parseFloat(info.totalMemMb)) * 100)
+
+				jungleHuntBot.sendMessage(msg.chat.id, `We're currently using ${usedMemoryPercentage}% memory`)
+				break
+			case 'processes':
+				const ps = await psList()
+				const puppeteer = ps.filter((process) => process.name === 'chrome')
+				const puppeteerPids = puppeteer.map((process) => process.pid)
+				
+				const searchTermScraper = ps.filter((process) =>
+					process.cmd.includes('node /app/src/scripts/scrape/searchTerms.js')
+				)
+				const searchTermScraperPid = searchTermScraper.map((process) => process.pid)
+
+				const listScraper = ps.filter((process) =>
+					process.cmd.includes('node /app/src/scripts/scrape/main.js')
+				)
+				const listScraperPid = listScraper.map((process) => process.pid)
+
+				jungleHuntBot.sendMessage(
+					msg.chat.id,
+					`
+						Puppeteer: [${puppeteerPids.join(', ')}]
+						Search Term Scraper: [${searchTermScraperPid.join(', ')}]
+						List Scraper: [${listScraperPid.join(', ')}]]
+					`
+				)
+				break
+		}
+	}
+
+	const killProcess = (pid) => {
+		exec(`kill -9 ${pid}`, (error) => {
+			if (error)
+				jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, error)
+		})
 	}
 
 	const getRandomGiphy = async (searchTerm) => {
@@ -158,8 +221,6 @@ const bot = require('./util/lib/Telegram')
 			return
 		}
 
-		// const command = msg.text.split('/')[1].split(' ')[0]
-
 		if (msg.text.includes('/start')) {
 			jungleHuntBot.sendMessage(msg.chat.id, 'You got it boss 👍')
 			toInfinityAndBeyond(msg)
@@ -170,6 +231,11 @@ const bot = require('./util/lib/Telegram')
 				'https://i.giphy.com/media/kgKrO1A3JbWTK/source.gif'
 			)
 			await killItWithFire()
+		} else if (msg.text.includes('/show')) {
+			showServerStats(msg)
+		}  else if (msg.text.includes('/kill')) {
+			const process = msg.text.split(' ')[1]
+			killProcess(process)
 		} else if (msg.text.includes('/giphy')) {
 			const giphy = await getRandomGiphy(msg.text.split(' ')[1])
 			if (giphy.success) {
