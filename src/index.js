@@ -152,38 +152,34 @@ const bot = require('./util/lib/Telegram')
 
 		const command = msg.text.split('/')[1]
 
-		switch (command) {
-			case 'start':
-				jungleHuntBot.sendMessage(msg.chat.id, 'You got it boss 👍')
-				toInfinityAndBeyond(msg)
-				break
-			case 'stop':
-				jungleHuntBot.sendMessage(msg.chat.id, 'Hammer time 👇')
+		if (command === 'start') {
+			jungleHuntBot.sendMessage(msg.chat.id, 'You got it boss 👍')
+			toInfinityAndBeyond(msg)
+		} else if (command === 'stop') {
+			jungleHuntBot.sendMessage(msg.chat.id, 'Hammer time 👇')
+			jungleHuntBot.sendAnimation(
+				msg.chat.id,
+				'https://i.giphy.com/media/kgKrO1A3JbWTK/source.gif'
+			)
+			await killItWithFire()
+		} else if (command === 'giphy') {
+			const giphy = await getRandomGiphy(msg.text.split(' ')[1])
+			if (giphy.success) {
 				jungleHuntBot.sendAnimation(
 					msg.chat.id,
-					'https://i.giphy.com/media/kgKrO1A3JbWTK/source.gif'
+					giphy.image
 				)
-				await killItWithFire()
-				break
-			case 'giphy':
-				const giphy = await getRandomGiphy(msg.text.split(' ')[1])
-				if (giphy.success) {
-					jungleHuntBot.sendAnimation(
-						msg.chat.id,
-						giphy.image
-					)
-				} else {
-					jungleHuntBot.sendMessage(
-						msg.chat.id,
-						'I failed you...'
-					)
-				}
-				break
-			default:
+			} else {
 				jungleHuntBot.sendMessage(
 					msg.chat.id,
-					'What do you want'
+					'I failed you...'
 				)
+			}
+		} else {
+			jungleHuntBot.sendMessage(
+				msg.chat.id,
+				'What do you want'
+			)
 		}
 	}
 
