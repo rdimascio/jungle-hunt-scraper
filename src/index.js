@@ -116,7 +116,7 @@ const bot = require('./util/lib/Telegram')
 		removeDirectories()
 	}
 
-	const getRandomGiphy = async () => {
+	const getRandomGiphy = async (searchTerm) => {
 		const response = {}
 
 		const url = [
@@ -124,6 +124,8 @@ const bot = require('./util/lib/Telegram')
 			'?api_key=',
 			process.env.GIPHY_API_KEY,
 		]
+
+		if (searchTerm) url.push(`&q=${searchTerm}`)
 
 		return await axios
 			.get(url.join(''))
@@ -163,14 +165,24 @@ const bot = require('./util/lib/Telegram')
 				)
 				await killItWithFire()
 				break
+			case 'giphy':
+				const giphy = await getRandomGiphy(msg.split(' ')[1])
+				if (giphy.success) {
+					jungleHuntBot.sendAnimation(
+						msg.chat.id,
+						giphy.image
+					)
+				} else {
+					jungleHuntBot.sendMessage(
+						msg.chat.id,
+						'I failed you...'
+					)
+				}
+				break
 			default:
 				jungleHuntBot.sendMessage(
 					msg.chat.id,
 					"Sorry, I didn't catch that. Here's a random gif"
-				)
-				jungleHuntBot.sendAnimation(
-					msg.chat.id,
-					await getRandomGiphy()
 				)
 		}
 	}
