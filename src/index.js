@@ -156,8 +156,7 @@ const bot = require('./util/lib/Telegram')
 			return
 		}
 
-		let command = msg.text.split('/')
-		command = command[1]
+		const command = msg.text.split('/')[1].split(' ')[0]
 
 		if (command === 'start') {
 			jungleHuntBot.sendMessage(msg.chat.id, 'You got it boss 👍')
