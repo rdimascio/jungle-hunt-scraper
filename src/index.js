@@ -75,7 +75,9 @@ const bot = require('./util/lib/Telegram')
 		const puppeteer = processes.filter((ps) => ps.name === 'chrome')
 		const puppeteerPids = puppeteer.map((ps) => ps.pid)
 		puppeteerPids.forEach((pid) => {
-			kill(pid, 'SIGKILL')
+			exec(`kill -9 ${pid}`, (error) => {
+				jungleHuntBot.sendMessage(msg.chat.id, error)
+			})
 		})
 	}
 
@@ -97,7 +99,9 @@ const bot = require('./util/lib/Telegram')
 			ps.cmd.includes('node /app/src/scripts/scrape/main.js')
 		)
 		const listScraperPid = listScraper.map((ps) => ps.pid)
-		kill(listScraperPid, 'SIGKILL')
+		exec(`kill -9 ${listScraperPid}`, (error) => {
+			jungleHuntBot.sendMessage(msg.chat.id, error)
+		})
 	}
 
 	const killSearchTermScraper = (processes) => {
@@ -105,7 +109,9 @@ const bot = require('./util/lib/Telegram')
 			ps.cmd.includes('node /app/src/scripts/scrape/searchTerms.js')
 		)
 		const searchTermScraperPid = searchTermScraper.map((ps) => ps.pid)
-		kill(searchTermScraperPid, 'SIGKILL')
+		exec(`kill -9 ${searchTermScraperPid}`, (error) => {
+			jungleHuntBot.sendMessage(msg.chat.id, error)
+		})
 	}
 
 	const killItWithFire = async () => {
@@ -150,22 +156,23 @@ const bot = require('./util/lib/Telegram')
 			return
 		}
 
-		const command = msg.text.split('/')
+		let command = msg.text.split('/')
+		command = command[1]
 
-		if (command[1] === 'start') {
+		if (command === 'start') {
 			jungleHuntBot.sendMessage(msg.chat.id, 'You got it boss 👍')
 			toInfinityAndBeyond(msg)
-		} else if (command[1] === 'stop') {
+		} else if (command === 'stop') {
 			jungleHuntBot.sendMessage(msg.chat.id, 'Hammer time 👇')
-			jungleHuntBot.sendAnimation(
+			jungleHuntBot.sendDocument(
 				msg.chat.id,
 				'https://i.giphy.com/media/kgKrO1A3JbWTK/source.gif'
 			)
 			await killItWithFire()
-		} else if (command[1] === 'giphy') {
+		} else if (command === 'giphy') {
 			const giphy = await getRandomGiphy(msg.text.split(' ')[1])
 			if (giphy.success) {
-				jungleHuntBot.sendAnimation(
+				jungleHuntBot.sendDocument(
 					msg.chat.id,
 					giphy.image
 				)
