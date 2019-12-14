@@ -136,7 +136,7 @@ const passBotDetection = async (page, url, logger, data = false) => {
 			proxy = true
 
 			changeIP()
-			await delay(4000 * retryNumber)
+			await delay(4000 * attempt)
 		} catch(error) {
 			logger.send({
 				emoji: '🚨',

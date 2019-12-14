@@ -38,16 +38,24 @@ const Mailgun = require('mailgun-js')({
 	for (let termIndex = 0; termIndex < searchTermsList.length; termIndex++) {
 		const lastTerm = termIndex + 1 === searchTermsList.length
 
-		// We don't want to run the scraper at the same time every single day,
-		// so we're going to wait a random time betwen 1 and 20 minutes
-		if ((args.d || args.delay) && termIndex === 0) {
-			const randomWaitTimer = generateRandomNumbers(
-				1000 * 60 * 10,
-				1000 * 60 * 60,
-				1
-			)
+		if (termIndex === 0) {
+			logger.send({
+				emoji: '🚀',
+				message: `Started scraping keywords`,
+				status: 'success',
+			})
+			
+			// We don't want to run the scraper at the same time every single day,
+			// so we're going to wait a random time betwen 1 and 20 minutes
+			if (args.d || args.delay) {
+				const randomWaitTimer = generateRandomNumbers(
+					1000 * 60 * 10,
+					1000 * 60 * 60,
+					1
+				)
 
-			await delay(randomWaitTimer)
+				await delay(randomWaitTimer)
+			}
 		}
 
 		headless = new Browser({logger})
@@ -64,12 +72,6 @@ const Mailgun = require('mailgun-js')({
 		headless = null
 
 		if (termData.status === 'OK') {
-			logger.send({
-				emoji: '🎉',
-				message: `Finished scraping keyword: ${searchTermsList[termIndex].keyword}`,
-				status: 'success',
-			})
-
 			const screenshot = request(termData.screenshot)
 			const messageData = {
 				subject: `Keyword Update: ${searchTermsList[termIndex].keyword}`,
@@ -136,6 +138,11 @@ const Mailgun = require('mailgun-js')({
 
 			sendEmail.then(async () => {
 				if (lastTerm) {
+					logger.send({
+						emoji: '🎉',
+						message: `Finished scraping keywords`,
+						status: 'success',
+					})
 					process.exit()
 				}
 			})

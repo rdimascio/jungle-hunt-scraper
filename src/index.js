@@ -29,48 +29,6 @@ const bot = require('./util/lib/Telegram')
 		}
 	}
 
-	const startListScraper = (msg, args = [], delay = false) => {
-		let initArgs = ''
-
-		switch (args.length) {
-			case 0:
-				break
-			case 1:
-				initArgs = ` -l ${args[0]}`
-			case 2:
-				initArgs = ` -l ${args[0]} -c ${args[1]}`
-			case 3:
-				initArgs = ` -s "${args.join(', ')}"`
-		}
-
-		exec(
-			`node /app/src/scripts/scrape/main.js
-				${initArgs}
-				${delay ? ' -d' : ''}
-			`,
-			(error) => {
-				jungleHuntBot.sendMessage(
-					msg.chat.id,
-					'Houston, we have a problem with the list scraper'
-				)
-				jungleHuntBot.sendMessage(msg.chat.id, error)
-			}
-		)
-	}
-
-	const startSearchTermScraper = (msg, delay = false) => {
-		exec(
-			`node /app/src/scripts/scrape/searchTerms.js${delay ? ' -d' : ''}`,
-			(error) => {
-				jungleHuntBot.sendMessage(
-					msg.chat.id,
-					'Houston, we have a problem with the search term scraper'
-				)
-				jungleHuntBot.sendMessage(msg.chat.id, error)
-			}
-		)
-	}
-
 	const killChrome = (msg, processes) => {
 		const puppeteer = processes.filter((ps) => ps.name === 'chrome')
 		const puppeteerPids = puppeteer.map((ps) => ps.pid)
@@ -120,6 +78,50 @@ const bot = require('./util/lib/Telegram')
 		killListScraper(msg, ps)
 		killSearchTermScraper(msg, ps)
 		removeDirectories()
+	}
+
+	const startListScraper = (msg, args = [], delay = false) => {
+		let initArgs = ''
+
+		switch (args.length) {
+			case 0:
+				break
+			case 1:
+				initArgs = ` -l ${args[0]}`
+			case 2:
+				initArgs = ` -l ${args[0]} -c ${args[1]}`
+			case 3:
+				initArgs = ` -s "${args.join(', ')}"`
+		}
+
+		exec(
+			`node /app/src/scripts/scrape/main.js
+				${initArgs}
+				${delay ? ' -d' : ''}
+			`,
+			(error) => {
+				jungleHuntBot.sendMessage(
+					msg.chat.id,
+					'Houston, we have a problem with the list scraper'
+				)
+				
+				killItWithFire(msg)
+			}
+		)
+	}
+
+	const startSearchTermScraper = (msg, delay = false) => {
+		exec(
+			`node /app/src/scripts/scrape/searchTerms.js${delay ? ' -d' : ''}`,
+			(error) => {
+				jungleHuntBot.sendMessage(
+					msg.chat.id,
+					'Houston, we have a problem with the search term scraper'
+				)
+				
+				killItWithFire(msg)
+			}
+		)
 	}
 
 	const getRandomGiphy = async (searchTerm) => {

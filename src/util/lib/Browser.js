@@ -152,6 +152,7 @@ class Browser {
 					emoji: '🦄',
 					message: `Browser launched at ${new Date().toLocaleString()}`,
 					status: 'success',
+					loggers: ['console, notify, logger']
 				})
 			} catch (error) {
 				this.logger.send({
