@@ -156,19 +156,19 @@ const bot = require('./util/lib/Telegram')
 			return
 		}
 
-		const command = msg.text.split('/')[1].split(' ')[0]
+		// const command = msg.text.split('/')[1].split(' ')[0]
 
-		if (command === 'start') {
+		if (msg.text.includes('/start')) {
 			jungleHuntBot.sendMessage(msg.chat.id, 'You got it boss 👍')
 			toInfinityAndBeyond(msg)
-		} else if (command === 'stop') {
+		} else if (msg.text.includes('/stop')) {
 			jungleHuntBot.sendMessage(msg.chat.id, 'Hammer time 👇')
 			jungleHuntBot.sendDocument(
 				msg.chat.id,
 				'https://i.giphy.com/media/kgKrO1A3JbWTK/source.gif'
 			)
 			await killItWithFire(msg)
-		} else if (command === 'giphy') {
+		} else if (msg.text.includes('/giphy')) {
 			const giphy = await getRandomGiphy(msg.text.split(' ')[1])
 			if (giphy.success) {
 				jungleHuntBot.sendDocument(
@@ -184,7 +184,7 @@ const bot = require('./util/lib/Telegram')
 		} else {
 			jungleHuntBot.sendMessage(
 				msg.chat.id,
-				command
+				'Huh?'
 			)
 		}
 	}
