@@ -131,7 +131,7 @@ const bot = require('./util/lib/Telegram')
 			process.env.GIPHY_API_KEY,
 		]
 
-		if (searchTerm) url.push(`&q=${searchTerm}`)
+		if (searchTerm) url.push(`&tag=${searchTerm}`)
 
 		return await axios
 			.get(url.join(''))
