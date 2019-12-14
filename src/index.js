@@ -188,9 +188,14 @@ const bot = require('./util/lib/Telegram')
 				jungleHuntBot.sendMessage(
 					msg.chat.id,
 					`
-						Puppeteer: [${puppeteerPids.join(', ')}]
-						Search Term Scraper: [${searchTermScraperPid.join(', ')}]
-						List Scraper: [${listScraperPid.join(', ')}]]
+					Puppeteer:
+						[${puppeteerPids.join(', ')}]
+					
+					Search Term Scraper:
+						[${searchTermScraperPid.join(', ')}]
+					
+					List Scraper:
+						[${listScraperPid.join(', ')}]
 					`
 				)
 				break

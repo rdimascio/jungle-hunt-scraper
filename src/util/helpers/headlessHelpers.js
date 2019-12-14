@@ -344,7 +344,7 @@ const getTermData = async (page) => {
 				asins: [],
 			},
 			product: {
-				asins: []
+				asins: [],
 			},
 		}
 
@@ -413,7 +413,9 @@ const getTermData = async (page) => {
 			return {
 				asin: container.getAttribute('data-asin'),
 				position: container.getAttribute('data-index'),
-				title: container.querySelector('h2').innerText,
+				title: container.querySelector('h2')
+					? container.querySelector('h2').innerText
+					: null,
 				price: container.querySelector('.a-price .a-offscreen')
 					? parseFloat(
 							container
@@ -423,31 +425,41 @@ const getTermData = async (page) => {
 								.join('')
 					  )
 					: null,
-				rating: container.querySelector(
-					'.a-spacing-top-micro span:first-of-type'
-				)
-					? parseFloat(
-							container
-								.querySelector(
-									'.a-spacing-top-micro span:first-of-type'
-								)
-								.getAttribute('aria-label')
-								.split(' ')[0]
-					  )
-					: null,
-				reviews: container.querySelector(
-					'.a-spacing-top-micro span:nth-child(2)'
-				)
-					? parseFloat(
-							container
-								.querySelector(
-									'.a-spacing-top-micro span:nth-child(2)'
-								)
-								.getAttribute('aria-label')
-								.split(',')
-								.join('')
-					  )
-					: null,
+				rating:
+					container.querySelector(
+						'.a-spacing-top-micro span:first-of-type'
+					) &&
+					container
+						.querySelector(
+							'.a-spacing-top-micro span:first-of-type'
+						)
+						.getAttribute('aria-label')
+						? parseFloat(
+								container
+									.querySelector(
+										'.a-spacing-top-micro span:first-of-type'
+									)
+									.getAttribute('aria-label')
+									.split(' ')[0]
+						  )
+						: null,
+				reviews:
+					container.querySelector(
+						'.a-spacing-top-micro span:nth-child(2)'
+					) &&
+					container
+						.querySelector('.a-spacing-top-micro span:nth-child(2)')
+						.getAttribute('aria-label')
+						? parseFloat(
+								container
+									.querySelector(
+										'.a-spacing-top-micro span:nth-child(2)'
+									)
+									.getAttribute('aria-label')
+									.split(',')
+									.join('')
+						  )
+						: null,
 				image: container.querySelector(
 					'[data-component-type="s-product-image"] img.s-image'
 				).src,
