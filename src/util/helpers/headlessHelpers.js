@@ -7,7 +7,7 @@ const generateRandomNumbers = require('../../util/helpers/randomNumbers')
 const changeIP = () => {
 	exec(
 		process.env.NODE_ENV === 'development'
-			? '(echo authenticate ""; echo signal newnym; echo quit) | nc localhost 9051'
+			? 'brew services restart tor'
 			: 'systemctl reload tor'
 		// async (error, stdout, stderr) => {
 		// 	if (stdout.match(/250/g).length === 3) {
@@ -42,7 +42,7 @@ const isBrowserUsingTor = async (page, logger) => {
 			emoji: '🚨',
 			message: `There was an error checking our IP`,
 			status: 'error',
-			error
+			error,
 		})
 		return false
 	}
@@ -91,20 +91,24 @@ const passBotDetection = async (page, url, logger, data = false) => {
 				waitUntil: 'networkidle2',
 				timeout: 0,
 			})
-	
+
 			const title = await page.title()
-	
+
 			if (response.ok() && title !== 'Robot Check') {
 				success = true
-	
+
 				if (process.env.NODE_ENV === 'development') {
 					logger.send({
 						emoji: '👍',
-						message: `We've avoided detection${data ? ` on subcategory #${data.urls.index} in ${data.category.current}` : ''}`,
+						message: `We've avoided detection${
+							data
+								? ` on subcategory #${data.urls.index} in ${data.category.current}`
+								: ''
+						}`,
 						status: 'info',
 					})
 				}
-	
+
 				await page.waitFor(3000)
 				break
 			} else if (title === 'Robot Check') {
@@ -113,20 +117,20 @@ const passBotDetection = async (page, url, logger, data = false) => {
 					message: `We hit a captcha page. Changing IP and waiting 10 minutes...`,
 					status: 'error',
 				})
-	
+
 				proxy = true
-	
+
 				changeIP()
 				await delay(6000000)
-	
+
 				// logger.send({
 				// 	emoji: '🚨',
 				// 	message: `We hit a captcha page. Trying to crack it...`,
 				// 	status: 'error',
 				// })
-	
+
 				// await page.solveRecaptchas()
-	
+
 				// await Promise.all([
 				// 	page.waitForNavigation(),
 				// 	page.click(`button[type="submit"]`),
@@ -137,12 +141,12 @@ const passBotDetection = async (page, url, logger, data = false) => {
 
 			changeIP()
 			await delay(4000 * attempt)
-		} catch(error) {
+		} catch (error) {
 			logger.send({
 				emoji: '🚨',
 				message: `Error passing bot detection`,
 				status: 'error',
-				error
+				error,
 			})
 			return
 		}
@@ -185,7 +189,7 @@ const preparePageForTests = async (page) => {
 			runtime: {},
 			// etc.
 		}
-		
+
 		// Pass the Plugins Length Test.
 		// Overwrite the `plugins` property to use a custom getter.
 		Object.defineProperty(navigator, 'plugins', {
@@ -206,8 +210,6 @@ const preparePageForTests = async (page) => {
 			parameters.name === 'notifications'
 				? Promise.resolve({state: Notification.permission})
 				: originalQuery(parameters))
-
-
 	})
 }
 
@@ -337,25 +339,128 @@ const getAsinData = async (page) => {
 const getTermData = async (page) => {
 	return await page.evaluate(() => {
 		const response = {}
-		const asins = {
-			brand: [],
-			product: [],
+		const ads = {
+			brand: {
+				asins: [],
+			},
+			product: {
+				asins: []
+			},
 		}
 
-		const brand = document.querySelector('span[data-component-type="s-top-slot"]')
+		// Sponsored Brand
+		const brand = document.querySelector(
+			'span[data-component-type="s-top-slot"]'
+		)
+		const brandTitle = brand.querySelector('#hsaSponsoredByBrandName')
 		const brandAsins = brand.querySelectorAll('[data-asin]')
+		const brandData = {
+			ad_id: brand.querySelector('#pdagDesktopSparkle')
+				? brand
+						.querySelector('#pdagDesktopSparkle')
+						.getAttribute('data-ad-id')
+				: null,
+			creative_id: brand.querySelector('#pdagDesktopSparkle')
+				? brand
+						.querySelector('#pdagDesktopSparkle')
+						.getAttribute('data-creative-id')
+				: null,
+			link: brand.querySelector(
+				'.clickthroughLink.templateContainer__link'
+			)
+				? brand.querySelector(
+						'.clickthroughLink.templateContainer__link'
+				  ).href
+				: null,
+		}
 
-		const searchResults = document.querySelector('span[data-component-type="s-search-results"]')
-		const sponsoredProducts = searchResults.querySelectorAll('[data-component-type="sp-sponsored-result"]')
+		// Sponsored Procucts
+		const searchResults = document.querySelector(
+			'span[data-component-type="s-search-results"]'
+		)
+		const sponsoredProducts = searchResults.querySelectorAll(
+			'[data-component-type="sp-sponsored-result"]'
+		)
 
-		const getBrandData = (element) => element.getAttribute('data-asin')
-		const getProductData = (element) => element.closest('.s-result-item').getAttribute('data-asin')
+		// Get the ASINs for each placement
+		const getBrandAsinData = (element) => {
+			return {
+				asin: element.getAttribute('data-asin'),
+				title: element.querySelector('img.imageContainer__image')
+					? element.querySelector('img.imageContainer__image').title
+					: null,
+				image: element.querySelector('img.imageContainer__image')
+					? element.querySelector('img.imageContainer__image').src
+					: null,
+				link: element.querySelector('.clickthroughLink.asinImage')
+					? element.querySelector('.clickthroughLink.asinImage').href
+					: null,
+			}
+		}
+		brandAsins.forEach((asin) =>
+			ads.brand.asins.push({...getBrandAsinData(asin)})
+		)
+		if (brandTitle) ads.brand.title = brandTitle
+		ads.brand = {...ads.brand, ...brandData}
 
-		brandAsins.forEach((asin) => asins.brand.push(getBrandData(asin)))
-		sponsoredProducts.forEach((asin) => asins.product.push(getProductData(asin)))
+		const getProductData = (element) => {
+			const container = element.closest('.s-result-item')
 
-		response.asins = asins
+			if (!container) {
+				console.log('failed to get container')
+			}
 
+			return {
+				asin: container.getAttribute('data-asin'),
+				position: container.getAttribute('data-index'),
+				title: container.querySelector('h2').innerText,
+				price: container.querySelector('.a-price .a-offscreen')
+					? parseFloat(
+							container
+								.querySelector('.a-price .a-offscreen')
+								.innerText.split('$')[1]
+								.split(',')
+								.join('')
+					  )
+					: null,
+				rating: container.querySelector(
+					'.a-spacing-top-micro span:first-of-type'
+				)
+					? parseFloat(
+							container
+								.querySelector(
+									'.a-spacing-top-micro span:first-of-type'
+								)
+								.getAttribute('aria-label')
+								.split(' ')[0]
+					  )
+					: null,
+				reviews: container.querySelector(
+					'.a-spacing-top-micro span:nth-child(2)'
+				)
+					? parseFloat(
+							container
+								.querySelector(
+									'.a-spacing-top-micro span:nth-child(2)'
+								)
+								.getAttribute('aria-label')
+								.split(',')
+								.join('')
+					  )
+					: null,
+				image: container.querySelector(
+					'[data-component-type="s-product-image"] img.s-image'
+				).src,
+				link: container.querySelector(
+					'[data-component-type="s-product-image"] a'
+				).href,
+			}
+		}
+		sponsoredProducts.forEach((asin) =>
+			ads.product.asins.push({...getProductData(asin)})
+		)
+
+		response.ads = ads
 		return response
 	})
 }
@@ -368,5 +473,5 @@ module.exports = {
 	passBotDetection,
 	isBrowserUsingTor,
 	preparePageForTor,
-	preparePageForTests
+	preparePageForTests,
 }

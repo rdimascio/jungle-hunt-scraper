@@ -73,6 +73,7 @@ const scrapeTerms = async (termData, headless, logger) => {
 
 			// Get the data from the page and return it
 			const searchTermData = await getTermData(page)
+
 			const screenshot = await page.screenshot(screenshotOptions)
 
 			const s3params = {
@@ -83,12 +84,12 @@ const scrapeTerms = async (termData, headless, logger) => {
 
 			await s3.putObject(s3params).promise()
 
-			if (searchTermData.asins[termData.placement].length) {
+			if (searchTermData.ads[termData.placement].asins.length) {
 				const matchingAsins = termData.asins.filter((asin) =>
-					searchTermData.asins[termData.placement].includes(asin)
+					searchTermData.ads[termData.placement].asins.filter((ad) => ad.asin === asin)
 				)
 
-				response.asins = searchTermData.asins
+				response.ads = searchTermData.ads
 				response.success = matchingAsins.length ? true : false
 				response.screenshot = `https://jungle-hunt.s3-us-west-1.amazonaws.com/search-terms/${newFileName}`
 			}

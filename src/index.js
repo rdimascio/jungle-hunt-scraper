@@ -187,24 +187,12 @@ const bot = require('./util/lib/Telegram')
 	})
 
 	// Run the search term scraper hourly
-	cron.schedule(
-		'17 * * * *',
-		() => {
-			startSearchTermScraper(msg, true)
-		},
-		{
-			timezone: 'America/Los_Angeles',
-		}
-	)
+	cron.schedule('17 * * * *', () => {
+		startSearchTermScraper(msg, true)
+	})
 
 	// Run the list scraper daily
-	cron.schedule(
-		'45 17 * * *',
-		() => {
-			startListScraper(msg, [], true)
-		},
-		{
-			timezone: 'America/Los_Angeles',
-		}
-	)
+	cron.schedule('45 17 * * *', () => {
+		startListScraper(msg, [], true)
+	})
 })()
