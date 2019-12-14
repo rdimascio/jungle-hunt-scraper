@@ -135,33 +135,50 @@ const bot = require('./util/lib/Telegram')
 		)
 	}
 
-	const showServerStats = (msg) => {
+	const showServerStats = async (msg) => {
 		const command = msg.text.split(':')[1]
 
-		switch(command) {
+		switch (command) {
 			case 'cpu':
 				const cpu = system.cpu
-				const usedCpuPercentage = await cpu.usage()
-					.then((info) => info)
+				const usedCpuPercentage = await cpu.usage().then((info) => info)
 
-				jungleHuntBot.sendMessage(msg.chat.id, `We're currently using ${usedCpuPercentage}% CPU`)
+				jungleHuntBot.sendMessage(
+					msg.chat.id,
+					`We're currently using ${usedCpuPercentage}% CPU`
+				)
 				break
 			case 'memory':
 				const memory = system.mem
-				const usedMemoryPercentage = memory.used()
-					.then((info) => (parseFloat(info.usedMemMb) / parseFloat(info.totalMemMb)) * 100)
+				const usedMemoryPercentage = await memory
+					.used()
+					.then(
+						(info) =>
+							(parseFloat(info.usedMemMb) /
+								parseFloat(info.totalMemMb)) *
+							100
+					)
 
-				jungleHuntBot.sendMessage(msg.chat.id, `We're currently using ${usedMemoryPercentage}% memory`)
+				jungleHuntBot.sendMessage(
+					msg.chat.id,
+					`We're currently using ${usedMemoryPercentage}% memory`
+				)
 				break
 			case 'processes':
 				const ps = await psList()
-				const puppeteer = ps.filter((process) => process.name === 'chrome')
-				const puppeteerPids = puppeteer.map((process) => process.pid)
-				
-				const searchTermScraper = ps.filter((process) =>
-					process.cmd.includes('node /app/src/scripts/scrape/searchTerms.js')
+				const puppeteer = ps.filter(
+					(process) => process.name === 'chrome'
 				)
-				const searchTermScraperPid = searchTermScraper.map((process) => process.pid)
+				const puppeteerPids = puppeteer.map((process) => process.pid)
+
+				const searchTermScraper = ps.filter((process) =>
+					process.cmd.includes(
+						'node /app/src/scripts/scrape/searchTerms.js'
+					)
+				)
+				const searchTermScraperPid = searchTermScraper.map(
+					(process) => process.pid
+				)
 
 				const listScraper = ps.filter((process) =>
 					process.cmd.includes('node /app/src/scripts/scrape/main.js')
@@ -233,7 +250,7 @@ const bot = require('./util/lib/Telegram')
 			await killItWithFire()
 		} else if (msg.text.includes('/show')) {
 			showServerStats(msg)
-		}  else if (msg.text.includes('/kill')) {
+		} else if (msg.text.includes('/kill')) {
 			const process = msg.text.split(' ')[1]
 			killProcess(process)
 		} else if (msg.text.includes('/giphy')) {
