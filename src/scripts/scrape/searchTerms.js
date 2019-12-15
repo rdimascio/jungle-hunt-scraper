@@ -39,23 +39,23 @@ const Mailgun = require('mailgun-js')({
 		const lastTerm = termIndex + 1 === searchTermsList.length
 
 		if (termIndex === 0) {
-			logger.send({
-				emoji: '🚀',
-				message: `Started scraping keywords`,
-				status: 'success',
-			})
-			
 			// We don't want to run the scraper at the same time every single day,
 			// so we're going to wait a random time betwen 1 and 20 minutes
 			if (args.d || args.delay) {
 				const randomWaitTimer = generateRandomNumbers(
-					1000 * 60 * 10,
-					1000 * 60 * 60,
+					1000 * 60 * 1,
+					1000 * 60 * 20,
 					1
 				)
 
 				await delay(randomWaitTimer)
 			}
+
+			logger.send({
+				emoji: '🚀',
+				message: `Started scraping keywords`,
+				status: 'success',
+			})
 		}
 
 		headless = new Browser({logger})

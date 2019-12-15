@@ -61,10 +61,12 @@ const bot = require('./util/lib/Telegram')
 		const listScraper = processes.filter((ps) =>
 			ps.cmd.includes('node /app/src/scripts/scrape/main.js')
 		)
-		const listScraperPid = listScraper.map((ps) => ps.pid)
-		exec(`kill -9 ${listScraperPid}`, (error) => {
-			if (error)
-				jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, error)
+		const listScraperPids = listScraper.map((ps) => ps.pid)
+		listScraperPids.forEach((pid) => {
+			exec(`kill -9 ${pid}`, (error) => {
+				if (error)
+					jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, error)
+			})
 		})
 	}
 
@@ -72,10 +74,12 @@ const bot = require('./util/lib/Telegram')
 		const searchTermScraper = processes.filter((ps) =>
 			ps.cmd.includes('node /app/src/scripts/scrape/searchTerms.js')
 		)
-		const searchTermScraperPid = searchTermScraper.map((ps) => ps.pid)
-		exec(`kill -9 ${searchTermScraperPid}`, (error) => {
-			if (error)
-				jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, error)
+		const searchTermScraperPids = searchTermScraper.map((ps) => ps.pid)
+		searchTermScraperPids.forEach((pid) => {
+			exec(`kill -9 ${pid}`, (error) => {
+				if (error)
+					jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, error)
+			})
 		})
 	}
 
@@ -110,7 +114,7 @@ const bot = require('./util/lib/Telegram')
 				if (error) {
 					jungleHuntBot.sendMessage(
 						process.env.TELEGRAM_USER_ID,
-						'Houston, we have a problem with the list scraper'
+						'👨‍🚀 Houston, we have a problem with the list scraper'
 					)
 
 					await killItWithFire()
@@ -126,7 +130,7 @@ const bot = require('./util/lib/Telegram')
 				if (error) {
 					jungleHuntBot.sendMessage(
 						process.env.TELEGRAM_USER_ID,
-						'Houston, we have a problem with the search term scraper'
+						'👨‍🚀 Houston, we have a problem with the search term scraper'
 					)
 
 					await killItWithFire()
@@ -188,16 +192,9 @@ const bot = require('./util/lib/Telegram')
 
 				jungleHuntBot.sendMessage(
 					msg.chat.id,
-					`
-					Puppeteer:
-						[${puppeteerPids.join(', ')}]
-					
-					Search Term Scraper:
-						[${searchTermScraperPid.join(', ')}]
-					
-					List Scraper:
-						[${listScraperPid.join(', ')}]
-					`
+					`Puppeteer: ${puppeteerPids.join(', ')}
+					Search Term Scraper: ${searchTermScraperPid.join(', ')}
+					List Scraper: ${listScraperPid.join(', ')}`
 				)
 				break
 		}
@@ -284,4 +281,9 @@ const bot = require('./util/lib/Telegram')
 	cron.schedule('45 17 * * *', () => {
 		startListScraper([], true)
 	})
+
+	// Run the list scraper daily
+	// cron.schedule('5 * * * *', () => {
+	// 	checkServerStats()
+	// })
 })()
