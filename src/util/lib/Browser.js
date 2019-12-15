@@ -147,6 +147,10 @@ class Browser {
 				})
 
 				this._browser.__BROWSER_START_TIME_MS__ = Date.now()
+				this._browser.on('disconnect', () => {
+					this._browser = null
+					this.browserInstance()
+				})
 
 				this.logger.send({
 					emoji: '🦄',

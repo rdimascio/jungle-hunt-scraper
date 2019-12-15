@@ -20,7 +20,6 @@ const logMessages = {
 					listData.urls.index
 				} in ${listData.category.current} in ${listData.list.name}`,
 				status: 'success',
-				loggers: ['console, notify, logger']
 			})
 		} else {
 			logger.send({

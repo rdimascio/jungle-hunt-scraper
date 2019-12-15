@@ -27,6 +27,8 @@ const bot = require('./util/lib/Telegram')
 		} else if (msg.text.includes('list')) {
 			const args = msg.text.split(' ')
 			startListScraper(args.slice(1))
+		} else {
+			jungleHuntBot.sendMessage(msg.chat.id, "That's not a valid command")
 		}
 	}
 
@@ -65,7 +67,10 @@ const bot = require('./util/lib/Telegram')
 		listScraperPids.forEach((pid) => {
 			exec(`kill -9 ${pid}`, (error) => {
 				if (error)
-					jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, error)
+					jungleHuntBot.sendMessage(
+						process.env.TELEGRAM_USER_ID,
+						error
+					)
 			})
 		})
 	}
@@ -78,7 +83,10 @@ const bot = require('./util/lib/Telegram')
 		searchTermScraperPids.forEach((pid) => {
 			exec(`kill -9 ${pid}`, (error) => {
 				if (error)
-					jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, error)
+					jungleHuntBot.sendMessage(
+						process.env.TELEGRAM_USER_ID,
+						error
+					)
 			})
 		})
 	}
@@ -201,6 +209,10 @@ const bot = require('./util/lib/Telegram')
 	}
 
 	const killProcess = (pid) => {
+		switch (pid) {
+			case 'puppeteer':
+				killChrome()
+		}
 		exec(`kill -9 ${pid}`, (error) => {
 			if (error)
 				jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, error)
@@ -273,14 +285,14 @@ const bot = require('./util/lib/Telegram')
 	})
 
 	// Run the search term scraper hourly
-	cron.schedule('17 * * * *', () => {
-		startSearchTermScraper(true)
-	})
+	// cron.schedule('17 * * * *', () => {
+	// 	startSearchTermScraper(true)
+	// })
 
-	// Run the list scraper daily
-	cron.schedule('45 17 * * *', () => {
-		startListScraper([], true)
-	})
+	// // Run the list scraper daily
+	// cron.schedule('45 17 * * *', () => {
+	// 	startListScraper([], true)
+	// })
 
 	// Run the list scraper daily
 	// cron.schedule('5 * * * *', () => {
