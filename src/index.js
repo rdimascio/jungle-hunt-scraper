@@ -11,6 +11,7 @@ const cron = require('node-cron')
 const {exec} = require('child_process')
 const system = require('node-os-utils')
 const bot = require('./util/lib/Telegram')
+const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 
 ;(async () => {
 	const jungleHuntBot = bot(true)
@@ -147,30 +148,40 @@ const bot = require('./util/lib/Telegram')
 		)
 	}
 
+	const getCurrentMemoryUsage = async () => {
+		const memory = system.mem
+
+		return await memory
+			.used()
+			.then((info) =>
+				Math.ceil(
+					(parseFloat(info.usedMemMb) /
+						parseFloat(info.totalMemMb)) *
+						100
+				)
+			)
+	}
+
+	const getCurrentCpuUsage = async () => {
+		const cpu = system.cpu
+		
+		return await cpu.usage().then((info) => info.toFixed(2))
+	}
+
 	const showServerStats = async (msg) => {
 		const command = msg.text.split(':')[1]
 
 		switch (command) {
 			case 'cpu':
-				const cpu = system.cpu
-				const usedCpuPercentage = await cpu.usage().then((info) => info)
+				const usedCpuPercentage = await getCurrentCpuUsage()
 
 				jungleHuntBot.sendMessage(
 					msg.chat.id,
-					`We're currently using ${usedCpuPercentage.toFixed(2)}% CPU`
+					`We're currently using ${usedCpuPercentage}% CPU`
 				)
 				break
 			case 'memory':
-				const memory = system.mem
-				const usedMemoryPercentage = await memory
-					.used()
-					.then((info) =>
-						Math.ceil(
-							(parseFloat(info.usedMemMb) /
-								parseFloat(info.totalMemMb)) *
-								100
-						)
-					)
+				const usedMemoryPercentage = await getCurrentMemoryUsage()
 
 				jungleHuntBot.sendMessage(
 					msg.chat.id,
@@ -208,15 +219,46 @@ const bot = require('./util/lib/Telegram')
 		}
 	}
 
-	const killProcess = (pid) => {
+	const checkServerStats = async () => {
+		const lastAlert = getLastAlertTime()
+		const stats = {}
+
+		stats.memory = await getCurrentMemoryUsage()
+		stats.CPU = await getCurrentCpuUsage()
+
+		Object.entries(stats).forEach(([metric, stat]) => {
+			if (stat >= 75) {
+				jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, `🚨 Our ${metric} usage is currently at ${stat}`)
+			}
+		})
+	}
+
+	const killProcess = async (pid) => {
+		const ps = await psList()
+
 		switch (pid) {
 			case 'puppeteer':
-				killChrome()
+				killChrome(ps)
+				break
+			case 'lists':
+				killListScraper(ps)
+				break
+			case 'search-terms':
+				killSearchTermScraper(ps)
+				break
+			default:
+				if (isNaN(parseFloat(pid))) {
+					return
+				}
+
+				exec(`kill -9 ${pid}`, (error) => {
+					if (error)
+						jungleHuntBot.sendMessage(
+							process.env.TELEGRAM_USER_ID,
+							error
+						)
+				})
 		}
-		exec(`kill -9 ${pid}`, (error) => {
-			if (error)
-				jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, error)
-		})
 	}
 
 	const getRandomGiphy = async (searchTerm) => {
@@ -266,8 +308,12 @@ const bot = require('./util/lib/Telegram')
 		} else if (msg.text.includes('/show')) {
 			showServerStats(msg)
 		} else if (msg.text.includes('/kill')) {
-			const process = msg.text.split(' ')[1]
-			killProcess(process)
+			if (!msg.text.includes(':')) {
+				killItWithFire()
+			}
+
+			const process = msg.text.split(':')[1]
+			await killProcess(process)
 		} else if (msg.text.includes('/giphy')) {
 			const giphy = await getRandomGiphy(msg.text.split(' ')[1])
 			if (giphy.success) {
@@ -295,7 +341,7 @@ const bot = require('./util/lib/Telegram')
 	// })
 
 	// Run the list scraper daily
-	// cron.schedule('5 * * * *', () => {
-	// 	checkServerStats()
-	// })
+	cron.schedule('* * * * *', () => {
+		checkServerStats()
+	})
 })()
