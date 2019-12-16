@@ -1,7 +1,7 @@
 'use strict'
 
 // Packages
-require('dotenv').config()
+require('dotenv').config({path: require('find-config')('.env')})
 const fs = require('fs')
 const os = require('os')
 const path = require('path')

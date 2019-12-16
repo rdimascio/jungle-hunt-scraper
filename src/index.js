@@ -1,8 +1,8 @@
 'use strict'
 
+require('dotenv').config({path: require('find-config')('.env')})
 const fs = require('fs')
 const os = require('os')
-require('dotenv').config()
 const path = require('path')
 const axios = require('axios')
 const rimraf = require('rimraf')

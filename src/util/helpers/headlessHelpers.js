@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv').config({path: require('find-config')('.env')})
 const delay = require('./delay')
 const {exec} = require('child_process')
 const generateRandomNumbers = require('../../util/helpers/randomNumbers')

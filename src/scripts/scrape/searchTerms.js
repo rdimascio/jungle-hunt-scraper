@@ -1,6 +1,6 @@
 'use strict'
 
-require('dotenv').config()
+require('dotenv').config({path: require('find-config')('.env')})
 const request = require('request')
 const Logger = require('../../util/lib/Logger')
 const Browser = require('../../util/lib/Browser')

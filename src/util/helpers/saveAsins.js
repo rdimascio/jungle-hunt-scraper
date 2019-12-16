@@ -1,14 +1,10 @@
-require('dotenv').config()
+require('dotenv').config({path: require('find-config')('.env')})
 const database = require('./database')
 const mongo = require('mongodb').MongoClient
 const mongoUrl =
 	process.env.NODE_ENV === 'development'
 		? 'mongodb://localhost:27017'
-		: `mongodb://${process.env.DB_USER || 'jungle_hunt'}:${process.env
-				.DB_PWD ||
-				'2%40u%40#GV+%g0WhMbIc+wt2|(>G3+)%3Fh|m[q&LXLzQ#g$+f4ZI;ZST0HY(g|K-&VO'}@${process
-				.env.DB_IP || '138.68.46.225'}/${process.env.DB_DATABASE ||
-				'jungleHunt'}`
+		: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_DATABASE}`
 
 /**
  *
@@ -27,7 +23,7 @@ const findAsins = async (asins, listType) => {
 				useUnifiedTopology: true,
 			},
 			async (error, client) => {
-				const db = client.db(process.env.DB_DATABASE || 'jungleHunt')
+				const db = client.db(process.env.DB_DATABASE)
 
 				asins.forEach((asin, index) => {
 					database.findProducts(
@@ -74,7 +70,7 @@ const saveAsins = async (asins, listType, loopPosition) => {
 					if (error) client.close()
 
 					mongoClient = client
-					const db = client.db(process.env.DB_DATABASE || 'jungleHunt')
+					const db = client.db(process.env.DB_DATABASE)
 
 					if ([...asinsToInsert, ...asinsToUpdate].length) {
 						database.insertStats(
@@ -85,7 +81,10 @@ const saveAsins = async (asins, listType, loopPosition) => {
 								...(asinsToUpdate ? asinsToUpdate : []),
 							],
 							(result) => {
-								response.asinStatsInserted = [...asinsToInsert, ...asinsToUpdate].length
+								response.asinStatsInserted = [
+									...asinsToInsert,
+									...asinsToUpdate,
+								].length
 								// logger.send({
 								// 	emoji: '✅',
 								// 	message: `Product Stats inserted for subcategory #${loopPosition.interval +

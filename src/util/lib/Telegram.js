@@ -1,8 +1,8 @@
 'use strict'
 
-require('dotenv').config()
+require('dotenv').config({path: require('find-config')('.env')})
 const TelegramBot = require('node-telegram-bot-api')
-const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || '894036353:AAEch4kCYoS7AUdm2qXPtUaxPHgDVjVvn48'
+const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN
 
 const bot = (polling = false) => {
 	let bot

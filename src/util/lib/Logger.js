@@ -1,6 +1,6 @@
 'use strict'
 
-require('dotenv').config()
+require('dotenv').config({path: require('find-config')('.env')})
 const colors = require('colors')
 const {createLogger, format, transports} = require('winston')
 const {combine, timestamp, label, printf} = format
