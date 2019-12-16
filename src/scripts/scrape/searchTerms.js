@@ -68,7 +68,7 @@ const Mailgun = require('mailgun-js')(mailgunOptions)
 			logger
 		)
 
-		console.log(termData.brand.asins.map((asin) => asin.asin))
+		console.log(termData.ads.brand.asins.map((asin) => asin.asin))
 
 		logger.send({
 			emoji: '🎉',
