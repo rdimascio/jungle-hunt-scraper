@@ -1,19 +1,19 @@
 const keywordList = [
-	// {
-	// 	keyword: 'samsung',
-	// 	placement: 'brand',
-	// 	asins: [
-	// 		'B07YGNLZ93',
-	// 		'B07YGNBMPN',
-	// 		'B07YGQ3XY9',
-	// 		'B07YGPCFFN',
-	// 		'B07YGQ3XY9',
-	// 		'B07YGNLZ93',
-	// 	],
-	// 	frequency: 'hourly',
-	// 	sendOn: 'fail',
-	// 	emails: ['jessicas@channelbakers.com', 'norab@channelbakers.com'],
-	// },
+	{
+		keyword: 'samsung',
+		placement: 'brand',
+		asins: [
+			'B07YGNLZ93',
+			'B07YGNBMPN',
+			'B07YGQ3XY9',
+			'B07YGPCFFN',
+			'B07YGQ3XY9',
+			'B07YGNLZ93',
+		],
+		frequency: 'hourly',
+		sendOn: 'fail',
+		emails: ['jessicas@channelbakers.com', 'norab@channelbakers.com'],
+	},
 	{
 		keyword: 'mouse',
 		placement: 'brand',

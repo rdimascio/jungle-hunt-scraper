@@ -16,7 +16,7 @@ const Mailgun = require('mailgun-js')({
 
 ;(async () => {
 	const logger = new Logger(`Search Term Scraper`)
-	let headless = new Browser({logger})
+	let headless
 
 	// We can handle our own termination signals, thank you
 	// This is SUPER important since we're launching headless
@@ -58,6 +58,8 @@ const Mailgun = require('mailgun-js')({
 			})
 		}
 
+		headless = new Browser({logger})
+
 		// Scrape dat shit
 		const termData = await scrapeTerms(
 			searchTermsList[termIndex],
@@ -65,7 +67,16 @@ const Mailgun = require('mailgun-js')({
 			logger
 		)
 
-		await headless.cleanupBrowser()
+		logger.send({
+			emoji: '🎉',
+			message: `Finished scraping keyword #${termIndex + 1}`,
+			status: 'success',
+		})
+
+		console.log(termData)
+
+		await headless.shutdown(false)
+		headless = null
 
 		if (termData.status === 'OK') {
 			const screenshot = request(termData.screenshot)
@@ -133,13 +144,14 @@ const Mailgun = require('mailgun-js')({
 			})
 
 			sendEmail.then(async () => {
+				console.log(`Term #${termIndex + 1} out of ${searchTermsList.length}`)
 				if (lastTerm) {
 					logger.send({
 						emoji: '🎉',
 						message: `Finished scraping keywords`,
 						status: 'success',
 					})
-					await headless.shutdown()
+					process.exit()
 				}
 			})
 
