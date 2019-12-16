@@ -226,9 +226,9 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 					msg.chat.id,
 					`<b>Puppeteer:</b> ${puppeteerPids.join(
 						', '
-					)}%0A<b>Search Term Scraper:</b> ${searchTermScraperPid.join(
+					)}<pre>\n</pre><b>Search Term Scraper:</b> ${searchTermScraperPid.join(
 						', '
-					)}%0A<b>List Scraper:</b> ${listScraperPid.join(', ')}`,
+					)}<pre>\n</pre><b>List Scraper:</b> ${listScraperPid.join(', ')}`,
 					{parse_mode: 'HTML'}
 				)
 				break
