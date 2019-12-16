@@ -10,8 +10,8 @@ const scrapeTerms = require('../../util/helpers/scrapeTerms')
 const searchTermsList = require('../../../data/terms/keywordList')
 const generateRandomNumbers = require('../../util/helpers/randomNumbers')
 const mailgunOptions = {
-	apiKey: process.env.MAILGUN_API_KEY,
-	domain: process.env.MAILGUN_DOMAIN,
+	apiKey: 'de9a31ad5fa008f76824d59d292c5f67-c8e745ec-d85b4a15',
+	domain: 'web.visibly.app',
 }
 const Mailgun = require('mailgun-js')(mailgunOptions)
 
