@@ -95,7 +95,7 @@ const scrapeTerms = async (termData, headless, logger) => {
 
 				response.ads = searchTermData.ads
 				response.success = matchingAsins
-				response.screenshot = `https://jungle-hunt.s3-us-west-1.amazonaws.com/search-terms/${newFileName}`
+				response.screenshot = `https://jungle-hunt.s3-us-west-1.amazonaws.com/search-terms/${termData.keyword}/${newFileName}`
 			}
 
 			return response
