@@ -67,7 +67,7 @@ const Mailgun = require('mailgun-js')({
 			logger
 		)
 
-		console.log(termData)
+		console.log(termData.brand.asins.map(asin => asin.asin))
 
 		logger.send({
 			emoji: '🎉',
@@ -143,7 +143,7 @@ const Mailgun = require('mailgun-js')({
 				}
 			})
 
-			sendEmail.then(async () => {
+			sendEmail.then(() => {
 				console.log(`Term #${termIndex + 1} out of ${searchTermsList.length}`)
 			})
 
