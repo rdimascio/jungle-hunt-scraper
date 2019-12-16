@@ -12,6 +12,7 @@ const {exec} = require('child_process')
 const system = require('node-os-utils')
 const bot = require('./util/lib/Telegram')
 const getLastAlertTime = require('./util/helpers/getLastAlertTime')
+const telegramUserId = process.env.TELEGRAM_USER_ID || '605686296'
 
 ;(async () => {
 	const jungleHuntBot = bot(true)
@@ -40,7 +41,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 			exec(`kill -9 ${pid}`, (error) => {
 				if (error)
 					jungleHuntBot.sendMessage(
-						process.env.TELEGRAM_USER_ID,
+						telegramUserId,
 						'There was an error killing the process'
 					)
 			})
@@ -69,7 +70,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 			exec(`kill -9 ${pid}`, (error) => {
 				if (error)
 					jungleHuntBot.sendMessage(
-						process.env.TELEGRAM_USER_ID,
+						telegramUserId,
 						'There was an error killing the process'
 					)
 			})
@@ -85,7 +86,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 			exec(`kill -9 ${pid}`, (error) => {
 				if (error)
 					jungleHuntBot.sendMessage(
-						process.env.TELEGRAM_USER_ID,
+						telegramUserId,
 						'There was an error killing the process'
 					)
 			})
@@ -113,7 +114,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 			}
 
 			jungleHuntBot.sendMessage(
-				process.env.TELEGRAM_USER_ID,
+				telegramUserId,
 				`Starting list scraper with arguments: ${initArgs}`
 			)
 		}
@@ -136,7 +137,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 			async (error) => {
 				if (error) {
 					jungleHuntBot.sendMessage(
-						process.env.TELEGRAM_USER_ID,
+						telegramUserId,
 						'👨‍🚀 Houston, we have a problem with the list scraper'
 					)
 
@@ -152,7 +153,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 			async (error) => {
 				if (error) {
 					jungleHuntBot.sendMessage(
-						process.env.TELEGRAM_USER_ID,
+						telegramUserId,
 						'👨‍🚀 Houston, we have a problem with the search term scraper'
 					)
 
@@ -245,7 +246,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 		Object.entries(stats).forEach(([metric, stat]) => {
 			if (stat >= 75) {
 				jungleHuntBot.sendMessage(
-					process.env.TELEGRAM_USER_ID,
+					telegramUserId,
 					`🚨 Our ${metric} usage is currently at ${stat}`
 				)
 			}
@@ -274,7 +275,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 				exec(`kill -9 ${pid}`, (error) => {
 					if (error)
 						jungleHuntBot.sendMessage(
-							process.env.TELEGRAM_USER_ID,
+							telegramUserId,
 							'There was an error killing the process'
 						)
 				})
@@ -305,7 +306,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 	}
 
 	const messageHandler = async (msg) => {
-		if (msg.chat.id != process.env.TELEGRAM_USER_ID) {
+		if (msg.chat.id != telegramUserId) {
 			jungleHuntBot.sendMessage(msg.chat.id, 'Do I know you?')
 			return
 		}

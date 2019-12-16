@@ -4,7 +4,11 @@ const mongo = require('mongodb').MongoClient
 const mongoUrl =
 	process.env.NODE_ENV === 'development'
 		? 'mongodb://localhost:27017'
-		: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_DATABASE}`
+		: `mongodb://${process.env.DB_USER || 'jungle_hunt'}:${process.env
+				.DB_PWD ||
+				'2%40u%40#GV+%g0WhMbIc+wt2|(>G3+)%3Fh|m[q&LXLzQ#g$+f4ZI;ZST0HY(g|K-&VO'}@${process
+				.env.DB_IP || '138.68.46.225'}/${process.env.DB_DATABASE ||
+				'jungleHunt'}`
 
 /**
  *
@@ -23,7 +27,7 @@ const findAsins = async (asins, listType) => {
 				useUnifiedTopology: true,
 			},
 			async (error, client) => {
-				const db = client.db(process.env.DB_DATABASE)
+				const db = client.db(process.env.DB_DATABASE || 'jungleHunt')
 
 				asins.forEach((asin, index) => {
 					database.findProducts(
@@ -70,7 +74,7 @@ const saveAsins = async (asins, listType, loopPosition) => {
 					if (error) client.close()
 
 					mongoClient = client
-					const db = client.db(process.env.DB_DATABASE)
+					const db = client.db(process.env.DB_DATABASE || 'jungleHunt')
 
 					if ([...asinsToInsert, ...asinsToUpdate].length) {
 						database.insertStats(
