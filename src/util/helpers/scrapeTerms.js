@@ -89,12 +89,12 @@ const scrapeTerms = async (termData, headless, logger) => {
 					termData.placement
 				].asins.map((asin) => asin.asin)
 
-				const matchingAsins = termData.asins.filter((asin) =>
-					adAsins.filter((ad) => ad === asin)
+				const matchingAsins = termData.asins.some((asin) =>
+					adAsins.includes(asin)
 				)
 
 				response.ads = searchTermData.ads
-				response.success = matchingAsins.length ? true : false
+				response.success = matchingAsins
 				response.screenshot = `https://jungle-hunt.s3-us-west-1.amazonaws.com/search-terms/${newFileName}`
 			}
 
