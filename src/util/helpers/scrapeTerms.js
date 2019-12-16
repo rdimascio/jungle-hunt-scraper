@@ -1,5 +1,9 @@
+const config = require('../../../config')
 const AWS = require('aws-sdk')
-AWS.config.loadFromPath('./aws.json')
+const AWS_PATH = config.NODE_ENV === 'development'
+	? './../../../aws.json'
+	: './../../../../aws.json'
+AWS.config.loadFromPath()
 const s3 = new AWS.S3()
 const browser = require('../helpers/headlessHelpers')
 const {
