@@ -103,8 +103,6 @@ const scrapeTerms = async (termData, headless, logger) => {
 
 		response = await requestNewSearchPage()
 		response.status = 'OK'
-
-		return response
 	} catch (error) {
 		if (!isTerminated) {
 			logger.send({
@@ -113,11 +111,12 @@ const scrapeTerms = async (termData, headless, logger) => {
 				status: 'error',
 				error: error,
 			})
-
-			await headless.shutdown()
 		}
+
+		response = {status: 'FAIL'}
 	} finally {
 		process.removeListener('SIGINT', processTerminated)
+		return response
 	}
 
 	// finally {

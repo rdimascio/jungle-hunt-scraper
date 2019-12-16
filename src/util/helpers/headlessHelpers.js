@@ -332,6 +332,7 @@ const getAsinData = async (page) => {
 }
 
 const getTermData = async (page) => {
+	await page.waitFor(3000)
 	return await page.evaluate(() => {
 		const response = {}
 		const ads = {
@@ -382,20 +383,20 @@ const getTermData = async (page) => {
 			return {
 				asin: element.getAttribute('data-asin'),
 				title: element.querySelector('img.imageContainer__image')
-					? element.querySelector('img.imageContainer__image').title
+					? element.querySelector('img.imageContainer__image').getAttribute('title')
 					: null,
 				image: element.querySelector('img.imageContainer__image')
 					? element.querySelector('img.imageContainer__image').src
 					: null,
 				link: element.querySelector('.clickthroughLink.asinImage')
-					? `https://${element.querySelector('.clickthroughLink.asinImage').href.split('https://')[2]}`
+					? `https://${element.querySelector('.clickthroughLink.asinImage').href.split('https://')[2].split('?')[0]}`
 					: null,
 			}
 		}
 		brandAsins.forEach((asin) =>
 			ads.brand.asins.push({...getBrandAsinData(asin)})
 		)
-		if (brandTitle) ads.brand.title = brandTitle
+		if (brandTitle) ads.brand.name = brandTitle.innerText
 		ads.brand = {...ads.brand, ...brandData}
 
 		const getProductData = (element) => {
