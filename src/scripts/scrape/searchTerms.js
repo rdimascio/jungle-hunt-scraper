@@ -9,12 +9,11 @@ const args = require('minimist')(process.argv.slice(2))
 const scrapeTerms = require('../../util/helpers/scrapeTerms')
 const searchTermsList = require('../../../data/terms/keywordList')
 const generateRandomNumbers = require('../../util/helpers/randomNumbers')
-const apiKey = process.env.MAILGUN_API_KEY
-const domain = process.env.MAILGUN_DOMAIN
-const Mailgun = require('mailgun-js')({
-	apiKey,
-	domain
-})
+const mailgunOptions = {
+	apiKey: process.env.MAILGUN_API_KEY,
+	domain: process.env.MAILGUN_DOMAIN,
+}
+const Mailgun = require('mailgun-js')(mailgunOptions)
 
 ;(async () => {
 	const logger = new Logger(`Search Term Scraper`)
@@ -69,11 +68,13 @@ const Mailgun = require('mailgun-js')({
 			logger
 		)
 
-		console.log(termData.brand.asins.map(asin => asin.asin))
+		console.log(termData.brand.asins.map((asin) => asin.asin))
 
 		logger.send({
 			emoji: '🎉',
-			message: `Keyword #${termIndex + 1} ${termData.success ? 'is' : 'is not'} showing`,
+			message: `Keyword #${termIndex + 1} ${
+				termData.success ? 'is' : 'is not'
+			} showing`,
 			status: 'success',
 		})
 
@@ -146,7 +147,9 @@ const Mailgun = require('mailgun-js')({
 			})
 
 			sendEmail.then(() => {
-				console.log(`Term #${termIndex + 1} out of ${searchTermsList.length}`)
+				console.log(
+					`Term #${termIndex + 1} out of ${searchTermsList.length}`
+				)
 			})
 
 			// Save to the database
