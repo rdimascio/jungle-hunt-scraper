@@ -171,7 +171,7 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 			if (
 				startPosition &&
 				startPosition[1] &&
-				camelCase(startPosition[0]) === list &&
+				camelCase(startPosition[0]) === listData.list.type &&
 				getCategoryIndex(list, startPosition[1].split(' ').join('')) >
 					categoryIndex
 			)

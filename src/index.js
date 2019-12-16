@@ -115,10 +115,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 		}
 
 		exec(
-			`node /app/src/scripts/scrape/main.js
-				${initArgs}
-				${delay ? ' -d' : ''}
-			`,
+			`node /app/src/scripts/scrape/main.js${initArgs}${delay ? ' -d' : ''}`,
 			async (error) => {
 				if (error) {
 					jungleHuntBot.sendMessage(
@@ -239,6 +236,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 		switch (pid) {
 			case 'puppeteer':
 				killChrome(ps)
+				removeDirectories()
 				break
 			case 'lists':
 				killListScraper(ps)
