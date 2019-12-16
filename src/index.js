@@ -226,9 +226,9 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 					msg.chat.id,
 					`<b>Puppeteer:</b> ${puppeteerPids.join(
 						', '
-					)}<br/><b>Search Term Scraper:</b> ${searchTermScraperPid.join(
+					)}%0A<b>Search Term Scraper:</b> ${searchTermScraperPid.join(
 						', '
-					)}<br/><b>List Scraper:</b> ${listScraperPid.join(', ')}`,
+					)}%0A<b>List Scraper:</b> ${listScraperPid.join(', ')}`,
 					{parse_mode: 'HTML'}
 				)
 				break
@@ -256,7 +256,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 		const ps = await psList()
 
 		switch (pid) {
-			case 'puppeteer':
+			case 'chrome':
 				killChrome(ps)
 				removeDirectories()
 				break
@@ -350,17 +350,6 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 		await messageHandler(msg)
 	})
 
-	// Run the search term scraper hourly
-	// cron.schedule('17 * * * *', () => {
-	// 	startSearchTermScraper(true)
-	// })
-
-	// // Run the list scraper daily
-	// cron.schedule('45 17 * * *', () => {
-	// 	startListScraper([], true)
-	// })
-
-	// Run the list scraper daily
 	cron.schedule('* * * * *', () => {
 		checkServerStats()
 	})

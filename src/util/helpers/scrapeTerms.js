@@ -47,7 +47,7 @@ const scrapeTerms = async (termData, headless, logger) => {
 		const requestNewSearchPage = async () => {
 			const response = {}
 			const URL = buildURL()
-			const newFileName = `${termData.keyword}-${
+			const newFileName = `${termData.keyword}-sponsored-${
 				termData.placement
 			}-${new Date().toISOString()}.png`
 
@@ -74,11 +74,10 @@ const scrapeTerms = async (termData, headless, logger) => {
 
 			// Get the data from the page and return it
 			const searchTermData = await getTermData(page)
-
 			const screenshot = await page.screenshot(screenshotOptions)
 
 			const s3params = {
-				Bucket: 'jungle-hunt/search-terms',
+				Bucket: `jungle-hunt/search-terms/${termData.keyword}/`,
 				Key: newFileName,
 				Body: screenshot,
 			}
