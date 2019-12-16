@@ -393,7 +393,7 @@ const getTermData = async (page) => {
 					? element.querySelector('img.imageContainer__image').src
 					: null,
 				link: element.querySelector('.clickthroughLink.asinImage')
-					? element.querySelector('.clickthroughLink.asinImage').href
+					? `https://${element.querySelector('.clickthroughLink.asinImage').href.split('https://')[2]}`
 					: null,
 			}
 		}

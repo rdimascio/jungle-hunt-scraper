@@ -67,9 +67,11 @@ const Mailgun = require('mailgun-js')({
 			logger
 		)
 
+		console.log(termData)
+
 		logger.send({
 			emoji: '🎉',
-			message: `Finished scraping keyword #${termIndex + 1}`,
+			message: `Keyword #${termIndex + 1} ${termData.success ? 'is' : 'is not'} showing`,
 			status: 'success',
 		})
 
@@ -143,14 +145,6 @@ const Mailgun = require('mailgun-js')({
 
 			sendEmail.then(async () => {
 				console.log(`Term #${termIndex + 1} out of ${searchTermsList.length}`)
-				if (lastTerm) {
-					logger.send({
-						emoji: '🎉',
-						message: `Finished scraping keywords`,
-						status: 'success',
-					})
-					process.exit()
-				}
 			})
 
 			// Save to the database
@@ -163,6 +157,15 @@ const Mailgun = require('mailgun-js')({
 			// 	},
 			// 	logger
 			// )
+		}
+
+		if (lastTerm) {
+			logger.send({
+				emoji: '🎉',
+				message: `Finished scraping keywords`,
+				status: 'success',
+			})
+			process.exit()
 		}
 	}
 })()

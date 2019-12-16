@@ -25,7 +25,8 @@ const scrapeTerms = async (termData, headless, logger) => {
 		const chrome = await headless.browser
 		const page = await chrome.newPage()
 
-		const buildURL = () => BASE + `/s?k=${encodeURIComponent(termData.keyword)}&ref=nb_sb_noss`
+		const buildURL = () =>
+			BASE + `/s?k=${encodeURIComponent(termData.keyword)}&ref=nb_sb_noss`
 
 		await preparePageForTor(page, buildURL())
 		await preparePageForTests(page)
@@ -74,8 +75,6 @@ const scrapeTerms = async (termData, headless, logger) => {
 			// Get the data from the page and return it
 			const searchTermData = await getTermData(page)
 
-			console.log(searchTermData.ads.brand.asins)
-
 			const screenshot = await page.screenshot(screenshotOptions)
 
 			const s3params = {
@@ -87,8 +86,12 @@ const scrapeTerms = async (termData, headless, logger) => {
 			await s3.putObject(s3params).promise()
 
 			if (searchTermData.ads[termData.placement].asins.length) {
+				const adAsins = searchTermData.ads[
+					termData.placement
+				].asins.map((asin) => asin.asin)
+
 				const matchingAsins = termData.asins.filter((asin) =>
-					searchTermData.ads[termData.placement].asins.filter((ad) => ad.asin === asin)
+					adAsins.filter((ad) => ad === asin)
 				)
 
 				response.ads = searchTermData.ads
