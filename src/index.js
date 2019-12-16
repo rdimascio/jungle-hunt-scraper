@@ -1,6 +1,5 @@
 'use strict'
 
-require('dotenv').config({path: require('find-config')('.env')})
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
@@ -8,11 +7,12 @@ const axios = require('axios')
 const rimraf = require('rimraf')
 const psList = require('ps-list')
 const cron = require('node-cron')
+const config = require('../config')
 const {exec} = require('child_process')
 const system = require('node-os-utils')
 const bot = require('./util/lib/Telegram')
 const getLastAlertTime = require('./util/helpers/getLastAlertTime')
-const telegramUserId = process.env.TELEGRAM_USER_ID || '605686296'
+const telegramUserId = config.TELEGRAM_USER_ID
 
 ;(async () => {
 	const jungleHuntBot = bot(true)
@@ -229,7 +229,9 @@ const telegramUserId = process.env.TELEGRAM_USER_ID || '605686296'
 						', '
 					)}<pre>\n</pre><b>Search Term Scraper:</b> ${searchTermScraperPid.join(
 						', '
-					)}<pre>\n</pre><b>List Scraper:</b> ${listScraperPid.join(', ')}`,
+					)}<pre>\n</pre><b>List Scraper:</b> ${listScraperPid.join(
+						', '
+					)}`,
 					{parse_mode: 'HTML'}
 				)
 				break
@@ -288,7 +290,7 @@ const telegramUserId = process.env.TELEGRAM_USER_ID || '605686296'
 		const url = [
 			'https://api.giphy.com/v1/gifs/random',
 			'?api_key=',
-			process.env.GIPHY_API_KEY,
+			config.GIPHY_API_KEY,
 		]
 
 		if (searchTerm) url.push(`&tag=${searchTerm}`)
@@ -332,10 +334,9 @@ const telegramUserId = process.env.TELEGRAM_USER_ID || '605686296'
 			if (!msg.text.includes(':')) {
 				killItWithFire()
 			}
-
 			const process = msg.text.split(':')[1]
 			await killProcess(process)
-		} else if (msg.text.includes('/giphy')) {
+		} else if (msg.text.includes('/gif')) {
 			const giphy = await getRandomGiphy(msg.text.split(' ')[1])
 			if (giphy.success) {
 				jungleHuntBot.sendDocument(msg.chat.id, giphy.image)

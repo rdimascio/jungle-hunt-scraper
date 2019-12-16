@@ -1,11 +1,11 @@
-require('dotenv').config({path: require('find-config')('.env')})
 const delay = require('./delay')
 const {exec} = require('child_process')
+const config = require('../../../config')
 const generateRandomNumbers = require('../../util/helpers/randomNumbers')
 
 // Change the IP address using Tor
 const changeIP = () => {
-	const command = process.env.NODE_ENV === 'development'
+	const command = config.NODE_ENV === 'development'
 		? 'brew services restart tor'
 		: 'systemctl reload tor'
 
@@ -92,7 +92,7 @@ const passBotDetection = async (page, url, logger, data = false) => {
 			if (response.ok() && title !== 'Robot Check') {
 				success = true
 
-				if (process.env.NODE_ENV === 'development') {
+				if (config.NODE_ENV === 'development') {
 					logger.send({
 						emoji: '👍',
 						message: `We've avoided detection${

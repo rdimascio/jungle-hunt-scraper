@@ -1,8 +1,8 @@
 'use strict'
 
-require('dotenv').config({path: require('find-config')('.env')})
+const config = require('../../../config')
 const mongo = require('mongodb').MongoClient
-const mongoUrl = `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_DATABASE}`
+const mongoUrl = `mongodb://${config.DB_USER}:${config.DB_PWD}@${config.DB_IP}/${config.DB_DATABASE}`
 
 const database = require('../../helpers/database')
 

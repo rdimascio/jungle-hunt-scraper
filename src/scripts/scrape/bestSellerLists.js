@@ -1,13 +1,13 @@
 'use strict'
 
 // Packages
-require('dotenv').config({path: require('find-config')('.env')})
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const util = require('util')
 const rimraf = require('rimraf')
 const kill = require('tree-kill')
+const config = require('../../../config')
 
 // Mongo
 const mongo = require('mongodb').MongoClient
@@ -33,12 +33,12 @@ const Logger = require('../../util/modules/Logger')
 const logger = new Logger('Best Seller List Scraper')
 
 // Variables
-const DEV = process.env.NODE_ENV === 'development'
+const DEV = config.NODE_ENV === 'development'
 const BASE = 'https://www.amazon.com'
 const publicIps = ['12.205.195.90', '172.119.134.14', '167.71.144.15']
 const mongoUrl = DEV
 	? 'mongodb://localhost:27017'
-	: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_DATABASE}`
+	: `mongodb://${config.DB_USER}:${config.DB_PWD}@${config.DB_IP}/${config.DB_DATABASE}`
 
 ;(async () => {
 	const now = new Date()
@@ -315,7 +315,7 @@ const mongoUrl = DEV
 					}
 
 					try {
-						const db = client.db(process.env.DB_DATABASE)
+						const db = client.db(config.DB_DATABASE)
 
 						asins.forEach((asin, index) => {
 							database.findProducts(
@@ -377,7 +377,7 @@ const mongoUrl = DEV
 						if (!terminated) await shutdown(browser)
 					}
 
-					const db = client.db(process.env.DB_DATABASE)
+					const db = client.db(config.DB_DATABASE)
 
 					if (asins.insert.length || asins.update.length) {
 						try {

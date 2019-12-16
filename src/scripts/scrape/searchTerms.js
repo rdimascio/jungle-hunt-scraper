@@ -1,7 +1,7 @@
 'use strict'
 
-require('dotenv').config({path: require('find-config')('.env')})
 const request = require('request')
+const config = require('../../../config')
 const Logger = require('../../util/lib/Logger')
 const Browser = require('../../util/lib/Browser')
 const delay = require('../../util/helpers/delay')
@@ -11,14 +11,16 @@ const scrapeTerms = require('../../util/helpers/scrapeTerms')
 const searchTermsList = require('../../../data/terms/keywordList')
 const generateRandomNumbers = require('../../util/helpers/randomNumbers')
 const mailgunOptions = {
-	apiKey: 'de9a31ad5fa008f76824d59d292c5f67-c8e745ec-d85b4a15',
-	domain: 'web.visibly.app',
+	apiKey: config.MAILGUN_API_KEY,
+	domain: config.MAILGUN_DOMAIN,
 }
 const Mailgun = require('mailgun-js')(mailgunOptions)
 
 ;(async () => {
 	const logger = new Logger(`Search Term Scraper`)
 	let headless
+
+	process.setMaxListeners(12)
 
 	// We can handle our own termination signals, thank you
 	// This is SUPER important since we're launching headless

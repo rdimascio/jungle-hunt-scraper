@@ -9,7 +9,7 @@ const mkdir = require('../helpers/mkdir')
 
 const puppeteer = require('puppeteer-extra')
 const pluginStealth = require('puppeteer-extra-plugin-stealth')
-const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha')
+// const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha')
 
 class Browser {
 	constructor(params) {

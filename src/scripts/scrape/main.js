@@ -22,6 +22,8 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 		logger,
 		iteration = 0
 
+	process.setMaxListeners(12)
+
 	// We can handle our own termination signals, thank you
 	// This is SUPER important since we're launching headless
 	// with the handleSIGINT property set to false

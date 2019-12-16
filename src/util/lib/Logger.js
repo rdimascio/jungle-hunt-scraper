@@ -1,7 +1,7 @@
 'use strict'
 
-require('dotenv').config({path: require('find-config')('.env')})
 const colors = require('colors')
+const config = require('../../../config')
 const {createLogger, format, transports} = require('winston')
 const {combine, timestamp, label, printf} = format
 const notifier = require('node-notifier')
@@ -12,7 +12,7 @@ const DAY = DATE.getDate()
 const MONTH = DATE.getMonth() + 1
 const YEAR = DATE.getFullYear()
 
-const DEV = process.env.NODE_ENV === 'development'
+const DEV = config.NODE_ENV === 'development'
 
 class Logger {
 	constructor(title) {
@@ -58,7 +58,7 @@ class Logger {
 			if (INCLUDE_ALL || options.loggers.includes('telegram')) {
 				try {
 					this.bot.sendMessage(
-						process.env.TELEGRAM_USER_ID,
+						config.TELEGRAM_USER_ID,
 						[options.emoji, `[${this.title}]:`, options.message].join(' ')
 					)
 				} catch (error) {
