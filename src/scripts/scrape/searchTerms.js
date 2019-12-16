@@ -18,7 +18,7 @@ const Mailgun = require('mailgun-js')(mailgunOptions)
 
 ;(async () => {
 	const logger = new Logger(`Search Term Scraper`)
-	let headless
+	let headless = new Browser({logger})
 
 	process.setMaxListeners(12)
 
@@ -62,8 +62,6 @@ const Mailgun = require('mailgun-js')(mailgunOptions)
 			})
 		}
 
-		headless = new Browser({logger})
-
 		// Scrape dat shit
 		const termData = await scrapeTerms(
 			searchTermsList[termIndex],
@@ -79,8 +77,7 @@ const Mailgun = require('mailgun-js')(mailgunOptions)
 			status: 'success',
 		})
 
-		await headless.shutdown(false)
-		headless = null
+		await headless.cleanupBrowser()
 
 		if (termData.status === 'OK') {
 			const screenshot = request(termData.screenshot)
@@ -147,22 +144,10 @@ const Mailgun = require('mailgun-js')(mailgunOptions)
 				}
 			})
 
-			sendEmail.then(() => {
-				if (lastTerm) {
-					logger.send({
-						emoji: '🎉',
-						message: `Finished scraping keywords`,
-						status: 'success',
-					})
-					process.exit()
-				}
-			})
+			await sendEmail
 
 			// Save to the database
-			const dbResponse = await saveTerms({
-				keyword: searchTermsList[termIndex].keyword,
-				...termData,
-			})
+			const dbResponse = await saveTerms(termData)
 
 			if (dbResponse.success) {
 				logger.send({
@@ -171,8 +156,16 @@ const Mailgun = require('mailgun-js')(mailgunOptions)
 					status: 'success',
 				})
 			}
-		} else {
-			process.exit()
+		}
+
+		if (lastTerm) {
+			logger.send({
+				emoji: '🎉',
+				message: `Finished scraping keywords`,
+				status: 'success',
+			})
+
+			await headless.shutdown()
 		}
 	}
 })()

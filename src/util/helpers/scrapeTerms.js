@@ -1,7 +1,7 @@
 const config = require('../../../config')
 const AWS = require('aws-sdk')
 const AWS_PATH = config.NODE_ENV === 'development'
-	? './../../../aws.json'
+	? './aws.json'
 	: './../../../../aws.json'
 AWS.config.loadFromPath(AWS_PATH)
 const s3 = new AWS.S3()
@@ -28,10 +28,11 @@ const scrapeTerms = async (termData, headless, logger) => {
 
 	try {
 		const chrome = await headless.browser
-		const page = await chrome.newPage()
+		const context = await chrome.createIncognitoBrowserContext()
+		const page = await context.newPage()
 
 		const buildURL = () =>
-			BASE + `/s?k=${encodeURIComponent(termData.keyword)}&ref=nb_sb_noss`
+			BASE + `/s?k=${termData.keyword.split(' ').join('+')}&ref=nb_sb_noss`
 
 		await preparePageForTor(page, buildURL())
 		await preparePageForTests(page)
@@ -123,6 +124,7 @@ const scrapeTerms = async (termData, headless, logger) => {
 		response = {status: 'FAIL'}
 	} finally {
 		process.removeListener('SIGINT', processTerminated)
+		response.keyword = termData.keyword
 		return response
 	}
 
