@@ -9,9 +9,11 @@ const args = require('minimist')(process.argv.slice(2))
 const scrapeTerms = require('../../util/helpers/scrapeTerms')
 const searchTermsList = require('../../../data/terms/keywordList')
 const generateRandomNumbers = require('../../util/helpers/randomNumbers')
+const apiKey = process.env.MAILGUN_API_KEY
+const domain = process.env.MAILGUN_DOMAIN
 const Mailgun = require('mailgun-js')({
-	apiKey: process.env.MAILGUN_API_KEY,
-	domain: process.env.MAILGUN_DOMAIN,
+	apiKey,
+	domain
 })
 
 ;(async () => {
