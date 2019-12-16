@@ -74,7 +74,7 @@ const scrapeTerms = async (termData, headless, logger) => {
 			// Get the data from the page and return it
 			const searchTermData = await getTermData(page)
 
-			console.log(searchTermData)
+			console.log(searchTermData.ads.brand.asins)
 
 			const screenshot = await page.screenshot(screenshotOptions)
 
