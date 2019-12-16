@@ -102,17 +102,29 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 
 	const startListScraper = (args = [], delay = false) => {
 		let initArgs = ''
-
-		switch (args.length) {
-			case 0:
-				break
-			case 1:
+		
+		if (args.length > 0) {
+			if (args.length === 1) {
 				initArgs = ` -l ${args[0]}`
-			case 2:
+			} else if (args.length === 2) {
 				initArgs = ` -l ${args[0]} -c ${args[1]}`
-			case 3:
+			} else if (args.length === 3) {
 				initArgs = ` -s "${args.join(', ')}"`
+			}
+
+			jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, `Starting list scraper with arguments: ${initArgs}`)
 		}
+
+		// switch (args.length) {
+		// 	case 0:
+		// 		break
+		// 	case 1:
+		// 		initArgs = ` -l ${args[0]}`
+		// 	case 2:
+		// 		initArgs = ` -l ${args[0]} -c ${args[1]}`
+		// 	case 3:
+		// 		initArgs = ` -s "${args.join(', ')}"`
+		// }
 
 		exec(
 			`node /app/src/scripts/scrape/main.js${initArgs}${delay ? ' -d' : ''}`,
@@ -238,7 +250,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 				killChrome(ps)
 				removeDirectories()
 				break
-			case 'lists':
+			case 'list':
 				killListScraper(ps)
 				break
 			case 'search-terms':
