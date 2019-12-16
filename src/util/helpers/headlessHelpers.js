@@ -9,6 +9,7 @@ const changeIP = () => {
 		? 'brew services restart tor'
 		: 'systemctl reload tor'
 
+	console.log('Changing IP address...')
 	exec(command)
 }
 
@@ -75,14 +76,18 @@ const passBotDetection = async (page, url, logger, data = false) => {
 	let proxy = false
 	let success = false
 
-	const PROXY = proxy ? 'https://jungle-hunt-proxy.herokuapps.com/' : ''
+	const PROXY = proxy ? 'https://jungle-hunt-proxy.herokuapp.com/' : ''
 	const MAX_ATTEMPT = 5
 
 	for (let attempt = 1; attempt <= MAX_ATTEMPT; attempt++) {
 		console.log(`Pass bot detection attempt #${attempt}`)
 
+		const URL = PROXY + url
+
+		console.log(`Navigating to page: ${URL}`)
+
 		try {
-			const response = await page.goto(PROXY + url, {
+			const response = await page.goto(URL, {
 				waitUntil: 'networkidle2',
 				timeout: 0,
 			})
