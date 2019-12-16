@@ -102,7 +102,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 
 	const startListScraper = (args = [], delay = false) => {
 		let initArgs = ''
-		
+
 		if (args.length > 0) {
 			if (args.length === 1) {
 				initArgs = ` -l ${args[0]}`
@@ -112,7 +112,10 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 				initArgs = ` -s "${args.join(', ')}"`
 			}
 
-			jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, `Starting list scraper with arguments: ${initArgs}`)
+			jungleHuntBot.sendMessage(
+				process.env.TELEGRAM_USER_ID,
+				`Starting list scraper with arguments: ${initArgs}`
+			)
 		}
 
 		// switch (args.length) {
@@ -127,7 +130,9 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 		// }
 
 		exec(
-			`node /app/src/scripts/scrape/main.js${initArgs}${delay ? ' -d' : ''}`,
+			`node /app/src/scripts/scrape/main.js${initArgs}${
+				delay ? ' -d' : ''
+			}`,
 			async (error) => {
 				if (error) {
 					jungleHuntBot.sendMessage(
@@ -164,8 +169,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 			.used()
 			.then((info) =>
 				Math.ceil(
-					(parseFloat(info.usedMemMb) /
-						parseFloat(info.totalMemMb)) *
+					(parseFloat(info.usedMemMb) / parseFloat(info.totalMemMb)) *
 						100
 				)
 			)
@@ -173,7 +177,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 
 	const getCurrentCpuUsage = async () => {
 		const cpu = system.cpu
-		
+
 		return await cpu.usage().then((info) => info.toFixed(2))
 	}
 
@@ -189,7 +193,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 					`We're currently using ${usedCpuPercentage}% CPU`
 				)
 				break
-			case 'memory':
+			case 'ram':
 				const usedMemoryPercentage = await getCurrentMemoryUsage()
 
 				jungleHuntBot.sendMessage(
@@ -197,7 +201,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 					`We're currently using ${usedMemoryPercentage}% memory`
 				)
 				break
-			case 'processes':
+			case 'ps':
 				const ps = await psList()
 				const puppeteer = ps.filter(
 					(process) => process.name === 'chrome'
@@ -220,9 +224,12 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 
 				jungleHuntBot.sendMessage(
 					msg.chat.id,
-					`Puppeteer: ${puppeteerPids.join(', ')}
-					Search Term Scraper: ${searchTermScraperPid.join(', ')}
-					List Scraper: ${listScraperPid.join(', ')}`
+					`<b>Puppeteer:</b> ${puppeteerPids.join(
+						', '
+					)}<br/><b>Search Term Scraper:</b> ${searchTermScraperPid.join(
+						', '
+					)}<br/><b>List Scraper:</b> ${listScraperPid.join(', ')}`,
+					{parse_mode: 'HTML'}
 				)
 				break
 		}
@@ -237,7 +244,10 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 
 		Object.entries(stats).forEach(([metric, stat]) => {
 			if (stat >= 75) {
-				jungleHuntBot.sendMessage(process.env.TELEGRAM_USER_ID, `🚨 Our ${metric} usage is currently at ${stat}`)
+				jungleHuntBot.sendMessage(
+					process.env.TELEGRAM_USER_ID,
+					`🚨 Our ${metric} usage is currently at ${stat}`
+				)
 			}
 		})
 	}
