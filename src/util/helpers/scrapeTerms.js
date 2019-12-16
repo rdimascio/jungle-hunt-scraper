@@ -77,7 +77,7 @@ const scrapeTerms = async (termData, headless, logger) => {
 			const screenshot = await page.screenshot(screenshotOptions)
 
 			const s3params = {
-				Bucket: `jungle-hunt/search-terms/${termData.keyword}/`,
+				Bucket: `jungle-hunt/search-terms/${termData.keyword}`,
 				Key: newFileName,
 				Body: screenshot,
 			}
