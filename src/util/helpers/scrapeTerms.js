@@ -113,6 +113,8 @@ const scrapeTerms = async (termData, headless, logger) => {
 			})
 		}
 
+		console.log(error)
+
 		response = {status: 'FAIL'}
 	} finally {
 		process.removeListener('SIGINT', processTerminated)
