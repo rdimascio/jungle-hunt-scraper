@@ -5,9 +5,10 @@ const generateRandomNumbers = require('../../util/helpers/randomNumbers')
 
 // Change the IP address using Tor
 const changeIP = () => {
-	const command = config.NODE_ENV === 'development'
-		? 'brew services restart tor'
-		: 'systemctl reload tor'
+	const command =
+		config.NODE_ENV === 'development'
+			? 'brew services restart tor'
+			: 'systemctl reload tor'
 
 	console.log('Changing IP address...')
 	exec(command)
@@ -369,9 +370,14 @@ const getTermData = async (page) => {
 			link: brand.querySelector(
 				'.clickthroughLink.templateContainer__link'
 			)
-				? brand.querySelector(
-						'.clickthroughLink.templateContainer__link'
-				  ).href
+				? `https://${
+						brand
+							.querySelector(
+								'.clickthroughLink.templateContainer__link'
+							)
+							.href.split('https://')[2]
+							.split('?')[0]
+				  }`
 				: null,
 		}
 
@@ -388,13 +394,20 @@ const getTermData = async (page) => {
 			return {
 				asin: element.getAttribute('data-asin'),
 				title: element.querySelector('img.imageContainer__image')
-					? element.querySelector('img.imageContainer__image').getAttribute('title')
+					? element
+							.querySelector('img.imageContainer__image')
+							.getAttribute('title')
 					: null,
 				image: element.querySelector('img.imageContainer__image')
 					? element.querySelector('img.imageContainer__image').src
 					: null,
 				link: element.querySelector('.clickthroughLink.asinImage')
-					? `https://${element.querySelector('.clickthroughLink.asinImage').href.split('https://')[2].split('?')[0]}`
+					? `https://${
+							element
+								.querySelector('.clickthroughLink.asinImage')
+								.href.split('https://')[2]
+								.split('?')[0]
+					  }`
 					: null,
 			}
 		}
