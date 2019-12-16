@@ -74,6 +74,8 @@ const scrapeTerms = async (termData, headless, logger) => {
 			// Get the data from the page and return it
 			const searchTermData = await getTermData(page)
 
+			console.log(searchTermData)
+
 			const screenshot = await page.screenshot(screenshotOptions)
 
 			const s3params = {

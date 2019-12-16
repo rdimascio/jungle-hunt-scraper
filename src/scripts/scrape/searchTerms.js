@@ -73,8 +73,6 @@ const Mailgun = require('mailgun-js')({
 			status: 'success',
 		})
 
-		console.log(termData)
-
 		await headless.shutdown(false)
 		headless = null
 

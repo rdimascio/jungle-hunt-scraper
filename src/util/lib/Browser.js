@@ -71,7 +71,6 @@ class Browser {
 			title: 'Best Seller List Scraper',
 			message: `Set up temporary directory at ${dataDir}`,
 			status: 'success',
-			loggers: ['console, notify, logger']
 		})
 
 		return dataDir
@@ -85,7 +84,6 @@ class Browser {
 					title: 'Best Seller List Scraper',
 					message: `Removed temporary directory at ${path}`,
 					status: 'success',
-					loggers: ['console, notify, logger']
 				})
 				resolve()
 			})
@@ -156,7 +154,6 @@ class Browser {
 					emoji: '🦄',
 					message: `Browser launched at ${new Date().toLocaleString()}`,
 					status: 'success',
-					loggers: ['console, notify, logger']
 				})
 			} catch (error) {
 				this.logger.send({
@@ -215,7 +212,6 @@ class Browser {
 			title: 'Best Seller List Scraper',
 			message: `Browser has been killed and cleaned`,
 			status: 'success',
-			loggers: ['console, notify, logger']
 		})
 	}
 
