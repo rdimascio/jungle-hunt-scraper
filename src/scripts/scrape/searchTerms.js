@@ -6,6 +6,7 @@ const Logger = require('../../util/lib/Logger')
 const Browser = require('../../util/lib/Browser')
 const delay = require('../../util/helpers/delay')
 const args = require('minimist')(process.argv.slice(2))
+const saveTerms = require('../../util/helpers/saveTerms')
 const scrapeTerms = require('../../util/helpers/scrapeTerms')
 const searchTermsList = require('../../../data/terms/keywordList')
 const generateRandomNumbers = require('../../util/helpers/randomNumbers')
@@ -68,10 +69,8 @@ const Mailgun = require('mailgun-js')(mailgunOptions)
 			logger
 		)
 
-		console.log(termData.ads.brand.asins.map((asin) => asin.asin))
-
 		logger.send({
-			emoji: '🎉',
+			emoji: termData.success ? '🎉' : '😰',
 			message: `Keyword #${termIndex + 1} ${
 				termData.success ? 'is' : 'is not'
 			} showing`,
@@ -147,29 +146,30 @@ const Mailgun = require('mailgun-js')(mailgunOptions)
 			})
 
 			sendEmail.then(() => {
-				console.log(
-					`Term #${termIndex + 1} out of ${searchTermsList.length}`
-				)
+				if (lastTerm) {
+					logger.send({
+						emoji: '🎉',
+						message: `Finished scraping keywords`,
+						status: 'success',
+					})
+					process.exit()
+				}
 			})
 
 			// Save to the database
-			// const dbResponse = await saveTerms(
-			// 	listData.asins,
-			// 	listData.list.type,
-			// 	{
-			// 		interval: listData.urls.index,
-			// 		category: listData.category.current,
-			// 	},
-			// 	logger
-			// )
-		}
-
-		if (lastTerm) {
-			logger.send({
-				emoji: '🎉',
-				message: `Finished scraping keywords`,
-				status: 'success',
+			const dbResponse = await saveTerms({
+				keyword: searchTermsList[termIndex].keyword,
+				...termData,
 			})
+
+			if (dbResponse.success) {
+				logger.send({
+					emoji: '✅',
+					message: `Saved keyword "${searchTermsList[termIndex].keyword}" to the database`,
+					status: 'success',
+				})
+			}
+		} else {
 			process.exit()
 		}
 	}

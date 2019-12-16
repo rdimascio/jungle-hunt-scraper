@@ -243,7 +243,7 @@ const mostWishedForCategories = require('../../../data/categories/mostWishedFor'
 						logger
 					)
 
-					if (dbResponse) log.database(logger, dbResponse, listData)
+					if (dbResponse.success) log.database(logger, dbResponse, listData)
 				}
 
 				// This is the last url of the last category of this list,

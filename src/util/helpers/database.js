@@ -24,11 +24,11 @@ const logger = createLogger({
 		// - Write all logs error (and below) to `error.log`.
 		//
 		new transports.File({
-			filename: `./logs/${MONTH}-${DAY}-${YEAR}-error.log`,
+			filename: `./logs/error-${MONTH}-${DAY}-${YEAR}.log`,
 			level: 'error',
 		}),
 		new transports.File({
-			filename: `./logs/${MONTH}-${DAY}-${YEAR}-info.log`,
+			filename: `./logs/info-${MONTH}-${DAY}-${YEAR}.log`,
 		}),
 	],
 })
@@ -59,7 +59,7 @@ const insertProducts = (db, col, products, callback) => {
 		callback(bulkInsert)
 	} catch (error) {
 		logger.error(error)
-		
+
 		if (DEV) {
 			console.log(error)
 		}
@@ -101,6 +101,19 @@ const insertStats = (db, col, products, callback) => {
 
 		callback(error)
 	}
+}
+
+const insertKeyword = (db, col, keyword, callback) => {
+	const collection = db.collection(col)
+
+	collection.insertOne(
+		keyword,
+		(err, result) => {
+			assert.equal(err, null)
+			assert.equal(1, result.result.n)
+			callback(result)
+		}
+	)
 }
 
 const updateProduct = (db, col, doc, product, callback) => {
@@ -180,7 +193,7 @@ const findProducts = (db, col, doc = {}, callback) => {
 }
 
 module.exports = {
-	// insertDocument,
+	insertKeyword,
 	insertProducts,
 	insertStats,
 	updateProduct,

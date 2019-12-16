@@ -5,18 +5,11 @@ const generateRandomNumbers = require('../../util/helpers/randomNumbers')
 
 // Change the IP address using Tor
 const changeIP = () => {
-	exec(
-		process.env.NODE_ENV === 'development'
-			? 'brew services restart tor'
-			: 'systemctl reload tor'
-		// async (error, stdout, stderr) => {
-		// 	if (stdout.match(/250/g).length === 3) {
-		// 		console.log('IP was changed')
-		// 	} else {
-		// 		console.log('IP tried to change but failed')
-		// 	}
-		// }
-	)
+	const command = process.env.NODE_ENV === 'development'
+		? 'brew services restart tor'
+		: 'systemctl reload tor'
+
+	exec(command)
 }
 
 const isBrowserUsingTor = async (page, logger) => {
@@ -86,6 +79,8 @@ const passBotDetection = async (page, url, logger, data = false) => {
 	const MAX_ATTEMPT = 5
 
 	for (let attempt = 1; attempt <= MAX_ATTEMPT; attempt++) {
+		console.log(`Pass bot detection attempt #${attempt}`)
+
 		try {
 			const response = await page.goto(PROXY + url, {
 				waitUntil: 'networkidle2',
