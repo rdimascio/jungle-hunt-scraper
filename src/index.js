@@ -23,9 +23,9 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 			return
 		}
 
-		if (msg.text.includes('search-terms')) {
+		if (msg.text.includes('keywords')) {
 			startSearchTermScraper()
-		} else if (msg.text.includes('list')) {
+		} else if (msg.text.includes('lists')) {
 			const args = msg.text.split(' ')
 			startListScraper(args.slice(1))
 		} else {
@@ -41,7 +41,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 				if (error)
 					jungleHuntBot.sendMessage(
 						process.env.TELEGRAM_USER_ID,
-						error
+						'There was an error killing the process'
 					)
 			})
 		})
@@ -70,7 +70,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 				if (error)
 					jungleHuntBot.sendMessage(
 						process.env.TELEGRAM_USER_ID,
-						error
+						'There was an error killing the process'
 					)
 			})
 		})
@@ -86,7 +86,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 				if (error)
 					jungleHuntBot.sendMessage(
 						process.env.TELEGRAM_USER_ID,
-						error
+						'There was an error killing the process'
 					)
 			})
 		})
@@ -260,10 +260,10 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 				killChrome(ps)
 				removeDirectories()
 				break
-			case 'list':
+			case 'lists':
 				killListScraper(ps)
 				break
-			case 'search-terms':
+			case 'keywords':
 				killSearchTermScraper(ps)
 				break
 			default:
@@ -275,7 +275,7 @@ const getLastAlertTime = require('./util/helpers/getLastAlertTime')
 					if (error)
 						jungleHuntBot.sendMessage(
 							process.env.TELEGRAM_USER_ID,
-							error
+							'There was an error killing the process'
 						)
 				})
 		}
