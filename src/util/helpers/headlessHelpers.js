@@ -74,16 +74,15 @@ const mockUserActions = async (page) => {
 }
 
 const passBotDetection = async (page, url, logger, data = false) => {
-	let proxy = false
 	let success = false
 
-	const PROXY = proxy ? 'https://jungle-hunt-proxy.herokuapp.com/' : ''
+	const PROXY = 'https://jungle-hunt-proxy.herokuapp.com/'
 	const MAX_ATTEMPT = 5
 
 	for (let attempt = 1; attempt <= MAX_ATTEMPT; attempt++) {
 		console.log(`Pass bot detection attempt #${attempt}`)
 
-		const URL = PROXY + url
+		const URL = attempt > 2 ? PROXY + url : url
 
 		console.log(`Navigating to page: ${URL}`)
 
@@ -119,8 +118,6 @@ const passBotDetection = async (page, url, logger, data = false) => {
 					status: 'error',
 				})
 
-				proxy = true
-
 				changeIP()
 				await delay(6000000)
 
@@ -137,8 +134,6 @@ const passBotDetection = async (page, url, logger, data = false) => {
 				// 	page.click(`button[type="submit"]`),
 				// ])
 			}
-
-			proxy = true
 
 			changeIP()
 			await delay(4000 * attempt)
