@@ -6,7 +6,7 @@ const mongoUrl =
 		? 'mongodb://localhost:27017'
 		: `mongodb://${config.DB_USER}:${config.DB_PWD}@${config.DB_IP}/${config.DB_DATABASE}`
 
-const saveKeyword = async (keywordData) => {
+const saveTerms = async (keywords) => {
 	let mongoClient
 	let response = {success: false}
 
@@ -24,10 +24,10 @@ const saveKeyword = async (keywordData) => {
 					mongoClient = client
 					const db = client.db(config.DB_DATABASE)
 
-					database.insertKeyword(
+					database.insertKeywords(
 						db,
 						'searchTerms',
-						keywordData,
+						keywords,
 						(result) => {
 							response.success = true
 							client.close()
@@ -47,4 +47,4 @@ const saveKeyword = async (keywordData) => {
 	}
 }
 
-module.exports = saveKeyword
+module.exports = saveTerms

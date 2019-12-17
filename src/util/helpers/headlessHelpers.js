@@ -420,10 +420,6 @@ const getTermData = async (page) => {
 		const getProductData = (element) => {
 			const container = element.closest('.s-result-item')
 
-			if (!container) {
-				console.log('failed to get container')
-			}
-
 			return {
 				asin: container.getAttribute('data-asin'),
 				position: container.getAttribute('data-index'),

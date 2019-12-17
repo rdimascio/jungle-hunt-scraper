@@ -1,8 +1,7 @@
 const config = require('../../../config')
 const AWS = require('aws-sdk')
-const AWS_PATH = config.NODE_ENV === 'development'
-	? './aws.json'
-	: './../../../../aws.json'
+const AWS_PATH =
+	config.NODE_ENV === 'development' ? './aws.json' : './../../../../aws.json'
 AWS.config.loadFromPath(AWS_PATH)
 const s3 = new AWS.S3()
 const browser = require('../helpers/headlessHelpers')
@@ -15,10 +14,11 @@ const {
 	preparePageForTests,
 } = browser
 
-const scrapeTerms = async (termData, headless, logger) => {
-	let response
+const scrapeTerms = async (searchTerms, headless, logger) => {
+	const data = []
 	let isTerminated = false
 	const BASE = 'https://www.amazon.com'
+	const chrome = await headless.browser
 
 	const processTerminated = () => {
 		isTerminated = true
@@ -26,163 +26,243 @@ const scrapeTerms = async (termData, headless, logger) => {
 
 	process.on('SIGINT', processTerminated)
 
-	try {
-		const chrome = await headless.browser
-		const context = await chrome.createIncognitoBrowserContext()
-		const page = await context.newPage()
+	await Promise.all(
+		searchTerms.map(async (searchTerm) => {
+			const scrapeSearchTerm = await (async () => {
+				let response
 
-		const buildURL = () =>
-			BASE + `/s?k=${termData.keyword.split(' ').join('+')}&ref=nb_sb_noss`
+				try {
+					const context = await chrome.createIncognitoBrowserContext()
+					const page = await context.newPage()
 
-		await preparePageForTor(page, buildURL())
-		await preparePageForTests(page)
+					const buildURL = () =>
+						BASE +
+						`/s?k=${searchTerm.keyword
+							.split(' ')
+							.join('+')}&ref=nb_sb_noss`
 
-		//////////////////////////////////
-		// Check to see if Tor is working
-		/////////////////////////////////
-		// First we're going to check our IP address
-		// to make sure we're not using our public IP
-		if (!(await isBrowserUsingTor(page, logger)) && !isTerminated) {
-			await headless.shutdown()
-		}
+					await preparePageForTor(page, buildURL())
+					await preparePageForTests(page)
 
-		///////////////////
-		// Scrape the page
-		///////////////////
-		// Now we're getting the heart of the scraper
-		const requestNewSearchPage = async () => {
-			const response = {}
-			const URL = buildURL()
-			const newFileName = `${termData.keyword}-sponsored-${
-				termData.placement
-			}-${new Date().toISOString()}.png`
+					//////////////////////////////////
+					// Check to see if Tor is working
+					/////////////////////////////////
+					// First we're going to check our IP address
+					// to make sure we're not using our public IP
+					if (
+						!(await isBrowserUsingTor(page, logger)) &&
+						!isTerminated
+					) {
+						await page.close()
+					}
 
-			// Try 5 times to get to the page undetected
-			if (!(await passBotDetection(page, URL, logger)) && !isTerminated) {
-				logger.send({
-					emoji: '🚨',
-					message: `Tor IP retry limit reached. Shutting down`,
-					status: 'error',
-				})
+					///////////////////
+					// Scrape the page
+					///////////////////
+					// Now we're getting the heart of the scraper
+					const requestNewSearchPage = async () => {
+						const response = {}
+						const URL = buildURL()
+						const newFileName = `${searchTerm.keyword.split(' ').join('-')}-sponsored-${
+							searchTerm.placement
+						}-${new Date().toISOString()}.png`
 
-				await headless.shutdown()
-			}
+						// Try 5 times to get to the page undetected
+						if (
+							!(await passBotDetection(page, URL, logger)) &&
+							!isTerminated
+						) {
+							logger.send({
+								emoji: '🚨',
+								message: `Tor IP retry limit reached. Shutting down`,
+								status: 'error',
+							})
 
-			// Mock user actions
-			// Hover over random product links in the grid
-			// await mockUserActions(page)
+							await page.close()
+						}
 
-			const screenshotOptions = {}
+						// Mock user actions
+						// Hover over random product links in the grid
+						// await mockUserActions(page)
 
-			if (termData.placement !== 'brand') {
-				screenshotOptions.fullPage = true
-			}
+						const screenshotOptions = {}
 
-			// Get the data from the page and return it
-			const searchTermData = await getTermData(page)
-			const screenshot = await page.screenshot(screenshotOptions)
+						if (searchTerm.placement !== 'brand') {
+							screenshotOptions.fullPage = true
+						}
 
-			const s3params = {
-				Bucket: `jungle-hunt/search-terms/${termData.keyword}`,
-				Key: newFileName,
-				Body: screenshot,
-			}
+						// Get the data from the page and return it
+						const searchTermData = await getTermData(page)
+						const screenshot = await page.screenshot(
+							screenshotOptions
+						)
 
-			await s3.putObject(s3params).promise()
+						const s3params = {
+							Bucket: `jungle-hunt/search-terms/${searchTerm.keyword.split(' ').join('-')}`,
+							Key: newFileName,
+							Body: screenshot,
+						}
 
-			if (searchTermData.ads[termData.placement].asins.length) {
-				const adAsins = searchTermData.ads[
-					termData.placement
-				].asins.map((asin) => asin.asin)
+						await s3.putObject(s3params).promise()
 
-				const matchingAsins = termData.asins.some((asin) =>
-					adAsins.includes(asin)
-				)
+						if (
+							searchTermData.ads[searchTerm.placement].asins
+								.length
+						) {
+							const adAsins = searchTermData.ads[
+								searchTerm.placement
+							].asins.map((asin) => asin.asin)
 
-				response.ads = searchTermData.ads
-				response.success = matchingAsins
-				response.screenshot = `https://jungle-hunt.s3-us-west-1.amazonaws.com/search-terms/${termData.keyword}/${newFileName}`
-			}
+							const matchingAsins = searchTerm.asins.some((asin) => adAsins.includes(asin))
 
-			return response
-		}
+							response.ads = searchTermData.ads
+							response.success = matchingAsins
+							response.screenshot = `https://jungle-hunt.s3-us-west-1.amazonaws.com/search-terms/${
+								searchTerm.keyword.split(' ').join('-')
+							}/${newFileName}`
+						}
 
-		response = await requestNewSearchPage()
-		response.status = 'OK'
-	} catch (error) {
-		if (!isTerminated) {
-			logger.send({
-				emoji: '🚨',
-				message: `Error scraping search term "${termData.keyword}"`,
-				status: 'error',
-				error: error,
-			})
-		}
+						return response
+					}
 
-		console.log(error)
+					response = await requestNewSearchPage()
+					response.status = 'OK'
+				} catch (error) {
+					if (!isTerminated) {
+						logger.send({
+							emoji: '🚨',
+							message: `Error scraping search term "${searchTerm.keyword}"`,
+							status: 'error',
+							error: error,
+						})
+					}
 
-		response = {status: 'FAIL'}
-	} finally {
-		process.removeListener('SIGINT', processTerminated)
-		response.keyword = termData.keyword
-		return response
-	}
+					console.log(error)
 
-	// finally {
-	// await saveAsins(
-	// 	{
-	// 		insert: asinsToInsert,
-	// 		update: asinsToUpdate,
-	// 	},
-	// 	LIST_TYPE.name,
-	// 	{
-	// 		interval: i,
-	// 		category,
+					response = {status: 'FAIL'}
+				} finally {
+					response.keyword = searchTerm.keyword
+					return response
+				}
+			})()
+
+			data.push(scrapeSearchTerm)
+		})
+	)
+
+	// for (let termIndex = 0; termIndex < searchTerms.length; termIndex++) {
+	// 	let response
+
+	// 	try {
+	// 		const context = await chrome.createIncognitoBrowserContext()
+	// 		const page = await context.newPage()
+
+	// 		const buildURL = () =>
+	// 			BASE +
+	// 			`/s?k=${searchTerms[termIndex].keyword.split(' ').join('+')}&ref=nb_sb_noss`
+
+	// 		await preparePageForTor(page, buildURL())
+	// 		await preparePageForTests(page)
+
+	// 		//////////////////////////////////
+	// 		// Check to see if Tor is working
+	// 		/////////////////////////////////
+	// 		// First we're going to check our IP address
+	// 		// to make sure we're not using our public IP
+	// 		if (!(await isBrowserUsingTor(page, logger)) && !isTerminated) {
+	// 			await headless.shutdown()
+	// 		}
+
+	// 		///////////////////
+	// 		// Scrape the page
+	// 		///////////////////
+	// 		// Now we're getting the heart of the scraper
+	// 		const requestNewSearchPage = async () => {
+	// 			const response = {}
+	// 			const URL = buildURL()
+	// 			const newFileName = `${searchTerms[termIndex].keyword}-sponsored-${
+	// 				searchTerms[termIndex].placement
+	// 			}-${new Date().toISOString()}.png`
+
+	// 			// Try 5 times to get to the page undetected
+	// 			if (
+	// 				!(await passBotDetection(page, URL, logger)) &&
+	// 				!isTerminated
+	// 			) {
+	// 				logger.send({
+	// 					emoji: '🚨',
+	// 					message: `Tor IP retry limit reached. Shutting down`,
+	// 					status: 'error',
+	// 				})
+
+	// 				await headless.shutdown()
+	// 			}
+
+	// 			// Mock user actions
+	// 			// Hover over random product links in the grid
+	// 			// await mockUserActions(page)
+
+	// 			const screenshotOptions = {}
+
+	// 			if (searchTerms[termIndex].placement !== 'brand') {
+	// 				screenshotOptions.fullPage = true
+	// 			}
+
+	// 			// Get the data from the page and return it
+	// 			const searchTermData = await getTermData(page)
+	// 			const screenshot = await page.screenshot(screenshotOptions)
+
+	// 			const s3params = {
+	// 				Bucket: `jungle-hunt/search-terms/${searchTerms[termIndex].keyword}`,
+	// 				Key: newFileName,
+	// 				Body: screenshot,
+	// 			}
+
+	// 			await s3.putObject(s3params).promise()
+
+	// 			if (searchTermData.ads[searchTerms[termIndex].placement].asins.length) {
+	// 				const adAsins = searchTermData.ads[
+	// 					searchTerms[termIndex].placement
+	// 				].asins.map((asin) => asin.asin)
+
+	// 				const matchingAsins = searchTerms[termIndex].asins.some((asin) =>
+	// 					adAsins.includes(asin)
+	// 				)
+
+	// 				response.ads = searchTermData.ads
+	// 				response.success = matchingAsins
+	// 				response.screenshot = `https://jungle-hunt.s3-us-west-1.amazonaws.com/search-terms/${encodeURIComponent(
+	// 					searchTerms[termIndex].keyword
+	// 				)}/${newFileName}`
+	// 			}
+
+	// 			return response
+	// 		}
+
+	// 		response = await requestNewSearchPage()
+	// 		response.status = 'OK'
+	// 	} catch (error) {
+	// 		if (!isTerminated) {
+	// 			logger.send({
+	// 				emoji: '🚨',
+	// 				message: `Error scraping search term "${searchTerms[termIndex].keyword}"`,
+	// 				status: 'error',
+	// 				error: error,
+	// 			})
+	// 		}
+
+	// 		console.log(error)
+
+	// 		response = {status: 'FAIL'}
+	// 	} finally {
+	// 		response.keyword = searchTerms[termIndex].keyword
+	// 		data.push(response)
 	// 	}
-	// )
-
-	// if (failedAsins.length) {
-	// 	fs.writeFileSync(
-	// 		`./data/failed/${DATE_PATH}.json`,
-	// 		JSON.stringify(failedAsins)
-	// 	)
 	// }
 
-	// if (!isTerminated) await headless.shutdown(false)
-	// if (!isTerminated) await headless.cleanupBrowser()
+	process.removeListener('SIGINT', processTerminated)
 
-	// if (index + 1 === categories.length && i + 1 === urls.length) {
-	// 	const DATE_FINISHED = new Date()
-	// 	const TIME_ELAPSED = DATE_FINISHED - DATE
-
-	// 	// Remainder of TIME_ELAPSED / days divided by hours
-	// 	const HOURS_ELAPSED = Math.floor(
-	// 		(TIME_ELAPSED % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-	// 	)
-
-	// 	// Remainder of TIME_ELAPSED / hours divided by minutes
-	// 	const MINUTES_ELAPSED = Math.floor(
-	// 		(TIME_ELAPSED % (1000 * 60 * 60)) / (1000 * 60)
-	// 	)
-
-	// 	// Remainder of TIME_ELAPSED / minutes divided by seconds
-	// 	const SECONDS_ELAPSED = Math.floor(
-	// 		(TIME_ELAPSED % (1000 * 60)) / 1000
-	// 	)
-
-	// 	logger.send({
-	// 		emoji: '🎉',
-	// 		message: `Finished in ${
-	// 			HOURS_ELAPSED > 0 ? `${HOURS_ELAPSED} hours, ` : ''
-	// 		}${MINUTES_ELAPSED} minutes and ${SECONDS_ELAPSED} seconds`,
-	// 		status: 'success',
-	// 	})
-
-	// 	fs.writeFileSync('./logs/lastScrapeTime.txt', now.getTime())
-
-	// 	if (!isTerminated) await headless.shutdown()
-	// }
-	// }
+	return data
 }
 
 module.exports = scrapeTerms

@@ -336,13 +336,21 @@ const telegramUserId = config.TELEGRAM_USER_ID
 			}
 			const process = msg.text.split(':')[1]
 			await killProcess(process)
-		} else if (msg.text.includes('/gif')) {
+		} else if (msg.text.includes('/giphy')) {
 			const giphy = await getRandomGiphy(msg.text.split(' ')[1])
 			if (giphy.success) {
 				jungleHuntBot.sendDocument(msg.chat.id, giphy.image)
 			} else {
 				jungleHuntBot.sendMessage(msg.chat.id, 'I failed you...')
 			}
+		} else if (msg.text === '😍') {
+			jungleHuntBot.sendMessage(msg.chat.id, '😘')
+		} else if (msg.text === '/help') {
+			jungleHuntBot.sendMessage(
+				msg.chat.id,
+				'Available commands:<pre>\n\n</pre><b>/start</b><pre>\n</pre>:keywords<pre>\n</pre>:lists<pre>\n</pre><b>/stop</b><pre>\n</pre><b>/show</b><pre>\n</pre>:ram<pre>\n</pre>:cpu<pre>\n</pre>:ps<pre>\n</pre><b>/kill</b><pre>\n</pre>:chrome<pre>\n</pre>:keywords<pre>\n</pre>:lists<pre>\n</pre>:{pid}',
+				{parse_mode: 'HTML'}
+			)
 		} else {
 			jungleHuntBot.sendMessage(msg.chat.id, 'Huh?')
 		}
