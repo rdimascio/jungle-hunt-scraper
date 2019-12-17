@@ -67,133 +67,123 @@ const Mailgun = require('mailgun-js')(mailgunOptions)
 		chunkedTermIndex < chunkedKeywordList.length;
 		chunkedTermIndex++
 	) {
-		for (
-			let termIndex = 0;
-			termIndex < chunkedKeywordList[chunkedTermIndex].length;
-			termIndex++
-		) {
-			const lastTerm =
-				chunkedTermIndex + 1 === chunkedKeywordList.length &&
-				termIndex + 1 === chunkedKeywordList[chunkedTermIndex].length
+		const lastTerm = chunkedTermIndex + 1 === chunkedKeywordList.length
 
-			// Scrape dat shit
-			const termData = await scrapeTerms(
-				chunkedKeywordList[chunkedTermIndex],
-				headless,
-				logger
-			)
+		// Scrape dat shit
+		const termData = await scrapeTerms(
+			chunkedKeywordList[chunkedTermIndex],
+			headless,
+			logger
+		)
 
-			console.log(termData)
-			process.exit()
+		// termData.forEach(async (term) => {
+		// 	console.log(term)
 
-			termData.forEach(async (term) => {
-				// logger.send({
-				// 	emoji: term.success ? '🎉' : '😰',
-				// 	message: `Keyword #${termIndex + 1} ${
-				// 		term.success ? 'is' : 'is not'
-				// 	} showing`,
-				// 	status: 'success',
-				// })
+		// 	logger.send({
+		// 		emoji: term.success ? '🎉' : '😰',
+		// 		message: `Keyword: ${term.keyword} ${
+		// 			term.success ? 'is' : 'is not'
+		// 		} showing`,
+		// 		status: 'success',
+		// 	})
 
-				if (term.status === 'OK') {
-					const screenshot = request(term.screenshot)
-					const messageData = {
-						subject: `Keyword Update: ${chunkedKeywordList[chunkedTermIndex].keyword}`,
-						from: 'Visibly <postmaster@web.visibly.app>',
-						to: chunkedKeywordList[chunkedTermIndex].emails
-							.concat('ryand@channelbakers.com')
-							.join(','),
-						attachment: screenshot,
-					}
+		// 	if (!term) return
 
-					const failedMessageData = {
-						...messageData,
-						text: `Uh oh... Your ${chunkedKeywordList[chunkedTermIndex].placement} placement for the keyword "${chunkedKeywordList[chunkedTermIndex].keyword}" is not showing 😰`,
-					}
+		// const screenshot = request(term.screenshot)
+		// const messageData = {
+		// 	subject: `Keyword Update: ${term.keyword}`,
+		// 	from: 'Visibly <postmaster@web.visibly.app>',
+		// 	// to: chunkedKeywordList[chunkedTermIndex].emails
+		// 	// 	.concat('ryand@channelbakers.com')
+		// 	// 	.join(','),
+		// 	to: 'ryand@channelbakers.com',
+		// 	attachment: screenshot,
+		// }
 
-					const successMessageData = {
-						...messageData,
-						text: `Woohoo! Your ${chunkedKeywordList[chunkedTermIndex].placement} placement for the keyword "${chunkedKeywordList[chunkedTermIndex].keyword}" is showing 🎉`,
-					}
+		// const failedMessageData = {
+		// 	...messageData,
+		// 	text: `Uh oh... Your ${chunkedKeywordList[chunkedTermIndex].placement} placement for the keyword "${chunkedKeywordList[chunkedTermIndex].keyword}" is not showing 😰`,
+		// }
 
-					const sendEmail = new Promise((resolve, reject) => {
-						if (
-							!term.success &&
-							(chunkedKeywordList[chunkedTermIndex].sendOn ===
-								'fail' ||
-								chunkedKeywordList[chunkedTermIndex].sendOn ===
-									'all')
-						) {
-							Mailgun.messages().send(
-								failedMessageData,
-								async (error, body) => {
-									if (error) {
-										logger.send({
-											emoji: '🚨',
-											message: `Error sending email for keyword: ${chunkedKeywordList[chunkedTermIndex].keyword}`,
-											status: 'error',
-											error,
-										})
-									}
+		// const successMessageData = {
+		// 	...messageData,
+		// 	text: `Woohoo! Your ${chunkedKeywordList[chunkedTermIndex].placement} placement for the keyword "${chunkedKeywordList[chunkedTermIndex].keyword}" is showing 🎉`,
+		// }
 
-									resolve()
-								}
-							)
-						} else if (
-							chunkedKeywordList[chunkedTermIndex].sendOn ===
-								'success' ||
-							chunkedKeywordList[chunkedTermIndex].sendOn ===
-								'all'
-						) {
-							Mailgun.messages().send(
-								successMessageData,
-								async (error, body) => {
-									if (error) {
-										logger.send({
-											emoji: '🚨',
-											message: `Error sending email for keyword: ${chunkedKeywordList[chunkedTermIndex].keyword}`,
-											status: 'error',
-											error,
-										})
-									}
+		// const sendEmail = new Promise((resolve, reject) => {
+		// 	if (
+		// 		!term.success &&
+		// 		(chunkedKeywordList[chunkedTermIndex].sendOn === 'fail' ||
+		// 			chunkedKeywordList[chunkedTermIndex].sendOn === 'all')
+		// 	) {
+		// 		Mailgun.messages().send(
+		// 			failedMessageData,
+		// 			async (error, body) => {
+		// 				if (error) {
+		// 					logger.send({
+		// 						emoji: '🚨',
+		// 						message: `Error sending email for keyword: ${chunkedKeywordList[chunkedTermIndex].keyword}`,
+		// 						status: 'error',
+		// 						error,
+		// 					})
+		// 				}
 
-									resolve()
-								}
-							)
-							resolve()
-						}
-					})
+		// 				resolve()
+		// 			}
+		// 		)
+		// 	} else if (
+		// 		chunkedKeywordList[chunkedTermIndex].sendOn === 'success' ||
+		// 		chunkedKeywordList[chunkedTermIndex].sendOn === 'all'
+		// 	) {
+		// 		Mailgun.messages().send(
+		// 			successMessageData,
+		// 			async (error, body) => {
+		// 				if (error) {
+		// 					logger.send({
+		// 						emoji: '🚨',
+		// 						message: `Error sending email for keyword: ${chunkedKeywordList[chunkedTermIndex].keyword}`,
+		// 						status: 'error',
+		// 						error,
+		// 					})
+		// 				}
 
-					sendEmail.then(async () => {
-						if (lastTerm) {
-							logger.send({
-								emoji: '🎉',
-								message: `Finished scraping keywords`,
-								status: 'success',
-							})
-							await headless.shutdown(false)
-							headless = null
-						}
-					})
+		// 				resolve()
+		// 			}
+		// 		)
+		// 		resolve()
+		// 	}
+		// })
 
-					// Save to the database
-					const dbResponse = await saveTerms(term)
+		// sendEmail.then(async () => {
+		// 	if (lastTerm) {
+		// 		logger.send({
+		// 			emoji: '🎉',
+		// 			message: `Finished scraping keywords`,
+		// 			status: 'success',
+		// 		})
+		// 		await headless.shutdown(false)
+		// 		headless = null
+		// 	}
+		// })
+		// })
 
-					if (dbResponse.success) {
-						logger.send({
-							emoji: '✅',
-							message: `Saved keyword "${chunkedKeywordList[chunkedTermIndex].keyword}" to the database`,
-							status: 'success',
-						})
-					}
-				} else {
-					if (lastTerm) {
-						await headless.shutdown(false)
-						headless = null
-						process.exit()
-					}
-				}
+		// Save to the database
+		const dbResponse = await saveTerms(termData)
+
+		if (dbResponse.success) {
+			logger.send({
+				emoji: '✅',
+				message: `Saved keywords: ${chunkedKeywordList[chunkedTermIndex]
+					.map((keyword) => keyword.keyword)
+					.join(', ')} to the database`,
+				status: 'success',
 			})
+		}
+
+		if (lastTerm) {
+			await headless.shutdown(false)
+			headless = null
+			process.exit()
 		}
 	}
 })()

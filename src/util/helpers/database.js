@@ -1,6 +1,5 @@
-'use strict'
-
 const assert = require('assert')
+const config = require('../../../config')
 const {createLogger, format, transports} = require('winston')
 const {combine, timestamp, label, printf} = format
 
@@ -95,7 +94,7 @@ const insertStats = (db, col, products, callback) => {
 	} catch (error) {
 		logger.error(error)
 
-		if (DEV) {
+		if (config.NODE_ENV === 'development') {
 			console.log(error)
 		}
 
@@ -103,17 +102,26 @@ const insertStats = (db, col, products, callback) => {
 	}
 }
 
-const insertKeyword = (db, col, keyword, callback) => {
+const insertKeywords = (db, col, keywords, callback) => {
 	const collection = db.collection(col)
 
-	collection.insertOne(
-		keyword,
-		(err, result) => {
+	const keywordsToInsert = keywords.filter((keyword) => keyword.status === 'OK')
+
+	try {
+		collection.insertMany(keywordsToInsert, (err, result) => {
 			assert.equal(err, null)
-			assert.equal(1, result.result.n)
+			assert.equal(keywordsToInsert.length, result.result.n)
 			callback(result)
+		})
+	} catch (error) {
+		logger.error(error)
+
+		if (config.NODE_ENV === 'development') {
+			console.log(error)
 		}
-	)
+
+		callback(error)
+	}
 }
 
 const updateProduct = (db, col, doc, product, callback) => {
@@ -175,7 +183,7 @@ const updateProducts = (db, col, products, callback) => {
 	} catch (error) {
 		logger.error(error)
 
-		if (DEV) {
+		if (config.NODE_ENV === 'development') {
 			console.log(error)
 		}
 
@@ -193,7 +201,7 @@ const findProducts = (db, col, doc = {}, callback) => {
 }
 
 module.exports = {
-	insertKeyword,
+	insertKeywords,
 	insertProducts,
 	insertStats,
 	updateProduct,
