@@ -77,6 +77,7 @@ const insertStats = (db, col, products, callback) => {
 			rank: product.rank,
 			rating: product.rating,
 			reviews: product.reviews,
+			category: product.category.secondary,
 			timestamp: new Date().toISOString(),
 		}
 
