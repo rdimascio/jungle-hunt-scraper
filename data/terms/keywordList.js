@@ -83,241 +83,241 @@ const keywordList = [
 		sendOn: 'fail',
 		emails: ['alexb@channelbakers.com'],
 	},
-	{
-		keyword: 'nintendo switch',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'nintendo switch',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'laptop',
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'fidget spinner',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'fidget spinner',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'headphones',
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'fitbit',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'ps4',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'kindle',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'fitbit',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'ps4',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'kindle',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'bluetooth headphones',
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'fire stick',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'instant pot',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'external hard drive',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'fire stick',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'instant pot',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'external hard drive',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'tv',
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'ipad',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'books',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'game of thrones',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'ssd',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'tablet',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'micro sd card',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'roku',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'toilet paper',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'backpack',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'alexa',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'ipad',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'books',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'game of thrones',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'ssd',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'tablet',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'micro sd card',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'roku',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'toilet paper',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'backpack',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'alexa',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'wireless headphones',
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'air fryer',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'air fryer',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'monitor',
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'paper towels',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'paper towels',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'bluetoth speakers',
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'desk',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'harry potter',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'switch',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'iphone charger',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'doctor who',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'hdmi cable',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'shoes',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'kindle fire',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'wireless earbuds',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'prime video',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'earbuds',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'xbos one',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'water bottle',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'pop socket',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'apple watch',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'gift card',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'desk',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'harry potter',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'switch',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'iphone charger',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'doctor who',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'hdmi cable',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'shoes',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'kindle fire',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'wireless earbuds',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'prime video',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'earbuds',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'xbos one',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'water bottle',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'pop socket',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'apple watch',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'gift card',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'gaming chair',
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'lego',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'echo',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'office chair',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'lego',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'echo',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'office chair',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'wireless mouse',
 		placement: 'product',
@@ -328,11 +328,11 @@ const keywordList = [
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'echo dot',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'echo dot',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'gaming mouse',
 		placement: 'product',
@@ -353,56 +353,56 @@ const keywordList = [
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'printer',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'essential oils',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'printer',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'essential oils',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'coffee',
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'sd card',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'star wars',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'xbox one controller',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'gift cards for amazon',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'socks',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'sd card',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'star wars',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'xbox one controller',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'gift cards for amazon',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'socks',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'mouse',
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'shower curtain',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'shower curtain',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'airpods',
 		placement: 'product',
@@ -413,21 +413,21 @@ const keywordList = [
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'ps4 controller',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'ps4 controller',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'iphone',
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'playstation 4',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'playstation 4',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'camera',
 		placement: 'product',
@@ -443,11 +443,11 @@ const keywordList = [
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'mattress',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'mattress',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'iphone 7 plus case',
 		placement: 'product',
@@ -458,41 +458,41 @@ const keywordList = [
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'microwave',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'vacuum cleaner',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'protein powder',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'drone',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'chromebook',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'yoga mat',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'aa batteries',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'microwave',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'vacuum cleaner',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'protein powder',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'drone',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'chromebook',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'yoga mat',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'aa batteries',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'ipone x case',
 		placement: 'product',
@@ -503,11 +503,11 @@ const keywordList = [
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'projector',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'projector',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'iphone 6 case',
 		placement: 'product',
@@ -523,26 +523,26 @@ const keywordList = [
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'hard drive',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'fan',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'dash cam',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'movies',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'hard drive',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'fan',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'dash cam',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'movies',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	{
 		keyword: 'gaming headset',
 		placement: 'product',
@@ -553,36 +553,36 @@ const keywordList = [
 		placement: 'product',
 		asins: [],
 	},
-	{
-		keyword: 'flash drive',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'blender',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'tv stand',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'luggage',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'portable charger',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'hbo',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'flash drive',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'blender',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'tv stand',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'luggage',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'portable charger',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'hbo',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 ]
 
 module.exports = keywordList
