@@ -138,11 +138,11 @@ const keywordList = [
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'tv',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'tv',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'ipad',
 	// 	placement: 'product',
@@ -193,31 +193,31 @@ const keywordList = [
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'wireless headphones',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'wireless headphones',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'air fryer',
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'monitor',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'monitor',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'paper towels',
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'bluetoth speakers',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'bluetoth speakers',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'desk',
 	// 	placement: 'product',
@@ -298,11 +298,11 @@ const keywordList = [
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'gaming chair',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'gaming chair',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'lego',
 	// 	placement: 'product',
@@ -318,41 +318,41 @@ const keywordList = [
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'wireless mouse',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'iphone 7 case',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'wireless mouse',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'iphone 7 case',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'echo dot',
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'gaming mouse',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'keyboard',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'mouse pad',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'coffee maker',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'gaming mouse',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'keyboard',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'mouse pad',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'coffee maker',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'printer',
 	// 	placement: 'product',
@@ -363,11 +363,11 @@ const keywordList = [
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'coffee',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'coffee',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'sd card',
 	// 	placement: 'product',
@@ -393,71 +393,71 @@ const keywordList = [
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'mouse',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'mouse',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'shower curtain',
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'airpods',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'bluetooth earbuds',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'airpods',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'bluetooth earbuds',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'ps4 controller',
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'iphone',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'iphone',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'playstation 4',
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'camera',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'smart watch',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'iphone 7',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'camera',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'smart watch',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'iphone 7',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'mattress',
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'iphone 7 plus case',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'ps4 games',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'iphone 7 plus case',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'ps4 games',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'microwave',
 	// 	placement: 'product',
@@ -493,36 +493,36 @@ const keywordList = [
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'ipone x case',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'laptops',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'ipone x case',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'laptops',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'projector',
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'iphone 6 case',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'iphone 6',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'computer desk',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'iphone 6 case',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'iphone 6',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'computer desk',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'hard drive',
 	// 	placement: 'product',
@@ -543,16 +543,16 @@ const keywordList = [
 	// 	placement: 'product',
 	// 	asins: [],
 	// },
-	{
-		keyword: 'gaming headset',
-		placement: 'product',
-		asins: [],
-	},
-	{
-		keyword: 'iphone 6s case',
-		placement: 'product',
-		asins: [],
-	},
+	// {
+	// 	keyword: 'gaming headset',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
+	// {
+	// 	keyword: 'iphone 6s case',
+	// 	placement: 'product',
+	// 	asins: [],
+	// },
 	// {
 	// 	keyword: 'flash drive',
 	// 	placement: 'product',
