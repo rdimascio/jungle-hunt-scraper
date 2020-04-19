@@ -20,7 +20,7 @@ const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha')
 
 // Helpers
 const database = require('../../util/helpers/database')
-const changeIpAddress = require('../../util/helpers/changeIP')
+const {changeIP} = require('../../util/helpers/headlessHelpers')
 const generateRandomNumbers = require('../../util/helpers/randomNumbers')
 const delay = require('../../util/helpers/delay')
 
@@ -509,7 +509,7 @@ const mongoUrl = DEV
 					!response.ok()
 				) {
 					// If the response isn't ok, change our IP
-					changeIpAddress()
+					changeIP()
 				}
 			})
 
@@ -609,7 +609,7 @@ const mongoUrl = DEV
 
 							proxy = true
 
-							changeIpAddress()
+							changeIP()
 							await delay(6000000)
 
 							// logger.send({
@@ -644,7 +644,7 @@ const mongoUrl = DEV
 						// 	status: 'error',
 						// })
 
-						// changeIpAddress()
+						// changeIP()
 						// return delay(6000000).then(() =>
 						// 	requestNewBestSellerPage(pg)
 						// )
