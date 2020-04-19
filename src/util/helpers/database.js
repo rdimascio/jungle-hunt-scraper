@@ -1,5 +1,5 @@
+require('dotenv').config()
 const assert = require('assert')
-const config = require('../../../config')
 const {createLogger, format, transports} = require('winston')
 const {combine, timestamp, label, printf} = format
 
@@ -95,7 +95,7 @@ const insertStats = (db, col, products, callback) => {
 	} catch (error) {
 		logger.error(error)
 
-		if (config.NODE_ENV === 'development') {
+		if (process.env.NODE_ENV === 'development') {
 			console.log(error)
 		}
 
@@ -117,7 +117,7 @@ const insertKeywords = (db, col, keywords, callback) => {
 	} catch (error) {
 		logger.error(error)
 
-		if (config.NODE_ENV === 'development') {
+		if (process.env.NODE_ENV === 'development') {
 			console.log(error)
 		}
 
@@ -184,7 +184,7 @@ const updateProducts = (db, col, products, callback) => {
 	} catch (error) {
 		logger.error(error)
 
-		if (config.NODE_ENV === 'development') {
+		if (process.env.NODE_ENV === 'development') {
 			console.log(error)
 		}
 

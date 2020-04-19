@@ -1,18 +1,18 @@
 'use strict'
 
+require('dotenv').config()
+
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const axios = require('axios')
 const rimraf = require('rimraf')
 const psList = require('ps-list')
-const cron = require('node-cron')
-const config = require('../config')
 const {exec} = require('child_process')
 const system = require('node-os-utils')
 const bot = require('./util/lib/Telegram')
 const getLastAlertTime = require('./util/helpers/getLastAlertTime')
-const telegramUserId = config.TELEGRAM_USER_ID
+const telegramUserId = process.env.TELEGRAM_USER_ID
 
 ;(async () => {
 	const jungleHuntBot = bot(true)
@@ -290,7 +290,7 @@ const telegramUserId = config.TELEGRAM_USER_ID
 		const url = [
 			'https://api.giphy.com/v1/gifs/random',
 			'?api_key=',
-			config.GIPHY_API_KEY,
+			process.env.GIPHY_API_KEY,
 		]
 
 		if (searchTerm) url.push(`&tag=${searchTerm}`)
@@ -359,8 +359,4 @@ const telegramUserId = config.TELEGRAM_USER_ID
 	jungleHuntBot.on('message', async (msg) => {
 		await messageHandler(msg)
 	})
-
-	//cron.schedule('* * * * *', () => {
-	//	checkServerStats()
-	//})
 })()

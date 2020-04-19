@@ -1,10 +1,10 @@
+require('dotenv').config()
 const database = require('./database')
-const config = require('../../../config')
 const mongo = require('mongodb').MongoClient
 const mongoUrl =
-	config.NODE_ENV === 'development'
+	process.env.NODE_ENV === 'development'
 		? 'mongodb://localhost:27017'
-		: `mongodb://${config.DB_USER}:${config.DB_PWD}@${config.DB_IP}/${config.DB_DATABASE}`
+		: `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_IP}/${process.env.DB_DATABASE}`
 
 /**
  *
@@ -23,7 +23,7 @@ const findAsins = async (asins, listType) => {
 				useUnifiedTopology: true,
 			},
 			async (error, client) => {
-				const db = client.db(config.DB_DATABASE)
+				const db = client.db(process.env.DB_DATABASE)
 
 				asins.forEach((asin, index) => {
 					database.findProducts(
@@ -70,7 +70,7 @@ const saveAsins = async (asins, listType, loopPosition) => {
 					if (error) client.close()
 
 					mongoClient = client
-					const db = client.db(config.DB_DATABASE)
+					const db = client.db(process.env.DB_DATABASE)
 
 					if ([...asinsToInsert, ...asinsToUpdate].length) {
 						database.insertStats(

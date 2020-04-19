@@ -1,7 +1,7 @@
 'use strict'
 
-const request = require('request')
-const config = require('../../../config')
+require('dotenv').config()
+
 const Logger = require('../../util/lib/Logger')
 const Browser = require('../../util/lib/Browser')
 const delay = require('../../util/helpers/delay')
@@ -12,8 +12,8 @@ const scrapeTerms = require('../../util/helpers/scrapeTerms')
 const searchTermsList = require('../../../data/terms/keywordList')
 const generateRandomNumbers = require('../../util/helpers/randomNumbers')
 const mailgunOptions = {
-	apiKey: config.MAILGUN_API_KEY,
-	domain: config.MAILGUN_DOMAIN,
+	apiKey: process.env.MAILGUN_API_KEY,
+	domain: process.env.MAILGUN_DOMAIN,
 }
 const Mailgun = require('mailgun-js')(mailgunOptions)
 

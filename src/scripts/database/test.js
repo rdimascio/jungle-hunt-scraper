@@ -1,8 +1,9 @@
 'use strict'
 
-const config = require('../../../config')
+require('dotenv').config()
+
 const mongo = require('mongodb').MongoClient
-const mongoUrl = `mongodb://${config.DB_USER}:${config.DB_PWD}@${config.DB_IP}:27017/${config.DB_DATABASE}`
+const mongoUrl = `mongodb://${pricess.env.DB_USER}:${pricess.env.DB_PWD}@${pricess.env.DB_IP}:27017/${pricess.env.DB_DATABASE}`
 
 const database = require('../../util/helpers/database')
 
