@@ -2,9 +2,9 @@
 
 const config = require('../../../config')
 const mongo = require('mongodb').MongoClient
-const mongoUrl = `mongodb://${config.DB_USER}:${config.DB_PWD}@${config.DB_IP}/${config.DB_DATABASE}`
+const mongoUrl = `mongodb://${config.DB_USER}:${config.DB_PWD}@${config.DB_IP}:27017/${config.DB_DATABASE}`
 
-const database = require('../../helpers/database')
+const database = require('../../util/helpers/database')
 
 mongo.connect(
 	mongoUrl, 
@@ -18,9 +18,9 @@ mongo.connect(
 			return
 		}
 		const db = client.db('jungleHunt')
-		const collection = 'products'
+		const collection = 'bestSellerProducts'
 
-		database.findDocuments(db, collection, {}, (docs) => {
+		database.findProducts(db, collection, {}, (docs) => {
 
 			// The product is already in the database, we need to update it
 			if (docs.length) {

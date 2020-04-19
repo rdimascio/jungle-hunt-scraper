@@ -4,7 +4,11 @@ const puppeteer = require('puppeteer');
 
 (async () => {
 	const browser = await puppeteer.launch({
-		args: ['--proxy-server=socks5://127.0.0.1:9050'],
+		args: [
+			'--no-sandbox',
+			'--disable-setuid-sandbox',
+			'--proxy-server=socks5://127.0.0.1:9050'
+		],
 	});
 	const page = await browser.newPage();
 
@@ -59,7 +63,7 @@ const puppeteer = require('puppeteer');
 			request.continue({headers})
 		})
 
-		await page.goto('http://cors-anywhere.herokuapp.com/http://checkip.amazonaws.com/');
+		await page.goto('http://checkip.amazonaws.com/');
 
 		const IP = await page.evaluate(() => document.body.textContent.trim());
 

@@ -360,7 +360,7 @@ const telegramUserId = config.TELEGRAM_USER_ID
 		await messageHandler(msg)
 	})
 
-	cron.schedule('* * * * *', () => {
-		checkServerStats()
-	})
+	//cron.schedule('* * * * *', () => {
+	//	checkServerStats()
+	//})
 })()

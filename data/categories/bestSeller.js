@@ -94,6 +94,14 @@ const categoryList = {
 		'/Best-Sellers-Video-Games-PC-Gaming-Keyboards/zgbs/videogames/402051011/ref=zg_bs_nav_vg_4_402052011',
 		'/Best-Sellers-Home-Kitchen-Gaming-Chairs/zgbs/home-garden/18682062011/ref=zg_bs_unv_hg_4_668180011_1',
 	],
+	supplements: [
+		'/Best-Sellers-Health-Personal-Care-Nutritional-Supplements/zgbs/hpc/6939426011/ref=zg_bs_unv_hpc_3_3773511_1',
+		'/Best-Sellers-Health-Personal-Care-Vitamins-Dietary-Supplements/zgbs/hpc/3764441/ref=zg_bs_unv_hpc_2_6939426011_1',
+		'/gp/bestsellers/hpc/6943351011/ref=pd_zg_hrsr_hpc',
+		'/Best-Sellers-Health-Personal-Care-Omega-Oil-Nutritional-Supplements/zgbs/hpc/6943348011/ref=zg_bs_unv_hpc_5_6943351011_1',
+		'/gp/bestsellers/hpc/3765851/ref=pd_zg_hrsr_hpc',
+		'/Best-Sellers-Health-Personal-Care-Herbal-Supplements/zgbs/hpc/3764461/ref=zg_bs_pg_2',
+	]
 }
 
 module.exports = categoryList
