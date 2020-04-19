@@ -6,7 +6,7 @@ const AWS = require('aws-sdk')
 const s3 = new AWS.S3()
 const path = `${new Date().toLocaleDateString().replace(/\//g, '-')}`
 
-fs.readFile(`/var/backups/mongo/${path}/jungleHunt.gz`, function (err, data) {
+fs.readFile(`/var/backups/mongo/${path}/jungleHunt.gz`, async (err, data) => {
     if (err) {
         console.log(err)
     }
