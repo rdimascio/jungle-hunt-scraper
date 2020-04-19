@@ -71,12 +71,6 @@ const mongoUrl = DEV
 	const maxRunningTime = 60 * 60 * 1000
 
 	const DATE = now
-	// const HOURS = DATE.getHours()
-	// const MINUTES = DATE.getMinutes()
-	// const DAY = DATE.getDate()
-	// const MONTH = DATE.getMonth() + 1
-	// const YEAR = DATE.getFullYear()
-	// const DATE_PATH = `${MONTH}-${DAY}-${YEAR}-${HOURS}-${MINUTES}`
 
 	// const failedAsinData = fs.existsSync(`./data/failed/${DATE_PATH}.json`)
 	// 	? fs.readFileSync(`./data/failed/${DATE_PATH}.json`, 'utf8')
@@ -84,23 +78,12 @@ const mongoUrl = DEV
 
 	// let failedAsins = failedAsinData.length ? JSON.parse(failedAsinData) : []
 
-	// const categories = [
-	// 	...Object.entries(bestSellerCategories),
-	// 	...Object.entries(mostGiftedCategories),
-	// 	...Object.entries(newReleaseCategories),
-	// 	...Object.entries(mostWishedForCategories),
-	// ]
-
 	const categories = {
 		bestSeller: [...Object.entries(bestSellerCategories)],
 		mostGifted: [...Object.entries(mostGiftedCategories)],
 		newReleases: [...Object.entries(newReleaseCategories)],
 		mostWishedFor: [...Object.entries(mostWishedForCategories)],
 	}
-
-	// We don't want to run the scraper at the same time every single day,
-	// so we're going to wait a random time betwen 10 minutes and 2 hours
-	// await delay(randomWaitTimer)
 
 	logger.send({
 		emoji: '🚀',
@@ -487,7 +470,7 @@ const mongoUrl = DEV
 		return save.then(() => success)
 	}
 
-	for (let [index, [category, urls]] of categories.entries()) {
+	for (let [index, [category, urls]] of Object.entries(categories)) {
 		for (let i = 0; i < urls.length; i++) {
 			const asinList = []
 			const asinsToUpdate = []
