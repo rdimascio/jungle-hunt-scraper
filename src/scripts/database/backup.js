@@ -6,7 +6,7 @@ const AWS = require('aws-sdk')
 const moment = require('moment')
 
 const s3 = new AWS.S3()
-const dir = path.dirname('/var/backups/mongo/jungle-hunt')
+const dir = path.dirname('/var/backups/mongo/jungle-hunt/')
 const filename = `${moment().format('MM-DD-YYYY')}.gz`
 
 if (!fs.existsSync(path.join(dir, filename))) {
