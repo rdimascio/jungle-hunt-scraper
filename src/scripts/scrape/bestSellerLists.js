@@ -30,7 +30,7 @@ const bestSellerCategories = require('../../../data/categories/bestSeller')
 const mostGiftedCategories = require('../../../data/categories/mostGifted')
 const newReleaseCategories = require('../../../data/categories/newReleases')
 const mostWishedForCategories = require('../../../data/categories/mostWishedFor')
-const Logger = require('../../util/modules/Logger')
+const Logger = require('../../util/lib/Logger')
 const logger = new Logger('Best Seller List Scraper')
 
 // Variables
