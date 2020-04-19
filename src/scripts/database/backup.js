@@ -18,7 +18,7 @@ fs.readFile(`${path}/${filename}`, async (err, data) => {
     }
 
     const s3params = {
-        Bucket: `jungle-hunt/backups/`,
+        Bucket: `jungle-hunt-backups`,
         Key: `${filename}`,
         Body: data,
         ContentEncoding: 'gzip'
